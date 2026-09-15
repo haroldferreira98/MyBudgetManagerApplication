@@ -1055,6 +1055,14 @@
     .voice-action-btn:disabled { opacity: .42; cursor: default; }
     .voice-action-btn .material-symbols-outlined { font-size: 20px; }
 
+
+    /* LOCAL-WHISPER-VOICE-V1 */
+    .voice-hud.recording .voice-mic { animation: voicePulse 1.15s ease-out infinite; }
+    .voice-hud.transcribing .voice-bars span,
+    .voice-hud.review .voice-bars span { animation: none !important; height: 8px !important; opacity: .35; }
+    .voice-hud.transcribing .voice-mic { animation: none !important; opacity: .78; }
+    .voice-hud.review .voice-mic { animation: none !important; background: var(--success-container); color: var(--success); }
+
 </style>
 </head>
 <body>
@@ -1114,7 +1122,7 @@
       <div class="voice-bars" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
       <div class="voice-actions">
         <button class="voice-action-btn cancel" id="voiceCancelBtn" type="button"><span class="material-symbols-outlined">close</span>Annuler</button>
-        <button class="voice-action-btn validate" id="voiceValidateBtn" type="button" disabled><span class="material-symbols-outlined">check</span>Valider</button>
+        <button class="voice-action-btn validate" id="voiceValidateBtn" type="button" disabled><span class="material-symbols-outlined">check</span><span>Valider</span></button>
       </div>
     </div>
   </div>
@@ -1224,6 +1232,16 @@
     let voiceInterimTranscript = "";
     let voicePendingParsed = null;
     let voiceRestartTimer = null;
+    let voiceRecorder = null;
+    let voiceStream = null;
+    let voiceChunks = [];
+    let voiceRecorderStopPromise = null;
+    let voiceRecorderStopResolve = null;
+    let voiceRecordedBlob = null;
+    let voiceRecordingStartedAt = 0;
+    let voiceTimerId = null;
+    let voicePhase = "idle";
+    let whisperTranscriberPromise = null;
     let voiceStartWatchdog = null;
     let voiceLastReleaseAt = 0;
     let voiceCycleSerial = 0;
@@ -2522,7 +2540,7 @@
     function setVoiceHud(active, title = "Je vous écoute…", value = "") {
       const hud = document.getElementById("voiceHud");
       if (!hud) return;
-      const fullText = value || voiceCombinedTranscript() || "Parlez naturellement. Votre phrase complète restera affichée ici.";
+      const fullText = value || voiceCombinedTranscript() || "Parlez naturellement.";
       document.getElementById("voiceHudTitle").textContent = title;
       const transcript = document.getElementById("voiceHudText");
       transcript.textContent = fullText;
@@ -2531,213 +2549,260 @@
       hud.setAttribute("aria-hidden", active ? "false" : "true");
     }
 
+    function setVoicePhase(phase) {
+      voicePhase = phase;
+      const hud = document.getElementById("voiceHud");
+      if (!hud) return;
+      hud.classList.remove("recording", "transcribing", "review");
+      if (["recording", "transcribing", "review"].includes(phase)) hud.classList.add(phase);
+      const validate = document.getElementById("voiceValidateBtn");
+      if (!validate) return;
+      const label = validate.querySelector("span:last-child");
+      if (phase === "recording") {
+        validate.disabled = false;
+        if (label) label.textContent = "Valider";
+      } else if (phase === "transcribing") {
+        validate.disabled = true;
+        if (label) label.textContent = "Transcription…";
+      } else if (phase === "review") {
+        validate.disabled = !voicePendingParsed?.ok;
+        if (label) label.textContent = voicePendingParsed?.ok ? "Ajouter" : "Recommencer";
+      } else {
+        validate.disabled = true;
+        if (label) label.textContent = "Valider";
+      }
+    }
+
     function updateVoiceCandidate() {
       const fullText = voiceCombinedTranscript();
       voicePendingParsed = fullText ? parseVoiceCommand(fullText) : null;
       const preview = document.getElementById("voiceHudPreview");
-      const validate = document.getElementById("voiceValidateBtn");
       const ready = !!voicePendingParsed?.ok;
-      if (validate) validate.disabled = !ready;
       if (preview) {
         preview.classList.toggle("ready", ready);
         preview.textContent = ready ? voicePendingParsed.message : "";
       }
+      if (voicePhase === "review") setVoicePhase("review");
     }
 
-    function clearVoiceRestartTimer() {
-      if (voiceRestartTimer) clearTimeout(voiceRestartTimer);
-      voiceRestartTimer = null;
+    function stopVoiceTimer() {
+      if (voiceTimerId) clearInterval(voiceTimerId);
+      voiceTimerId = null;
     }
 
-    function clearVoiceStartWatchdog() {
-      if (voiceStartWatchdog) clearTimeout(voiceStartWatchdog);
-      voiceStartWatchdog = null;
+    function voiceDurationLabel() {
+      const seconds = Math.max(0, Math.floor((Date.now() - voiceRecordingStartedAt) / 1000));
+      const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
+      const ss = String(seconds % 60).padStart(2, "0");
+      return `${mm}:${ss}`;
     }
 
-    function scheduleVoiceRestart(SpeechRecognition, delay = 420) {
-      clearVoiceRestartTimer();
-      if (!voiceSessionActive) return;
-      voiceRestartTimer = setTimeout(() => {
-        voiceRestartTimer = null;
-        if (voiceSessionActive && !recognition) startRecognitionCycle(SpeechRecognition);
-      }, delay);
+    function releaseVoiceStream() {
+      try { voiceStream?.getTracks()?.forEach(track => track.stop()); } catch (_) {}
+      voiceStream = null;
     }
 
-    function finishVoiceSession({ hide = true, graceful = false } = {}) {
-      voiceSessionActive = false;
-      clearVoiceRestartTimer();
-      clearVoiceStartWatchdog();
-      voiceCycleSerial += 1;
-      const activeRecognition = recognition;
-      recognition = null;
-      voiceLastReleaseAt = Date.now();
+    function recorderMimeType() {
+      const candidates = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+      return candidates.find(type => window.MediaRecorder?.isTypeSupported?.(type)) || "";
+    }
+
+    async function stopRecorderAndGetBlob() {
+      stopVoiceTimer();
+      if (!voiceRecorder) return voiceRecordedBlob;
+      if (voiceRecorder.state === "inactive") {
+        releaseVoiceStream();
+        return voiceRecordedBlob;
+      }
+      if (!voiceRecorderStopPromise) {
+        voiceRecorderStopPromise = new Promise(resolve => { voiceRecorderStopResolve = resolve; });
+      }
+      try { voiceRecorder.requestData?.(); } catch (_) {}
+      try { voiceRecorder.stop(); } catch (_) {}
+      const blob = await voiceRecorderStopPromise;
+      releaseVoiceStream();
+      return blob;
+    }
+
+    function cleanupVoiceRecorder() {
+      stopVoiceTimer();
       try {
-        if (graceful && typeof activeRecognition?.stop === "function") activeRecognition.stop();
-        else activeRecognition?.abort();
+        if (voiceRecorder && voiceRecorder.state !== "inactive") voiceRecorder.stop();
       } catch (_) {}
-      document.getElementById("micBtn")?.classList.remove("listening");
-      if (hide) setVoiceHud(false);
+      voiceRecorder = null;
+      voiceRecorderStopPromise = null;
+      voiceRecorderStopResolve = null;
+      voiceChunks = [];
+      voiceRecordedBlob = null;
+      releaseVoiceStream();
     }
 
-    function cancelVoiceRecognition() {
-      finishVoiceSession({ hide: true, graceful: false });
-      voiceFinalTranscript = "";
-      voiceInterimTranscript = "";
-      voicePendingParsed = null;
-      updateVoiceCandidate();
+    async function decodeVoiceBlobTo16kMono(blob) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) throw new Error("AudioContext indisponible");
+      const context = new AudioCtx();
+      try {
+        const buffer = await blob.arrayBuffer();
+        const decoded = await context.decodeAudioData(buffer.slice(0));
+        const channels = decoded.numberOfChannels;
+        const mono = new Float32Array(decoded.length);
+        for (let c = 0; c < channels; c += 1) {
+          const data = decoded.getChannelData(c);
+          for (let i = 0; i < data.length; i += 1) mono[i] += data[i] / channels;
+        }
+        if (decoded.sampleRate === 16000) return mono;
+        const ratio = decoded.sampleRate / 16000;
+        const outLength = Math.max(1, Math.round(mono.length / ratio));
+        const out = new Float32Array(outLength);
+        for (let i = 0; i < outLength; i += 1) {
+          const sourcePos = i * ratio;
+          const left = Math.floor(sourcePos);
+          const right = Math.min(mono.length - 1, left + 1);
+          const mix = sourcePos - left;
+          out[i] = mono[left] * (1 - mix) + mono[right] * mix;
+        }
+        return out;
+      } finally {
+        try { await context.close(); } catch (_) {}
+      }
     }
 
-    function validateVoiceRecognition() {
-      const fullText = voiceCombinedTranscript();
-      const parsed = fullText ? parseVoiceCommand(fullText) : null;
-      if (!parsed?.ok) {
-        updateVoiceCandidate();
+    async function getLocalWhisperTranscriber() {
+      if (!whisperTranscriberPromise) {
+        whisperTranscriberPromise = (async () => {
+          setVoiceHud(true, "Préparation du modèle local…", "Premier chargement uniquement. Le modèle sera ensuite mis en cache sur cet appareil.");
+          const { pipeline, env } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1");
+          env.allowLocalModels = false;
+          return pipeline(
+            "automatic-speech-recognition",
+            "onnx-community/whisper-tiny",
+            {
+              device: "wasm",
+              dtype: "q8",
+              progress_callback: progress => {
+                if (voicePhase !== "transcribing") return;
+                let pct = null;
+                if (typeof progress?.progress === "number") pct = progress.progress;
+                else if (progress?.loaded && progress?.total) pct = (progress.loaded / progress.total) * 100;
+                const suffix = pct == null ? "" : ` · ${Math.max(0, Math.min(100, pct)).toFixed(0)} %`;
+                setVoiceHud(true, "Préparation du modèle local…", `Téléchargement et mise en cache${suffix}`);
+              }
+            }
+          );
+        })().catch(error => {
+          whisperTranscriberPromise = null;
+          throw error;
+        });
+      }
+      return whisperTranscriberPromise;
+    }
+
+    async function transcribeVoiceBlob(blob) {
+      const audio = await decodeVoiceBlobTo16kMono(blob);
+      const transcriber = await getLocalWhisperTranscriber();
+      const output = await transcriber(audio, { language: "french", task: "transcribe" });
+      return String(output?.text || "").trim();
+    }
+
+    async function startVoiceRecognition(options = {}) {
+      if (voiceSessionActive || voicePhase === "transcribing") {
+        setVoiceHud(true, voicePhase === "transcribing" ? "Transcription locale…" : "Je vous écoute…");
         return;
       }
-      const collection = collectionForType(parsed.type);
-      if (!collection) return;
-      // stop() releases WebKit's audio session more cleanly than abort() after a valid capture.
-      finishVoiceSession({ hide: true, graceful: true });
-      state[collection].push(parsed.item);
-      saveState(parsed.message);
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+        showSnackbar("L’enregistrement audio n’est pas disponible dans ce navigateur.");
+        return;
+      }
+      cleanupVoiceRecorder();
       voiceFinalTranscript = "";
       voiceInterimTranscript = "";
       voicePendingParsed = null;
       updateVoiceCandidate();
+      try {
+        voiceStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+        const mimeType = recorderMimeType();
+        voiceChunks = [];
+        voiceRecorderStopPromise = new Promise(resolve => { voiceRecorderStopResolve = resolve; });
+        voiceRecorder = mimeType ? new MediaRecorder(voiceStream, { mimeType }) : new MediaRecorder(voiceStream);
+        voiceRecorder.ondataavailable = event => { if (event.data && event.data.size > 0) voiceChunks.push(event.data); };
+        voiceRecorder.onerror = event => { console.error("MediaRecorder", event.error || event); };
+        voiceRecorder.onstop = () => {
+          const type = voiceRecorder?.mimeType || mimeType || "audio/mp4";
+          voiceRecordedBlob = new Blob(voiceChunks, { type });
+          const resolve = voiceRecorderStopResolve;
+          voiceRecorderStopResolve = null;
+          resolve?.(voiceRecordedBlob);
+        };
+        voiceSessionActive = true;
+        voiceRecordingStartedAt = Date.now();
+        voiceRecorder.start(250);
+        setVoicePhase("recording");
+        setVoiceHud(true, "Je vous écoute…", `Enregistrement local · ${voiceDurationLabel()}`);
+        voiceTimerId = setInterval(() => {
+          if (voicePhase === "recording") setVoiceHud(true, "Je vous écoute…", `Enregistrement local · ${voiceDurationLabel()}`);
+        }, 500);
+      } catch (error) {
+        console.error("Microphone", error);
+        cleanupVoiceRecorder();
+        voiceSessionActive = false;
+        voicePhase = "idle";
+        setVoiceHud(false);
+        showSnackbar("Impossible d’accéder au microphone.");
+      }
     }
 
-    function startRecognitionCycle(SpeechRecognition) {
-      if (!voiceSessionActive || recognition) return;
-      clearVoiceRestartTimer();
-      clearVoiceStartWatchdog();
+    async function cancelVoiceRecognition() {
+      voiceSessionActive = false;
+      stopVoiceTimer();
+      try { if (voiceRecorder && voiceRecorder.state !== "inactive") voiceRecorder.stop(); } catch (_) {}
+      releaseVoiceStream();
+      cleanupVoiceRecorder();
+      voiceFinalTranscript = "";
+      voiceInterimTranscript = "";
+      voicePendingParsed = null;
+      setVoicePhase("idle");
+      setVoiceHud(false);
+    }
 
-      const serial = ++voiceCycleSerial;
-      const cycle = new SpeechRecognition();
-      recognition = cycle;
-      cycle.lang = "fr-FR";
-      cycle.interimResults = true;
-      // iOS/WebKit is more reliable with short single-result cycles.
-      // Persistence is handled by our own automatic restart loop.
-      cycle.continuous = false;
-      cycle.maxAlternatives = 1;
-      let started = false;
-
-      const releaseAndRetry = (delay = 520) => {
-        if (!voiceSessionActive || serial !== voiceCycleSerial) return;
-        clearVoiceStartWatchdog();
-        if (recognition === cycle) recognition = null;
-        voiceLastReleaseAt = Date.now();
-        try { cycle.abort(); } catch (_) {}
-        document.getElementById("micBtn")?.classList.remove("listening");
-        setVoiceHud(true, "Je vous écoute…");
-        scheduleVoiceRestart(SpeechRecognition, delay);
-      };
-
-      cycle.onstart = () => {
-        if (!voiceSessionActive || recognition !== cycle || serial !== voiceCycleSerial) return;
-        started = true;
-        clearVoiceStartWatchdog();
-        document.getElementById("micBtn")?.classList.add("listening");
-        setVoiceHud(true, "Je vous écoute…");
-      };
-
-      cycle.onresult = event => {
-        if (!voiceSessionActive || recognition !== cycle || serial !== voiceCycleSerial) return;
-        let interim = "";
-        for (let i = event.resultIndex; i < event.results.length; i += 1) {
-          const chunk = String(event.results[i]?.[0]?.transcript || "").trim();
-          if (!chunk) continue;
-          if (event.results[i].isFinal) {
-            voiceFinalTranscript = `${voiceFinalTranscript} ${chunk}`.replace(/\s+/g, " ").trim();
-          } else {
-            interim += `${interim ? " " : ""}${chunk}`;
-          }
+    async function validateVoiceRecognition() {
+      if (voicePhase === "recording") {
+        voiceSessionActive = false;
+        setVoicePhase("transcribing");
+        setVoiceHud(true, "Transcription locale…", "Traitement sur votre iPhone, sans API payante.");
+        try {
+          const blob = await stopRecorderAndGetBlob();
+          if (!blob || blob.size < 100) throw new Error("Enregistrement vide");
+          const transcript = await transcribeVoiceBlob(blob);
+          voiceFinalTranscript = transcript;
+          voiceInterimTranscript = "";
+          updateVoiceCandidate();
+          setVoicePhase("review");
+          setVoiceHud(true, transcript ? "Vérifiez la transcription" : "Aucune parole détectée", transcript || "Annulez puis recommencez.");
+        } catch (error) {
+          console.error("Transcription locale", error);
+          voiceFinalTranscript = "";
+          voicePendingParsed = null;
+          setVoicePhase("review");
+          setVoiceHud(true, "Transcription impossible", "Annulez puis réessayez. Le premier chargement du modèle nécessite Internet.");
+        } finally {
+          releaseVoiceStream();
+          voiceRecorder = null;
         }
-        voiceInterimTranscript = interim.trim();
-        setVoiceHud(true, "Je vous écoute…");
-        updateVoiceCandidate();
-      };
-
-      cycle.onerror = event => {
-        if (!voiceSessionActive || serial !== voiceCycleSerial) return;
-        clearVoiceStartWatchdog();
-        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-          voiceSessionActive = false;
-          clearVoiceRestartTimer();
-          if (recognition === cycle) recognition = null;
-          voiceLastReleaseAt = Date.now();
-          document.getElementById("micBtn")?.classList.remove("listening");
-          setVoiceHud(true, "Accès au micro requis", voiceCombinedTranscript() || "Autorisez le micro dans Safari pour continuer.");
+        return;
+      }
+      if (voicePhase === "review") {
+        if (!voicePendingParsed?.ok) {
+          await cancelVoiceRecognition();
+          await startVoiceRecognition({ source: "retry" });
           return;
         }
-        // no-speech / audio-capture / network / aborted can leave WebKit visually active
-        // while it no longer consumes microphone audio. Force a clean new recognizer.
-        releaseAndRetry(event.error === "aborted" ? 650 : 520);
-      };
-
-      cycle.onend = () => {
-        clearVoiceStartWatchdog();
-        if (serial !== voiceCycleSerial) return;
-        if (recognition === cycle) recognition = null;
-        voiceLastReleaseAt = Date.now();
-        document.getElementById("micBtn")?.classList.remove("listening");
-        if (!voiceSessionActive) return;
-        if (voiceInterimTranscript) {
-          voiceFinalTranscript = `${voiceFinalTranscript} ${voiceInterimTranscript}`.replace(/\s+/g, " ").trim();
-          voiceInterimTranscript = "";
-          setVoiceHud(true, "Je vous écoute…");
-          updateVoiceCandidate();
-        }
-        scheduleVoiceRestart(SpeechRecognition, 420);
-      };
-
-      const elapsedSinceRelease = Date.now() - voiceLastReleaseAt;
-      const startDelay = voiceLastReleaseAt && elapsedSinceRelease < 280 ? 280 - elapsedSinceRelease : 0;
-      const doStart = () => {
-        if (!voiceSessionActive || recognition !== cycle || serial !== voiceCycleSerial) return;
-        try {
-          cycle.start();
-          // If WebKit accepts start() but never emits onstart, recycle the recognizer.
-          voiceStartWatchdog = setTimeout(() => {
-            voiceStartWatchdog = null;
-            if (voiceSessionActive && recognition === cycle && serial === voiceCycleSerial && !started) {
-              releaseAndRetry(650);
-            }
-          }, 1800);
-        } catch (error) {
-          console.warn("Démarrage de la reconnaissance vocale", error);
-          releaseAndRetry(650);
-        }
-      };
-      if (startDelay > 0) setTimeout(doStart, startDelay);
-      else doStart();
-    }
-
-    function startVoiceRecognition(options = {}) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        setVoiceHud(false);
-        showSnackbar("La reconnaissance vocale n’est pas disponible dans ce navigateur.");
-        return;
+        const collection = collectionForType(voicePendingParsed.type);
+        if (!collection) return;
+        const parsed = voicePendingParsed;
+        state[collection].push(parsed.item);
+        saveState(parsed.message);
+        await cancelVoiceRecognition();
       }
-      if (voiceSessionActive) {
-        setVoiceHud(true, "Je vous écoute…");
-        // If the UI is active but WebKit silently lost its recognizer, revive it.
-        if (!recognition && !voiceRestartTimer) startRecognitionCycle(SpeechRecognition);
-        return;
-      }
-      try { recognition?.abort(); } catch (_) {}
-      recognition = null;
-      clearVoiceRestartTimer();
-      clearVoiceStartWatchdog();
-      voiceCycleSerial += 1;
-      voiceSessionActive = true;
-      voiceFinalTranscript = "";
-      voiceInterimTranscript = "";
-      voicePendingParsed = null;
-      updateVoiceCandidate();
-      setVoiceHud(true, "Activation du micro…", "Parlez naturellement. Le micro restera actif jusqu’à Valider ou Annuler.");
-      startRecognitionCycle(SpeechRecognition);
     }
 
     function exportJSON() {
