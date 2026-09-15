@@ -566,7 +566,7 @@
       backdrop-filter: blur(18px) saturate(1.2);
       -webkit-backdrop-filter: blur(18px) saturate(1.2);
       display: grid;
-      grid-template-columns: 1fr 1fr 72px 1fr 1fr;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       align-items: center;
       pointer-events: auto;
     }
@@ -725,7 +725,7 @@
     @media (max-width: 560px) {
       .grid-2, .field-row, .sim-grid { grid-template-columns: 1fr; }
       .nav-btn { font-size: 9px; }
-      .bottom-nav { grid-template-columns: 1fr 1fr 64px 1fr 1fr; }
+      .bottom-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
       .fab { width: 58px; height: 58px; }
     }
 
@@ -913,6 +913,26 @@
 
 
 
+    /* FIXED-CHARGE-ROW-NO-FAB-V1 */
+    #entityModal[data-entity-type="fixed"] .field-row {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+      gap: 12px !important;
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+    #entityModal[data-entity-type="fixed"] .field-row > .field {
+      min-width: 0 !important;
+      width: auto !important;
+      max-width: 100% !important;
+    }
+    #entityModal[data-entity-type="fixed"] .field-row input {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
 </style>
 </head>
 <body>
@@ -947,9 +967,6 @@
       </button>
       <button class="nav-btn" data-screen="income" aria-label="Revenus">
         <span class="material-symbols-outlined">payments</span><span>Revenus</span>
-      </button>
-      <button class="fab" id="fabAdd" aria-label="Ajouter">
-        <span class="material-symbols-outlined">add</span>
       </button>
       <button class="nav-btn" data-screen="expenses" aria-label="Dépenses">
         <span class="material-symbols-outlined">receipt_long</span><span>Dépenses</span>
@@ -2311,12 +2328,6 @@
       }
     }
 
-    const fabAdd = document.getElementById("fabAdd");
-    fabAdd?.addEventListener("click", () => {
-      if (currentScreen === "income") openEntityModal("income", null, null, true);
-      else if (currentScreen === "expenses" || currentScreen === "home") openEntityModal("expense", null, null, true);
-      else openEntityModal("expense");
-    });
     document.getElementById("entityForm").addEventListener("submit", handleEntitySubmit);
 
     document.addEventListener("click", event => {
