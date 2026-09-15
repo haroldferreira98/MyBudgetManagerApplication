@@ -1,0 +1,160 @@
+name: Refine floating nav balance and backup layout
+
+on:
+  push:
+    paths:
+      - '.github/workflows/refine-nav-balance-backup.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          # 1) Make the bottom navigation a real floating pill with safe-area spacing outside it.
+          old_nav = '''    .nav-wrap {
+      position: fixed;
+      z-index: 40;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: min(calc(100% - 16px), 720px);
+      pointer-events: none;
+    }
+    .bottom-nav {
+      min-height: calc(var(--nav-height) + var(--safe-bottom));
+      height: auto;
+      padding: 8px 10px calc(8px + var(--safe-bottom));
+      border-radius: 30px 30px 0 0;
+      background: color-mix(in srgb, var(--surface-container-high) 94%, transparent);
+      box-shadow: 0 14px 36px var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--outline-variant) 45%, transparent);
+      backdrop-filter: blur(18px) saturate(1.2);
+      -webkit-backdrop-filter: blur(18px) saturate(1.2);
+      display: grid;
+      grid-template-columns: 1fr 1fr 72px 1fr 1fr;
+      align-items: center;
+      pointer-events: auto;
+    }'''
+          new_nav = '''    .nav-wrap {
+      position: fixed;
+      z-index: 40;
+      left: 50%;
+      bottom: calc(8px + var(--safe-bottom));
+      transform: translateX(-50%);
+      width: min(calc(100% - 24px), 720px);
+      pointer-events: none;
+    }
+    .bottom-nav {
+      height: var(--nav-height);
+      padding: 8px 10px;
+      border-radius: 32px;
+      background: color-mix(in srgb, var(--surface-container-high) 94%, transparent);
+      box-shadow: 0 14px 36px var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--outline-variant) 45%, transparent);
+      backdrop-filter: blur(18px) saturate(1.2);
+      -webkit-backdrop-filter: blur(18px) saturate(1.2);
+      display: grid;
+      grid-template-columns: 1fr 1fr 72px 1fr 1fr;
+      align-items: center;
+      pointer-events: auto;
+    }'''
+          if old_nav not in s:
+              raise SystemExit('nav block not found')
+          s = s.replace(old_nav, new_nav, 1)
+
+          # Give page content enough room above the truly floating pill.
+          s = s.replace('padding-bottom: calc(var(--nav-height) + 42px + var(--safe-bottom));',
+                        'padding-bottom: calc(var(--nav-height) + 54px + var(--safe-bottom));', 1)
+
+          # 2) Clean compact 50/30/20 rows, guaranteed single line.
+          old_balance_css = '''    .balance-row { margin: 14px 0; }
+    .balance-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 7px; font-size: 13px; }
+    .balance-head strong { font-size: 14px; }'''
+          new_balance_css = '''    .balance-row { margin: 15px 0; }
+    .balance-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .balance-label { min-width: 0; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+    .balance-label strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+    .target-badge {
+      flex: 0 0 auto;
+      min-width: 38px;
+      padding: 4px 7px;
+      border-radius: var(--pill);
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .balance-value { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; text-align: right; }
+    .balance-pct { color: var(--on-surface-variant); font-size: 12px; }'''
+          if old_balance_css not in s:
+              raise SystemExit('balance css not found')
+          s = s.replace(old_balance_css, new_balance_css, 1)
+
+          old_template = '''            <div class="balance-head">
+              <strong>${item.label} · ${item.target}%</strong>
+              <span><span class="money">${formatMoney(item.value)}</span> · ${pctIncome.toFixed(0)}%</span>
+            </div>'''
+          new_template = '''            <div class="balance-head">
+              <div class="balance-label"><strong>${item.label}</strong><span class="target-badge">${item.target}%</span></div>
+              <span class="balance-value"><span class="money">${formatMoney(item.value)}</span><span class="balance-pct">${pctIncome.toFixed(0)}%</span></span>
+            </div>'''
+          if old_template not in s:
+              raise SystemExit('balance template not found')
+          s = s.replace(old_template, new_template, 1)
+          s = s.replace('{ key: "savings", label: "Épargne / investissement disponible", target: 20, value: s.buckets.savings }',
+                        '{ key: "savings", label: "Épargne possible", target: 20, value: s.buckets.savings }', 1)
+
+          # 3) One-row backup/data controls on mobile.
+          marker = '    .button-row { display: flex; flex-wrap: wrap; gap: 10px; }\n'
+          extra = '''    .backup-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .backup-actions .btn { min-width: 0; min-height: 48px; padding: 0 8px; gap: 5px; white-space: nowrap; font-size: 12px; }
+    .backup-actions .btn .material-symbols-outlined { font-size: 20px; }
+'''
+          if extra not in s:
+              if marker not in s:
+                  raise SystemExit('button row css marker not found')
+              s = s.replace(marker, marker + extra, 1)
+
+          # Replace the backup button row only inside the Sauvegarde & données section.
+          pattern = re.compile(r'''(<h2 class="section-title">Sauvegarde & données</h2>.*?<div class="card">\s*)<div class="button-row">\s*<button class="btn tonal" id="exportJsonBtn"><span class="material-symbols-outlined">download</span>Exporter JSON</button>\s*<button class="btn tonal" id="exportCsvBtn"><span class="material-symbols-outlined">table_view</span>Exporter CSV</button>\s*<button class="btn outlined" id="importJsonBtn"><span class="material-symbols-outlined">upload</span>Importer JSON</button>\s*</div>''', re.S)
+          replacement = r'''\1<div class="backup-actions">
+              <button class="btn tonal" id="exportJsonBtn" aria-label="Exporter JSON"><span class="material-symbols-outlined">download</span>JSON</button>
+              <button class="btn tonal" id="exportCsvBtn" aria-label="Exporter CSV"><span class="material-symbols-outlined">table_view</span>CSV</button>
+              <button class="btn outlined" id="importJsonBtn" aria-label="Importer JSON"><span class="material-symbols-outlined">upload</span>Importer</button>
+            </div>'''
+          s2, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+              raise SystemExit(f'backup row replacement count={n}')
+          s = s2
+
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Validate
+        run: git diff --check
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Polish floating nav budget balance and backup row"
+          git push
