@@ -34,7 +34,6 @@ if marker not in s:
 s = s.replace(marker, css + marker, 1)
 
 for required in [
-    'Ajouter · Charge fixe',
     'Montant mensuel (€)',
     'Jour de prélèvement',
     'data-screen="home"',
