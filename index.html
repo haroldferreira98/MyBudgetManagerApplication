@@ -1224,6 +1224,9 @@
     let voiceInterimTranscript = "";
     let voicePendingParsed = null;
     let voiceRestartTimer = null;
+    let voiceStartWatchdog = null;
+    let voiceLastReleaseAt = 0;
+    let voiceCycleSerial = 0;
     let cloud = null;
     let cloudUser = null;
     let cloudSaveTimer = null;
@@ -2546,18 +2549,38 @@
       voiceRestartTimer = null;
     }
 
-    function finishVoiceSession({ hide = true } = {}) {
+    function clearVoiceStartWatchdog() {
+      if (voiceStartWatchdog) clearTimeout(voiceStartWatchdog);
+      voiceStartWatchdog = null;
+    }
+
+    function scheduleVoiceRestart(SpeechRecognition, delay = 420) {
+      clearVoiceRestartTimer();
+      if (!voiceSessionActive) return;
+      voiceRestartTimer = setTimeout(() => {
+        voiceRestartTimer = null;
+        if (voiceSessionActive && !recognition) startRecognitionCycle(SpeechRecognition);
+      }, delay);
+    }
+
+    function finishVoiceSession({ hide = true, graceful = false } = {}) {
       voiceSessionActive = false;
       clearVoiceRestartTimer();
+      clearVoiceStartWatchdog();
+      voiceCycleSerial += 1;
       const activeRecognition = recognition;
       recognition = null;
-      try { activeRecognition?.abort(); } catch (_) {}
+      voiceLastReleaseAt = Date.now();
+      try {
+        if (graceful && typeof activeRecognition?.stop === "function") activeRecognition.stop();
+        else activeRecognition?.abort();
+      } catch (_) {}
       document.getElementById("micBtn")?.classList.remove("listening");
       if (hide) setVoiceHud(false);
     }
 
     function cancelVoiceRecognition() {
-      finishVoiceSession({ hide: true });
+      finishVoiceSession({ hide: true, graceful: false });
       voiceFinalTranscript = "";
       voiceInterimTranscript = "";
       voicePendingParsed = null;
@@ -2573,7 +2596,8 @@
       }
       const collection = collectionForType(parsed.type);
       if (!collection) return;
-      finishVoiceSession({ hide: true });
+      // stop() releases WebKit's audio session more cleanly than abort() after a valid capture.
+      finishVoiceSession({ hide: true, graceful: true });
       state[collection].push(parsed.item);
       saveState(parsed.message);
       voiceFinalTranscript = "";
@@ -2585,21 +2609,40 @@
     function startRecognitionCycle(SpeechRecognition) {
       if (!voiceSessionActive || recognition) return;
       clearVoiceRestartTimer();
+      clearVoiceStartWatchdog();
+
+      const serial = ++voiceCycleSerial;
       const cycle = new SpeechRecognition();
       recognition = cycle;
       cycle.lang = "fr-FR";
       cycle.interimResults = true;
-      cycle.continuous = true;
+      // iOS/WebKit is more reliable with short single-result cycles.
+      // Persistence is handled by our own automatic restart loop.
+      cycle.continuous = false;
       cycle.maxAlternatives = 1;
+      let started = false;
+
+      const releaseAndRetry = (delay = 520) => {
+        if (!voiceSessionActive || serial !== voiceCycleSerial) return;
+        clearVoiceStartWatchdog();
+        if (recognition === cycle) recognition = null;
+        voiceLastReleaseAt = Date.now();
+        try { cycle.abort(); } catch (_) {}
+        document.getElementById("micBtn")?.classList.remove("listening");
+        setVoiceHud(true, "Je vous écoute…");
+        scheduleVoiceRestart(SpeechRecognition, delay);
+      };
 
       cycle.onstart = () => {
-        if (!voiceSessionActive || recognition !== cycle) return;
+        if (!voiceSessionActive || recognition !== cycle || serial !== voiceCycleSerial) return;
+        started = true;
+        clearVoiceStartWatchdog();
         document.getElementById("micBtn")?.classList.add("listening");
         setVoiceHud(true, "Je vous écoute…");
       };
 
       cycle.onresult = event => {
-        if (!voiceSessionActive || recognition !== cycle) return;
+        if (!voiceSessionActive || recognition !== cycle || serial !== voiceCycleSerial) return;
         let interim = "";
         for (let i = event.resultIndex; i < event.results.length; i += 1) {
           const chunk = String(event.results[i]?.[0]?.transcript || "").trim();
@@ -2616,20 +2659,27 @@
       };
 
       cycle.onerror = event => {
-        if (!voiceSessionActive || recognition !== cycle) return;
+        if (!voiceSessionActive || serial !== voiceCycleSerial) return;
+        clearVoiceStartWatchdog();
         if (event.error === "not-allowed" || event.error === "service-not-allowed") {
           voiceSessionActive = false;
           clearVoiceRestartTimer();
-          recognition = null;
+          if (recognition === cycle) recognition = null;
+          voiceLastReleaseAt = Date.now();
           document.getElementById("micBtn")?.classList.remove("listening");
           setVoiceHud(true, "Accès au micro requis", voiceCombinedTranscript() || "Autorisez le micro dans Safari pour continuer.");
           return;
         }
-        setVoiceHud(true, "Je vous écoute…");
+        // no-speech / audio-capture / network / aborted can leave WebKit visually active
+        // while it no longer consumes microphone audio. Force a clean new recognizer.
+        releaseAndRetry(event.error === "aborted" ? 650 : 520);
       };
 
       cycle.onend = () => {
+        clearVoiceStartWatchdog();
+        if (serial !== voiceCycleSerial) return;
         if (recognition === cycle) recognition = null;
+        voiceLastReleaseAt = Date.now();
         document.getElementById("micBtn")?.classList.remove("listening");
         if (!voiceSessionActive) return;
         if (voiceInterimTranscript) {
@@ -2638,23 +2688,29 @@
           setVoiceHud(true, "Je vous écoute…");
           updateVoiceCandidate();
         }
-        voiceRestartTimer = setTimeout(() => {
-          voiceRestartTimer = null;
-          if (voiceSessionActive && !recognition) startRecognitionCycle(SpeechRecognition);
-        }, 180);
+        scheduleVoiceRestart(SpeechRecognition, 420);
       };
 
-      try {
-        cycle.start();
-      } catch (error) {
-        if (recognition === cycle) recognition = null;
-        if (!voiceSessionActive) return;
-        console.warn("Redémarrage de la reconnaissance vocale", error);
-        voiceRestartTimer = setTimeout(() => {
-          voiceRestartTimer = null;
-          if (voiceSessionActive && !recognition) startRecognitionCycle(SpeechRecognition);
-        }, 450);
-      }
+      const elapsedSinceRelease = Date.now() - voiceLastReleaseAt;
+      const startDelay = voiceLastReleaseAt && elapsedSinceRelease < 280 ? 280 - elapsedSinceRelease : 0;
+      const doStart = () => {
+        if (!voiceSessionActive || recognition !== cycle || serial !== voiceCycleSerial) return;
+        try {
+          cycle.start();
+          // If WebKit accepts start() but never emits onstart, recycle the recognizer.
+          voiceStartWatchdog = setTimeout(() => {
+            voiceStartWatchdog = null;
+            if (voiceSessionActive && recognition === cycle && serial === voiceCycleSerial && !started) {
+              releaseAndRetry(650);
+            }
+          }, 1800);
+        } catch (error) {
+          console.warn("Démarrage de la reconnaissance vocale", error);
+          releaseAndRetry(650);
+        }
+      };
+      if (startDelay > 0) setTimeout(doStart, startDelay);
+      else doStart();
     }
 
     function startVoiceRecognition(options = {}) {
@@ -2666,17 +2722,21 @@
       }
       if (voiceSessionActive) {
         setVoiceHud(true, "Je vous écoute…");
+        // If the UI is active but WebKit silently lost its recognizer, revive it.
+        if (!recognition && !voiceRestartTimer) startRecognitionCycle(SpeechRecognition);
         return;
       }
       try { recognition?.abort(); } catch (_) {}
       recognition = null;
       clearVoiceRestartTimer();
+      clearVoiceStartWatchdog();
+      voiceCycleSerial += 1;
       voiceSessionActive = true;
       voiceFinalTranscript = "";
       voiceInterimTranscript = "";
       voicePendingParsed = null;
       updateVoiceCandidate();
-      setVoiceHud(true, "Je vous écoute…", "Parlez naturellement. Le micro restera actif jusqu’à Valider ou Annuler.");
+      setVoiceHud(true, "Activation du micro…", "Parlez naturellement. Le micro restera actif jusqu’à Valider ou Annuler.");
       startRecognitionCycle(SpeechRecognition);
     }
 
