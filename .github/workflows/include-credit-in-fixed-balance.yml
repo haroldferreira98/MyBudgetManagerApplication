@@ -1,0 +1,27 @@
+name: Include credit payments in fixed balance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/include-credit-in-fixed-balance.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch 50 30 20 fixed bucket
+        run: |
+          python3 -c "from pathlib import Path; p=Path('index.html'); s=p.read_text(encoding='utf-8'); old='          needs: fixed,'; new='          needs: fixed + credits,'; assert old in s or new in s, 'financial bucket marker not found'; s=s if new in s else s.replace(old,new,1); p.write_text(s,encoding='utf-8')"
+          rm -f .github/workflows/include-credit-in-fixed-balance.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Include credit payments in fixed balance"
+          git push origin main
