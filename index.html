@@ -837,9 +837,9 @@
       }
       try {
         const [appMod, authMod, storeMod] = await Promise.all([
-          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
-          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
-          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+          import("https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"),
+          import("https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js"),
+          import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js")
         ]);
         const app = appMod.initializeApp(window.BUDGET_FIREBASE_CONFIG);
         const auth = authMod.getAuth(app);
@@ -852,7 +852,6 @@
           renderProfile();
           if (cloudUser) await reconcileCloudState();
         });
-        await authMod.getRedirectResult(auth);
       } catch (error) {
         console.error("Initialisation Firebase impossible", error);
         showSnackbar("Connexion cloud indisponible pour le moment.");
@@ -911,12 +910,27 @@
       showSnackbar("Données cloud chargées.");
     }
 
+    function firebaseAuthErrorMessage(error) {
+      const code = error?.code || "";
+      if (code === "auth/unauthorized-domain") return "Domaine non autorisé dans Firebase Authentication.";
+      if (code === "auth/operation-not-allowed") return "Connexion Google non activée dans Firebase Authentication.";
+      if (code === "auth/popup-blocked") return "La fenêtre Google a été bloquée par le navigateur.";
+      if (code === "auth/popup-closed-by-user") return "Connexion Google annulée.";
+      if (code === "auth/network-request-failed") return "Erreur réseau pendant la connexion Google.";
+      return code ? `Connexion Google impossible (${code}).` : "Connexion Google impossible.";
+    }
+
     async function signInWithGoogle() {
       if (!cloud) {
         showSnackbar("Firebase doit d'abord être configuré.");
         return;
       }
-      await cloud.authMod.signInWithRedirect(cloud.auth, cloud.provider);
+      try {
+        await cloud.authMod.signInWithPopup(cloud.auth, cloud.provider);
+      } catch (error) {
+        console.error("Connexion Google impossible", error);
+        showSnackbar(firebaseAuthErrorMessage(error));
+      }
     }
 
     async function signOutGoogle() {
@@ -1882,7 +1896,7 @@
       if (event.target.id === "exportCsvBtn" || event.target.closest("#exportCsvBtn")) exportCSV();
       if (event.target.id === "importJsonBtn" || event.target.closest("#importJsonBtn")) document.getElementById("jsonImportInput").click();
       if (event.target.id === "resetBtn" || event.target.closest("#resetBtn")) resetAllData();
-      if (event.target.id === "googleSignInBtn" || event.target.closest("#googleSignInBtn")) signInWithGoogle().catch(error => { console.error(error); showSnackbar("Connexion Google impossible."); });
+      if (event.target.id === "googleSignInBtn" || event.target.closest("#googleSignInBtn")) signInWithGoogle();
       if (event.target.id === "googleSignOutBtn" || event.target.closest("#googleSignOutBtn")) signOutGoogle().catch(error => { console.error(error); showSnackbar("Déconnexion Google impossible."); });
     });
 
