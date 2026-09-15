@@ -1,0 +1,52 @@
+name: iOS voice reliability
+
+on:
+  push:
+    paths:
+      - '.github/workflows/ios-voice-reliability.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch iOS voice lifecycle
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+
+          old_globals = '''    let voicePendingParsed = null;\n    let voiceRestartTimer = null;\n    let cloud = null;'''
+          new_globals = '''    let voicePendingParsed = null;\n    let voiceRestartTimer = null;\n    let voiceStartWatchdog = null;\n    let voiceLastReleaseAt = 0;\n    let voiceCycleSerial = 0;\n    let cloud = null;'''
+          if old_globals not in text:
+              raise SystemExit('voice globals not found')
+          text = text.replace(old_globals, new_globals, 1)
+
+          pattern = re.compile(r'''    function clearVoiceRestartTimer\(\) \{.*?\n    function startVoiceRecognition\(options = \{\}\) \{.*?\n    \}\n\n    function exportJSON\(\) \{''', re.S)
+
+          replacement = '''    function clearVoiceRestartTimer() {\n      if (voiceRestartTimer) clearTimeout(voiceRestartTimer);\n      voiceRestartTimer = null;\n    }\n\n    function clearVoiceStartWatchdog() {\n      if (voiceStartWatchdog) clearTimeout(voiceStartWatchdog);\n      voiceStartWatchdog = null;\n    }\n\n    function scheduleVoiceRestart(SpeechRecognition, delay = 420) {\n      clearVoiceRestartTimer();\n      if (!voiceSessionActive) return;\n      voiceRestartTimer = setTimeout(() => {\n        voiceRestartTimer = null;\n        if (voiceSessionActive && !recognition) startRecognitionCycle(SpeechRecognition);\n      }, delay);\n    }\n\n    function finishVoiceSession({ hide = true, graceful = false } = {}) {\n      voiceSessionActive = false;\n      clearVoiceRestartTimer();\n      clearVoiceStartWatchdog();\n      voiceCycleSerial += 1;\n      const activeRecognition = recognition;\n      recognition = null;\n      voiceLastReleaseAt = Date.now();\n      try {\n        if (graceful && typeof activeRecognition?.stop === "function") activeRecognition.stop();\n        else activeRecognition?.abort();\n      } catch (_) {}\n      document.getElementById("micBtn")?.classList.remove("listening");\n      if (hide) setVoiceHud(false);\n    }\n\n    function cancelVoiceRecognition() {\n      finishVoiceSession({ hide: true, graceful: false });\n      voiceFinalTranscript = "";\n      voiceInterimTranscript = "";\n      voicePendingParsed = null;\n      updateVoiceCandidate();\n    }\n\n    function validateVoiceRecognition() {\n      const fullText = voiceCombinedTranscript();\n      const parsed = fullText ? parseVoiceCommand(fullText) : null;\n      if (!parsed?.ok) {\n        updateVoiceCandidate();\n        return;\n      }\n      const collection = collectionForType(parsed.type);\n      if (!collection) return;\n      // stop() releases WebKit's audio session more cleanly than abort() after a valid capture.\n      finishVoiceSession({ hide: true, graceful: true });\n      state[collection].push(parsed.item);\n      saveState(parsed.message);\n      voiceFinalTranscript = "";\n      voiceInterimTranscript = "";\n      voicePendingParsed = null;\n      updateVoiceCandidate();\n    }\n\n    function startRecognitionCycle(SpeechRecognition) {\n      if (!voiceSessionActive || recognition) return;\n      clearVoiceRestartTimer();\n      clearVoiceStartWatchdog();\n\n      const serial = ++voiceCycleSerial;\n      const cycle = new SpeechRecognition();\n      recognition = cycle;\n      cycle.lang = "fr-FR";\n      cycle.interimResults = true;\n      // iOS/WebKit is more reliable with short single-result cycles.\n      // Persistence is handled by our own automatic restart loop.\n      cycle.continuous = false;\n      cycle.maxAlternatives = 1;\n      let started = false;\n\n      const releaseAndRetry = (delay = 520) => {\n        if (!voiceSessionActive || serial !== voiceCycleSerial) return;\n        clearVoiceStartWatchdog();\n        if (recognition === cycle) recognition = null;\n        voiceLastReleaseAt = Date.now();\n        try { cycle.abort(); } catch (_) {}\n        document.getElementById("micBtn")?.classList.remove("listening");\n        setVoiceHud(true, "Je vous écoute…");\n        scheduleVoiceRestart(SpeechRecognition, delay);\n      };\n\n      cycle.onstart = () => {\n        if (!voiceSessionActive || recognition !== cycle || serial !== voiceCycleSerial) return;\n        started = true;\n        clearVoiceStartWatchdog();\n        document.getElementById("micBtn")?.classList.add("listening");\n        setVoiceHud(true, "Je vous écoute…");\n      };\n\n      cycle.onresult = event => {\n        if (!voiceSessionActive || recognition !== cycle || serial !== voiceCycleSerial) return;\n        let interim = "";\n        for (let i = event.resultIndex; i < event.results.length; i += 1) {\n          const chunk = String(event.results[i]?.[0]?.transcript || "").trim();\n          if (!chunk) continue;\n          if (event.results[i].isFinal) {\n            voiceFinalTranscript = `${voiceFinalTranscript} ${chunk}`.replace(/\\s+/g, " ").trim();\n          } else {\n            interim += `${interim ? " " : ""}${chunk}`;\n          }\n        }\n        voiceInterimTranscript = interim.trim();\n        setVoiceHud(true, "Je vous écoute…");\n        updateVoiceCandidate();\n      };\n\n      cycle.onerror = event => {\n        if (!voiceSessionActive || serial !== voiceCycleSerial) return;\n        clearVoiceStartWatchdog();\n        if (event.error === "not-allowed" || event.error === "service-not-allowed") {\n          voiceSessionActive = false;\n          clearVoiceRestartTimer();\n          if (recognition === cycle) recognition = null;\n          voiceLastReleaseAt = Date.now();\n          document.getElementById("micBtn")?.classList.remove("listening");\n          setVoiceHud(true, "Accès au micro requis", voiceCombinedTranscript() || "Autorisez le micro dans Safari pour continuer.");\n          return;\n        }\n        // no-speech / audio-capture / network / aborted can leave WebKit visually active\n        // while it no longer consumes microphone audio. Force a clean new recognizer.\n        releaseAndRetry(event.error === "aborted" ? 650 : 520);\n      };\n\n      cycle.onend = () => {\n        clearVoiceStartWatchdog();\n        if (serial !== voiceCycleSerial) return;\n        if (recognition === cycle) recognition = null;\n        voiceLastReleaseAt = Date.now();\n        document.getElementById("micBtn")?.classList.remove("listening");\n        if (!voiceSessionActive) return;\n        if (voiceInterimTranscript) {\n          voiceFinalTranscript = `${voiceFinalTranscript} ${voiceInterimTranscript}`.replace(/\\s+/g, " ").trim();\n          voiceInterimTranscript = "";\n          setVoiceHud(true, "Je vous écoute…");\n          updateVoiceCandidate();\n        }\n        scheduleVoiceRestart(SpeechRecognition, 420);\n      };\n\n      const elapsedSinceRelease = Date.now() - voiceLastReleaseAt;\n      const startDelay = voiceLastReleaseAt && elapsedSinceRelease < 280 ? 280 - elapsedSinceRelease : 0;\n      const doStart = () => {\n        if (!voiceSessionActive || recognition !== cycle || serial !== voiceCycleSerial) return;\n        try {\n          cycle.start();\n          // If WebKit accepts start() but never emits onstart, recycle the recognizer.\n          voiceStartWatchdog = setTimeout(() => {\n            voiceStartWatchdog = null;\n            if (voiceSessionActive && recognition === cycle && serial === voiceCycleSerial && !started) {\n              releaseAndRetry(650);\n            }\n          }, 1800);\n        } catch (error) {\n          console.warn("Démarrage de la reconnaissance vocale", error);\n          releaseAndRetry(650);\n        }\n      };\n      if (startDelay > 0) setTimeout(doStart, startDelay);\n      else doStart();\n    }\n\n    function startVoiceRecognition(options = {}) {\n      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;\n      if (!SpeechRecognition) {\n        setVoiceHud(false);\n        showSnackbar("La reconnaissance vocale n’est pas disponible dans ce navigateur.");\n        return;\n      }\n      if (voiceSessionActive) {\n        setVoiceHud(true, "Je vous écoute…");\n        // If the UI is active but WebKit silently lost its recognizer, revive it.\n        if (!recognition && !voiceRestartTimer) startRecognitionCycle(SpeechRecognition);\n        return;\n      }\n      try { recognition?.abort(); } catch (_) {}\n      recognition = null;\n      clearVoiceRestartTimer();\n      clearVoiceStartWatchdog();\n      voiceCycleSerial += 1;\n      voiceSessionActive = true;\n      voiceFinalTranscript = "";\n      voiceInterimTranscript = "";\n      voicePendingParsed = null;\n      updateVoiceCandidate();\n      setVoiceHud(true, "Activation du micro…", "Parlez naturellement. Le micro restera actif jusqu’à Valider ou Annuler.");\n      startRecognitionCycle(SpeechRecognition);\n    }\n\n    function exportJSON() {'''
+
+          text, count = pattern.subn(lambda m: replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'voice lifecycle replacement failed: {count}')
+
+          p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Validate and commit
+        shell: bash
+        run: |
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Harden iOS voice recognition lifecycle"
+          git push
