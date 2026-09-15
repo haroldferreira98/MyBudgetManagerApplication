@@ -873,7 +873,65 @@
 
       /* VOICE-CANCEL-SILENT-V1 */
     .voice-hud-card{position:relative}.voice-cancel-btn{width:38px;height:38px;flex:0 0 38px;border:0;border-radius:50%;display:grid;place-items:center;background:var(--surface-container-high);color:var(--on-surface);cursor:pointer;margin-left:4px}.voice-cancel-btn:active{transform:scale(.94)}
-  </style>
+  
+/* EXPENSE-SHEET-IOS-FIX */
+#entityModal[data-entity-type="expense"] .sheet {
+  width: calc(100% - 12px) !important;
+  max-width: 748px;
+  max-height: min(52dvh, 610px) !important;
+  margin-inline: 6px !important;
+}
+#entityModal[data-entity-type="expense"] .sheet-body {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  overflow-x: hidden !important;
+}
+#entityModal[data-entity-type="expense"] .field-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr) !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+#entityModal[data-entity-type="expense"] .field-row > .field {
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: 100% !important;
+  contain: inline-size;
+  overflow: hidden;
+}
+#entityModal[data-entity-type="expense"] .field-row input {
+  display: block !important;
+  inline-size: 100% !important;
+  width: 100% !important;
+  min-inline-size: 0 !important;
+  min-width: 0 !important;
+  max-inline-size: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+#entityModal[data-entity-type="expense"] input[type="date"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 10px !important;
+}
+#entityModal[data-entity-type="expense"] input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0 !important;
+  width: 100% !important;
+  text-align: left !important;
+}
+#entityModal[data-entity-type="expense"] .field {
+  margin-top: 6px !important;
+  margin-bottom: 6px !important;
+}
+#entityModal[data-entity-type="expense"] .modal-actions {
+  padding-top: 8px !important;
+  margin-top: 2px !important;
+}
+</style>
 </head>
 <body>
   <div class="app-shell">
