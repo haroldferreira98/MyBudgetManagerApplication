@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/contextual-add-sheet.yml'
+      - '.github/scripts/contextual_add.py'
 
 permissions:
   contents: write
@@ -13,88 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Adapt add sheet to context
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          p = Path('index.html')
-          text = p.read_text(encoding='utf-8')
-
-          old_sig = '    function openEntityModal(type = "expense", id = null, prefill = null) {'
-          new_sig = '    function openEntityModal(type = "expense", id = null, prefill = null, contextual = false) {'
-          if old_sig not in text:
-              raise SystemExit('openEntityModal signature not found')
-          text = text.replace(old_sig, new_sig, 1)
-
-          old_title = '      document.getElementById("entityModalTitle").textContent = editing ? `Modifier · ${entityLabel(type)}` : "Ajouter";'
-          new_title = '      document.getElementById("entityModalTitle").textContent = editing ? `Modifier · ${entityLabel(type)}` : (contextual ? `Ajouter · ${entityLabel(type)}` : "Ajouter");'
-          if old_title not in text:
-              raise SystemExit('entity modal title line not found')
-          text = text.replace(old_title, new_title, 1)
-
-          old_selector = '''      const typeSelector = editing ? `<input type="hidden" name="entityType" value="${type}">` : `
-        <div class="field">
-          <label for="entityType">Type</label>
-          <select id="entityType" name="entityType">
-            ${optionTags([
-              {value:"expense",label:"Dépense"},{value:"income",label:"Revenu"},{value:"fixed",label:"Charge fixe"},{value:"credit",label:"Crédit"},{value:"project",label:"Projet d'épargne"},{value:"envelope",label:"Enveloppe budgétaire"}
-            ], type)}
-          </select>
-        </div>`;'''
-          new_selector = '''      const typeSelector = (editing || contextual) ? `<input type="hidden" name="entityType" value="${type}">` : `
-        <div class="field">
-          <label for="entityType">Type</label>
-          <select id="entityType" name="entityType">
-            ${optionTags([
-              {value:"expense",label:"Dépense"},{value:"income",label:"Revenu"},{value:"fixed",label:"Charge fixe"},{value:"credit",label:"Crédit"},{value:"project",label:"Projet d'épargne"},{value:"envelope",label:"Enveloppe budgétaire"}
-            ], type)}
-          </select>
-        </div>`;'''
-          if old_selector not in text:
-              raise SystemExit('type selector block not found')
-          text = text.replace(old_selector, new_selector, 1)
-
-          old_fixed = '''          <div class="field-row">
-            <div class="field"><label>Montant mensuel (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
-            <div class="field"><label>Jour de prélèvement</label><input name="day" type="number" min="1" max="31" required value="${data.day ?? new Date().getDate()}"></div>
-          </div>
-          <label class="checkbox-row"><input name="active" type="checkbox" ${data.active !== false ? "checked" : ""}><span>Charge active</span></label>`;'''
-          new_fixed = '''          <div class="field-row">
-            <div class="field"><label>Montant mensuel (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
-            <div class="field"><label>Jour de prélèvement</label><input name="day" type="number" min="1" max="31" required value="${data.day ?? new Date().getDate()}"></div>
-          </div>`;'''
-          if old_fixed not in text:
-              raise SystemExit('fixed charge fields block not found')
-          text = text.replace(old_fixed, new_fixed, 1)
-
-          old_fixed_submit = '          day: clamp(Math.round(safeNumber(fd.get("day"), 1)), 1, 31), bucket: "needs", active: fd.get("active") === "on",'
-          new_fixed_submit = '          day: clamp(Math.round(safeNumber(fd.get("day"), 1)), 1, 31), bucket: "needs", active: true,'
-          if old_fixed_submit not in text:
-              raise SystemExit('fixed charge submit line not found')
-          text = text.replace(old_fixed_submit, new_fixed_submit, 1)
-
-          old_fab = '    fabAdd?.addEventListener("click", () => openEntityModal("expense"));'
-          new_fab = '''    fabAdd?.addEventListener("click", () => {
-      if (currentScreen === "income") openEntityModal("income", null, null, true);
-      else if (currentScreen === "expenses" || currentScreen === "home") openEntityModal("expense", null, null, true);
-      else openEntityModal("expense");
-    });'''
-          if old_fab not in text:
-              raise SystemExit('FAB listener not found')
-          text = text.replace(old_fab, new_fab, 1)
-
-          old_add = '      if (add) openEntityModal(add.dataset.addType);'
-          new_add = '      if (add) openEntityModal(add.dataset.addType, null, null, true);'
-          if old_add not in text:
-              raise SystemExit('context add listener not found')
-          text = text.replace(old_add, new_add, 1)
-
-          p.write_text(text, encoding='utf-8')
-          PY
+      - name: Patch contextual add sheet
+        run: python .github/scripts/contextual_add.py
       - name: Validate and commit
-        shell: bash
         run: |
           git diff --check
           git config user.name "github-actions[bot]"
