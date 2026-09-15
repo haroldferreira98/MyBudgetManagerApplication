@@ -1,0 +1,152 @@
+name: Compact home summary
+
+on:
+  push:
+    paths:
+      - '.github/workflows/compact-home-summary.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch home summary and nav position
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          # Move the floating pill as low as possible while staying above the iPhone safe area.
+          old_nav = '''    .nav-wrap {
+      position: fixed;
+      z-index: 40;
+      left: 50%;
+      bottom: calc(8px + var(--safe-bottom));
+      transform: translateX(-50%);
+      width: min(calc(100% - 24px), 720px);
+      pointer-events: none;
+    }
+    .bottom-nav {
+      height: var(--nav-height);
+      padding: 8px 10px;
+      border-radius: 32px;'''
+          new_nav = '''    .nav-wrap {
+      position: fixed;
+      z-index: 40;
+      left: 50%;
+      bottom: var(--safe-bottom);
+      transform: translateX(-50%);
+      width: min(calc(100% - 20px), 720px);
+      pointer-events: none;
+    }
+    .bottom-nav {
+      height: calc(var(--nav-height) - 4px);
+      padding: 6px 10px;
+      border-radius: 32px;'''
+          if old_nav not in s:
+              raise SystemExit('nav block not found')
+          s = s.replace(old_nav, new_nav, 1)
+
+          # Compact three-number summary in one visual card.
+          marker = '''    .metric-note { margin-top: 6px; color: var(--on-surface-variant); font-size: 12px; }
+'''
+          extra = '''    .home-summary-section { margin-top: 14px; margin-bottom: 18px; }
+    .summary-card { padding: 18px; }
+    .summary-card .hero-value { font-size: clamp(36px, 10vw, 48px); margin-top: 6px; }
+    .summary-card .hero-meta { margin-top: 14px; gap: 8px; flex-wrap: nowrap; }
+    .summary-card .daily-pill, .summary-card .status-pill { min-height: 32px; padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+    .summary-card .hero-privacy-btn { width: 40px; height: 40px; top: 12px; right: 12px; }
+    .summary-bottom {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid color-mix(in srgb, var(--on-primary-container) 14%, transparent);
+    }
+    .summary-mini {
+      min-width: 0;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--surface-container-lowest) 58%, transparent);
+    }
+    .summary-mini-label { color: var(--on-surface-variant); font-size: 11px; font-weight: 600; }
+    .summary-mini-value { display: block; margin-top: 3px; color: var(--on-primary-container); font-size: 19px; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .summary-mini-note { margin-top: 2px; color: var(--on-surface-variant); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+'''
+          if extra not in s:
+              if marker not in s:
+                  raise SystemExit('summary css marker not found')
+              s = s.replace(marker, marker + extra, 1)
+
+          old_home = '''        <div class="section">
+          <div class="card hero-card">
+            <button class="icon-btn hero-privacy-btn" id="privacyBtn" type="button" aria-label="Masquer les montants" title="Masquer les montants"><span class="material-symbols-outlined" id="privacyIcon">visibility</span></button>
+            <div class="hero-label">Reste à vivre ce mois-ci</div>
+            <div class="hero-value money">${formatMoney(s.remaining)}</div>
+            <div class="hero-meta">
+              <span class="daily-pill"><span class="material-symbols-outlined">today</span><span class="money">${formatMoney(s.daily)}</span>/jour · ${days} jour${days > 1 ? "s" : ""}</span>
+              <span class="status-pill ${status.key}"><span class="material-symbols-outlined">${status.icon}</span>${status.label}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="grid-2">
+            <div class="card metric-card">
+              <div class="metric-label">Revenus</div>
+              <div class="metric-value money">${formatMoney(s.income)}</div>
+              <div class="metric-note">Total du mois en cours</div>
+            </div>
+            <div class="card metric-card">
+              <div class="metric-label">Total engagé</div>
+              <div class="metric-value money">${formatMoney(s.engaged)}</div>
+              <div class="metric-note">Charges + crédits + projets + dépenses</div>
+            </div>
+          </div>
+        </div>'''
+          new_home = '''        <div class="section home-summary-section">
+          <div class="card hero-card summary-card">
+            <button class="icon-btn hero-privacy-btn" id="privacyBtn" type="button" aria-label="Masquer les montants" title="Masquer les montants"><span class="material-symbols-outlined" id="privacyIcon">visibility</span></button>
+            <div class="hero-label">Reste à vivre ce mois-ci</div>
+            <div class="hero-value money">${formatMoney(s.remaining)}</div>
+            <div class="hero-meta">
+              <span class="daily-pill"><span class="material-symbols-outlined">today</span><span class="money">${formatMoney(s.daily)}</span>/jour · ${days} jour${days > 1 ? "s" : ""}</span>
+              <span class="status-pill ${status.key}"><span class="material-symbols-outlined">${status.icon}</span>${status.label}</span>
+            </div>
+            <div class="summary-bottom">
+              <div class="summary-mini">
+                <span class="summary-mini-label">Revenus</span>
+                <strong class="summary-mini-value money">${formatMoney(s.income)}</strong>
+                <div class="summary-mini-note">Ce mois</div>
+              </div>
+              <div class="summary-mini">
+                <span class="summary-mini-label">Total engagé</span>
+                <strong class="summary-mini-value money">${formatMoney(s.engaged)}</strong>
+                <div class="summary-mini-note">Charges + crédits + dépenses</div>
+              </div>
+            </div>
+          </div>
+        </div>'''
+          if old_home not in s:
+              raise SystemExit('home summary block not found')
+          s = s.replace(old_home, new_home, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Validate
+        run: git diff --check
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Compact home financial summary and lower nav"
+          git push
