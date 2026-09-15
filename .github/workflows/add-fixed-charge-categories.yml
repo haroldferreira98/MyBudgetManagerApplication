@@ -1,0 +1,118 @@
+name: Add fixed charge categories
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/add-fixed-charge-categories.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Add fixed charge categories
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          income_anchor = '    const INCOME_CATEGORIES = ["Salaire", "Prime", "Bonus", "Remboursement mutuelle", "Remboursement sécurité sociale", "Aide au logement", "Prime d’activité", "Allocations familiales", "Chômage", "Indemnités maladie", "Revenus freelance", "Revenus locatifs", "Intérêts", "Dividendes", "Remboursement d’un proche", "Vente"];'
+          fixed_line = '    const FIXED_CHARGE_CATEGORIES = ["Loyer", "Assurances", "Abonnements", "Forfait mobile", "Forfait internet", "Cotisations bancaires", "Électricité", "Gaz", "Eau", "Mutuelle", "Transport", "Parking", "Charges de copropriété", "Taxe foncière", "Frais de garde", "Pension alimentaire"];'
+          if fixed_line not in s:
+              if income_anchor not in s:
+                  raise SystemExit('income category anchor not found')
+              s = s.replace(income_anchor, income_anchor + '\n' + fixed_line, 1)
+
+          old_fields = '''      } else if (type === "fixed") {
+        fields = `
+          <div class="field"><label>Libellé</label><input name="label" required maxlength="80" value="${escapeHtml(data.label || "")}" placeholder="Ex. Loyer"></div>
+          <div class="field-row">
+            <div class="field"><label>Montant mensuel (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
+            <div class="field"><label>Jour de prélèvement</label><input name="day" type="number" min="1" max="31" required value="${data.day ?? new Date().getDate()}"></div>
+          </div>`;'''
+          new_fields = '''      } else if (type === "fixed") {
+        fields = `
+          <div class="field"><label>Libellé</label><input name="label" required maxlength="80" value="${escapeHtml(data.label || "")}" placeholder="Ex. Loyer"></div>
+          <div class="field-row">
+            <div class="field"><label>Montant mensuel (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
+            <div class="field"><label>Jour de prélèvement</label><input name="day" type="number" min="1" max="31" required value="${data.day ?? new Date().getDate()}"></div>
+          </div>
+          <div class="field"><label>Catégorie</label><select name="category" required><option value="" disabled ${data.category ? "" : "selected"}>Choisir une catégorie</option>${optionTags(FIXED_CHARGE_CATEGORIES, data.category || "")}</select></div>`;'''
+          if old_fields in s:
+              s = s.replace(old_fields, new_fields, 1)
+          elif 'optionTags(FIXED_CHARGE_CATEGORIES' not in s:
+              raise SystemExit('fixed fields block not found')
+
+          old_submit = '''      } else if (type === "fixed") {
+        item = {
+          id: id || uid("fix"), label: String(fd.get("label") || "").trim(), amount: safeNumber(fd.get("amount")),
+          day: clamp(Math.round(safeNumber(fd.get("day"), 1)), 1, 31), bucket: "needs", active: true,
+          paidMonths: current?.paidMonths || []
+        };'''
+          new_submit = '''      } else if (type === "fixed") {
+        item = {
+          id: id || uid("fix"), label: String(fd.get("label") || "").trim(), amount: safeNumber(fd.get("amount")),
+          category: String(fd.get("category") || "").trim(),
+          day: clamp(Math.round(safeNumber(fd.get("day"), 1)), 1, 31), bucket: "needs", active: true,
+          paidMonths: current?.paidMonths || []
+        };'''
+          if old_submit in s:
+              s = s.replace(old_submit, new_submit, 1)
+          elif 'category: String(fd.get("category") || "").trim(),' not in s:
+              raise SystemExit('fixed submit block not found')
+
+          old_charge_sub = '<div class="list-sub">Jour ${safeNumber(charge.day, 1)} · ${paid ? "Prélevé" : "À venir"}</div>'
+          new_charge_sub = '<div class="list-sub">${charge.category ? `${escapeHtml(charge.category)} · ` : ""}Jour ${safeNumber(charge.day, 1)} · ${paid ? "Prélevé" : "À venir"}</div>'
+          if old_charge_sub in s:
+              s = s.replace(old_charge_sub, new_charge_sub, 1)
+
+          old_search = '''      state.fixedCharges.forEach(item => rows.push({
+        type: "fixed", id: item.id, icon: "event_repeat", kind: "Charge fixe", title: item.label,
+        subtitle: `Jour ${safeNumber(item.day, 1)}`, amount: -safeNumber(item.amount),
+        haystack: [item.label, "charge fixe", "charges fixes", item.day, ...amountTokens(item.amount)].join(" ")
+      }));'''
+          new_search = '''      state.fixedCharges.forEach(item => rows.push({
+        type: "fixed", id: item.id, icon: "event_repeat", kind: "Charge fixe", title: item.label,
+        subtitle: `${item.category ? `${item.category} · ` : ""}Jour ${safeNumber(item.day, 1)}`, amount: -safeNumber(item.amount),
+        haystack: [item.label, item.category || "", "charge fixe", "charges fixes", item.day, ...amountTokens(item.amount)].join(" ")
+      }));'''
+          if old_search in s:
+              s = s.replace(old_search, new_search, 1)
+
+          old_csv = 'state.fixedCharges.forEach(x => rows.push(["charge_fixe",x.id,x.label,x.amount,"","",x.bucket,x.day,x.active !== false,"","","","","","","",""]));'
+          new_csv = 'state.fixedCharges.forEach(x => rows.push(["charge_fixe",x.id,x.label,x.amount,"",x.category || "",x.bucket,x.day,x.active !== false,"","","","","","","",""]));'
+          if old_csv in s:
+              s = s.replace(old_csv, new_csv, 1)
+
+          old_migration = '      output.fixedCharges = output.fixedCharges.map(item => ({ ...item, paidMonths: Array.isArray(item.paidMonths) ? item.paidMonths : [] }));'
+          new_migration = '      output.fixedCharges = output.fixedCharges.map(item => ({ ...item, category: item.category || "", paidMonths: Array.isArray(item.paidMonths) ? item.paidMonths : [] }));'
+          if old_migration in s:
+              s = s.replace(old_migration, new_migration, 1)
+
+          required = [
+              'const FIXED_CHARGE_CATEGORIES =',
+              'Taxe foncière',
+              'optionTags(FIXED_CHARGE_CATEGORIES',
+              'category: String(fd.get("category") || "").trim(),'
+          ]
+          for marker in required:
+              if marker not in s:
+                  raise SystemExit(f'missing expected marker: {marker}')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          rm -f .github/workflows/add-fixed-charge-categories.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/add-fixed-charge-categories.yml
+          git commit -m "Add fixed charge categories"
+          git push origin main
