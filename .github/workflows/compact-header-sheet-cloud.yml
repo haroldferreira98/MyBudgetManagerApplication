@@ -1,0 +1,84 @@
+name: Compact header sheet and cloud UX
+
+on:
+  push:
+    paths:
+      - '.github/workflows/compact-header-sheet-cloud.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch UI
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          s = s.replace('      showSnackbar("Données cloud chargées.");\n', '')
+
+          css = '''
+
+    /* COMPACT-HEADER-SHEET-CLOUD-V1 */
+    .topbar {
+      padding: calc(8px + var(--safe-top)) 18px 8px !important;
+      gap: 10px !important;
+    }
+    .topbar .top-account-btn,
+    .topbar .icon-btn {
+      width: 42px !important;
+      height: 42px !important;
+      flex: 0 0 42px !important;
+    }
+    .brand-eyebrow {
+      margin-bottom: 0 !important;
+      font-size: 11px !important;
+    }
+    .brand-title {
+      font-size: clamp(23px, 6.7vw, 30px) !important;
+    }
+    #screen-home > .home-search-wrap {
+      margin: -8px -16px 10px !important;
+      padding: 4px 16px 10px !important;
+    }
+    #screen-home > .home-search-wrap .search-shell {
+      min-height: 50px !important;
+      padding: 5px 8px 5px 14px !important;
+    }
+
+    #entityModal[data-entity-type="expense"] .sheet {
+      height: auto !important;
+      max-height: min(52dvh, 610px) !important;
+    }
+    #entityModal[data-entity-type="expense"] .sheet-body {
+      flex: 0 1 auto !important;
+      padding-bottom: 8px !important;
+    }
+    #entityModal[data-entity-type="expense"] form {
+      margin: 0 !important;
+    }
+    #entityModal[data-entity-type="expense"] .modal-actions {
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+    }
+'''
+          if '/* COMPACT-HEADER-SHEET-CLOUD-V1 */' not in s:
+              s = s.replace('</style>', css + '\n</style>', 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Compact home header and expense sheet"
+          git push
