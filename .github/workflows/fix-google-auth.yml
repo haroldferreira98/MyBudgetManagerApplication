@@ -1,0 +1,52 @@
+name: Fix Google auth flow
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-google-auth.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch Firebase auth
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+
+          text = text.replace('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js','https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js')
+          text = text.replace('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js','https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js')
+          text = text.replace('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js','https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js')
+
+          text = text.replace('''        await authMod.getRedirectResult(auth);\n''','')
+
+          old = '''    async function signInWithGoogle() {\n      if (!cloud) {\n        showSnackbar("Firebase doit d'abord être configuré.");\n        return;\n      }\n      await cloud.authMod.signInWithRedirect(cloud.auth, cloud.provider);\n    }\n'''
+          new = '''    function firebaseAuthErrorMessage(error) {\n      const code = error?.code || "";\n      if (code === "auth/unauthorized-domain") return "Domaine non autorisé dans Firebase Authentication.";\n      if (code === "auth/operation-not-allowed") return "Connexion Google non activée dans Firebase Authentication.";\n      if (code === "auth/popup-blocked") return "La fenêtre Google a été bloquée par le navigateur.";\n      if (code === "auth/popup-closed-by-user") return "Connexion Google annulée.";\n      if (code === "auth/network-request-failed") return "Erreur réseau pendant la connexion Google.";\n      return code ? `Connexion Google impossible (${code}).` : "Connexion Google impossible.";\n    }\n\n    async function signInWithGoogle() {\n      if (!cloud) {\n        showSnackbar("Firebase doit d'abord être configuré.");\n        return;\n      }\n      try {\n        await cloud.authMod.signInWithPopup(cloud.auth, cloud.provider);\n      } catch (error) {\n        console.error("Connexion Google impossible", error);\n        showSnackbar(firebaseAuthErrorMessage(error));\n      }\n    }\n'''
+          if old not in text:
+              raise SystemExit('signInWithGoogle block not found')
+          text = text.replace(old, new, 1)
+
+          old_click = '''      if (event.target.id === "googleSignInBtn" || event.target.closest("#googleSignInBtn")) signInWithGoogle().catch(error => { console.error(error); showSnackbar("Connexion Google impossible."); });\n'''
+          new_click = '''      if (event.target.id === "googleSignInBtn" || event.target.closest("#googleSignInBtn")) signInWithGoogle();\n'''
+          if old_click not in text:
+              raise SystemExit('Google click handler not found')
+          text = text.replace(old_click, new_click, 1)
+
+          p.write_text(text, encoding='utf-8')
+          PY
+      - run: git diff --check
+      - name: Commit auth fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix Google sign-in on Safari and Vercel"
+          git push
