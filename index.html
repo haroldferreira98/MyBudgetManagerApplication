@@ -1055,6 +1055,9 @@
     .voice-action-btn:disabled { opacity: .42; cursor: default; }
     .voice-action-btn .material-symbols-outlined { font-size: 20px; }
 
+    /* VOICE-FEATURE-REMOVED */
+    #voiceHud { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -2604,13 +2607,6 @@
       // iOS/WebKit can leave SpeechRecognition unusable after the first session.
       // Persist Firebase first, then reload the page so the next voice operation
       // starts with a fresh browser speech-recognition context.
-      const reloadAfterVoiceSave = () => setTimeout(() => {
-        // JavaScript cannot trigger Safari's exact Cmd+Shift+R command.
-        // A unique navigation URL gives us a fresh document and voice context.
-        const url = new URL(window.location.href);
-        url.searchParams.set("__voice_hard_reload", Date.now().toString());
-        window.location.replace(url.toString());
-      }, 220);
       if (cloud && cloudUser) {
         clearTimeout(cloudSaveTimer);
         writeCloudState()
@@ -2735,31 +2731,9 @@
       else doStart();
     }
 
+
     function startVoiceRecognition(options = {}) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        setVoiceHud(false);
-        showSnackbar("La reconnaissance vocale n’est pas disponible dans ce navigateur.");
-        return;
-      }
-      if (voiceSessionActive) {
-        setVoiceHud(true, "Je vous écoute…");
-        // If the UI is active but WebKit silently lost its recognizer, revive it.
-        if (!recognition && !voiceRestartTimer) startRecognitionCycle(SpeechRecognition);
-        return;
-      }
-      try { recognition?.abort(); } catch (_) {}
-      recognition = null;
-      clearVoiceRestartTimer();
-      clearVoiceStartWatchdog();
-      voiceCycleSerial += 1;
-      voiceSessionActive = true;
-      voiceFinalTranscript = "";
-      voiceInterimTranscript = "";
-      voicePendingParsed = null;
-      updateVoiceCandidate();
-      setVoiceHud(true, "Activation du micro…", "Parlez naturellement. Le micro restera actif jusqu’à Valider ou Annuler.");
-      startRecognitionCycle(SpeechRecognition);
+      openEntityModal("expense");
     }
 
     function exportJSON() {
@@ -2858,7 +2832,7 @@
       fabHoldTimer = setTimeout(() => {
         fabLongPress = true;
         navigator.vibrate?.(18);
-        startVoiceRecognition({ source: "fab" });
+        openEntityModal("expense");
       }, 460);
     });
     fabAdd?.addEventListener("pointerup", event => {
