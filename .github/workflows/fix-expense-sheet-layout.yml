@@ -1,0 +1,97 @@
+name: Fix expense sheet spacing on iPhone
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-expense-sheet-layout.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch expense sheet layout
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          marker = '</style>'
+          css = r'''
+
+    /* EXPENSE-SHEET-IOS-FIX */
+    #entityModal[data-entity-type="expense"] .sheet {
+      width: calc(100% - 12px) !important;
+      max-width: 748px;
+      max-height: min(52dvh, 610px) !important;
+      margin-inline: 6px !important;
+    }
+    #entityModal[data-entity-type="expense"] .sheet-body {
+      padding-left: 20px !important;
+      padding-right: 20px !important;
+      overflow-x: hidden !important;
+    }
+    #entityModal[data-entity-type="expense"] .field-row {
+      display: grid !important;
+      grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr) !important;
+      gap: 12px !important;
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+    #entityModal[data-entity-type="expense"] .field-row > .field {
+      min-width: 0 !important;
+      width: auto !important;
+      max-width: 100% !important;
+      contain: inline-size;
+      overflow: hidden;
+    }
+    #entityModal[data-entity-type="expense"] .field-row input {
+      display: block !important;
+      inline-size: 100% !important;
+      width: 100% !important;
+      min-inline-size: 0 !important;
+      min-width: 0 !important;
+      max-inline-size: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    #entityModal[data-entity-type="expense"] input[type="date"] {
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding-right: 10px !important;
+    }
+    #entityModal[data-entity-type="expense"] input[type="date"]::-webkit-date-and-time-value {
+      min-width: 0 !important;
+      width: 100% !important;
+      text-align: left !important;
+    }
+    #entityModal[data-entity-type="expense"] .field {
+      margin-top: 6px !important;
+      margin-bottom: 6px !important;
+    }
+    #entityModal[data-entity-type="expense"] .modal-actions {
+      padding-top: 8px !important;
+      margin-top: 2px !important;
+    }
+'''
+          if '/* EXPENSE-SHEET-IOS-FIX */' not in text:
+              text = text.replace(marker, css + '\n' + marker, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix expense sheet spacing on iPhone"
+          git push
