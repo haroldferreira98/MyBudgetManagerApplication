@@ -325,6 +325,67 @@
     .summary-mini-label { color: var(--on-surface-variant); font-size: 11px; font-weight: 600; }
     .summary-mini-value { display: block; margin-top: 3px; color: var(--on-primary-container); font-size: 19px; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .summary-mini-note { margin-top: 2px; color: var(--on-surface-variant); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .summary-card::after { display: none; }
+    .balance-section-subtitle {
+      white-space: nowrap;
+      font-size: clamp(10.5px, 3.1vw, 12px);
+      letter-spacing: -.01em;
+    }
+    .month-switcher {
+      height: 46px;
+      display: grid;
+      grid-template-columns: 42px minmax(0,1fr) 42px;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 5px;
+      margin: 4px 0 12px;
+      border-radius: var(--pill);
+      background: var(--surface-container-low);
+      border: 1px solid color-mix(in srgb, var(--outline-variant) 55%, transparent);
+    }
+    .month-switcher button {
+      border: 0;
+      background: transparent;
+      color: var(--on-surface);
+      cursor: pointer;
+    }
+    .month-arrow {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+    }
+    .month-arrow:active { background: var(--surface-container-highest); }
+    .month-current {
+      min-width: 0;
+      height: 38px;
+      border-radius: var(--pill);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+      text-transform: capitalize;
+    }
+    .month-current .material-symbols-outlined { font-size: 19px; color: var(--primary); }
+
+    #entityModal[data-entity-type="expense"] .sheet {
+      height: min(52dvh, 500px);
+      max-height: min(52dvh, 500px);
+    }
+    #entityModal[data-entity-type="expense"] .sheet-head { padding-top: 5px; padding-bottom: 4px; }
+    #entityModal[data-entity-type="expense"] .sheet-title { font-size: 20px; }
+    #entityModal[data-entity-type="expense"] .sheet-body { flex: 1; min-height: 0; padding-top: 2px; padding-bottom: 10px; }
+    #entityModal[data-entity-type="expense"] .field { gap: 4px; margin: 7px 0; }
+    #entityModal[data-entity-type="expense"] .field label { font-size: 12px; }
+    #entityModal[data-entity-type="expense"] .field input,
+    #entityModal[data-entity-type="expense"] .field select { min-height: 44px; padding: 8px 11px; border-radius: 15px; }
+    #entityModal[data-entity-type="expense"] .field-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    #entityModal[data-entity-type="expense"] .modal-actions { padding-top: 7px; }
+    #entityModal[data-entity-type="expense"] .modal-actions .btn { min-height: 46px; }
 
     .progress-track {
       width: 100%;
@@ -824,6 +885,7 @@
     let cloudUser = null;
     let cloudSaveTimer = null;
     let applyingCloudState = false;
+    let selectedMonth = monthKey();
 
     const euro = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const shortDate = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
@@ -856,13 +918,50 @@
 
     function isCurrentMonth(dateString) {
       if (!dateString) return false;
-      return monthKey(dateString) === monthKey();
+      return monthKey(dateString) === selectedMonth;
     }
 
-    function daysRemainingInMonth() {
-      const now = new Date();
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      return Math.max(1, lastDay - now.getDate() + 1);
+    function selectedMonthDate() {
+      const [year, month] = selectedMonth.split("-").map(Number);
+      return new Date(year, month - 1, 1, 12, 0, 0);
+    }
+
+    function selectedMonthLabel() {
+      const label = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(selectedMonthDate());
+      return label.charAt(0).toUpperCase() + label.slice(1);
+    }
+
+    function daysInSelectedMonth() {
+      const [year, month] = selectedMonth.split("-").map(Number);
+      return new Date(year, month, 0).getDate();
+    }
+
+    function averageDayCount() {
+      const current = monthKey();
+      if (selectedMonth === current) return Math.max(1, new Date().getDate());
+      return Math.max(1, daysInSelectedMonth());
+    }
+
+    function defaultDateForSelectedMonth() {
+      if (selectedMonth === monthKey()) return todayISO();
+      const todayDay = new Date().getDate();
+      return `${selectedMonth}-${String(Math.min(todayDay, daysInSelectedMonth())).padStart(2, "0")}`;
+    }
+
+    function shiftSelectedMonth(delta) {
+      const date = selectedMonthDate();
+      date.setMonth(date.getMonth() + Number(delta || 0));
+      selectedMonth = monthKey(date);
+      renderAll();
+    }
+
+    function renderMonthSwitcher() {
+      return `
+        <div class="month-switcher" aria-label="Mois affiché">
+          <button class="month-arrow" type="button" data-month-shift="-1" aria-label="Mois précédent"><span class="material-symbols-outlined">chevron_left</span></button>
+          <button class="month-current" type="button" data-month-today aria-label="Revenir au mois actuel"><span class="material-symbols-outlined">calendar_month</span><span>${escapeHtml(selectedMonthLabel())}</span></button>
+          <button class="month-arrow" type="button" data-month-shift="1" aria-label="Mois suivant"><span class="material-symbols-outlined">chevron_right</span></button>
+        </div>`;
     }
 
     function formatMoney(value) {
@@ -1135,7 +1234,7 @@
       const projects = sum(activeProjects(), x => x.monthlyAllocation);
       const engaged = fixed + credits + projects + expenses;
       const remaining = income - engaged;
-      const daily = remaining / daysRemainingInMonth();
+      const daily = expenses / averageDayCount();
 
       return {
         income, expenses, fixed, credits, projects, engaged, remaining, daily,
@@ -1229,7 +1328,6 @@
       const container = document.getElementById("screen-home");
       const s = financialSnapshot();
       const status = financialStatus(s);
-      const days = daysRemainingInMonth();
       const charges = [...activeFixedCharges()].sort((a,b) => safeNumber(a.day, 1) - safeNumber(b.day, 1));
 
       const bucketCards = [
@@ -1251,7 +1349,7 @@
       }).join("");
 
       const chargesHtml = charges.length ? charges.map(charge => {
-        const paid = (charge.paidMonths || []).includes(monthKey());
+        const paid = (charge.paidMonths || []).includes(selectedMonth);
         return `
           <div class="list-item">
             <div class="list-icon"><span class="material-symbols-outlined">${paid ? "check_circle" : "event"}</span></div>
@@ -1276,6 +1374,7 @@
           </div>
           ${renderGlobalSearchResults(globalSearch)}
         </div>
+        ${renderMonthSwitcher()}
 
         <div class="section home-summary-section">
           <div class="card hero-card summary-card">
@@ -1283,7 +1382,7 @@
             <div class="hero-label">Reste à vivre ce mois-ci</div>
             <div class="hero-value money">${formatMoney(s.remaining)}</div>
             <div class="hero-meta">
-              <span class="daily-pill"><span class="material-symbols-outlined">today</span><span class="money">${formatMoney(s.daily)}</span>/jour · ${days} jour${days > 1 ? "s" : ""}</span>
+              <span class="daily-pill"><span class="material-symbols-outlined">monitoring</span>Dépenses moy. <span class="money">${formatMoney(s.daily)}</span>/jour</span>
               <span class="status-pill ${status.key}"><span class="material-symbols-outlined">${status.icon}</span>${status.label}</span>
             </div>
             <div class="summary-bottom">
@@ -1293,16 +1392,16 @@
                 <div class="summary-mini-note">Ce mois</div>
               </div>
               <div class="summary-mini">
-                <span class="summary-mini-label">Total engagé</span>
+                <span class="summary-mini-label">Dépenses</span>
                 <strong class="summary-mini-value money">${formatMoney(s.engaged)}</strong>
-                <div class="summary-mini-note">Charges + crédits + dépenses</div>
+                <div class="summary-mini-note">Total du mois</div>
               </div>
             </div>
           </div>
         </div>
 
         <div class="section">
-          <div class="section-header"><div><h2 class="section-title">Équilibre 50 / 30 / 20</h2><p class="section-subtitle">50 % charges fixes · 30 % dépenses courantes · 20 % épargne.</p></div></div>
+          <div class="section-header"><div><h2 class="section-title">Équilibre 50 / 30 / 20</h2><p class="section-subtitle balance-section-subtitle">50% fixes · 30% quotidien · 20% disponible</p></div></div>
           <div class="card">${bucketCards}</div>
         </div>
 
@@ -1331,7 +1430,7 @@
 
     function renderIncome() {
       const container = document.getElementById("screen-income");
-      const items = [...state.incomes].sort((a,b) => String(b.date).localeCompare(String(a.date)));
+      const items = [...currentMonthIncomes()].sort((a,b) => String(b.date).localeCompare(String(a.date)));
       const currentTotal = sum(currentMonthIncomes(), x => x.amount);
       const listHtml = items.length ? items.map(item => `
         <div class="list-item">
@@ -1345,11 +1444,12 @@
         </div>`).join("") : emptyState("payments", "Aucun revenu", "Ajoute un salaire, un remboursement ou tout autre revenu.");
 
       container.innerHTML = `
+        ${renderMonthSwitcher()}
         <div class="section">
           <div class="card hero-card">
             <div class="hero-label">Revenus du mois</div>
             <div class="hero-value money">${formatMoney(currentTotal)}</div>
-            <div class="hero-meta"><span class="daily-pill"><span class="material-symbols-outlined">calendar_month</span>${escapeHtml(new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date()))}</span></div>
+            <div class="hero-meta"><span class="daily-pill"><span class="material-symbols-outlined">calendar_month</span>${escapeHtml(selectedMonthLabel())}</span></div>
           </div>
         </div>
         <div class="section">
@@ -1361,7 +1461,7 @@
     function renderExpenses() {
       const container = document.getElementById("screen-expenses");
       const normalizedSearch = expenseSearch.trim().toLowerCase();
-      const filtered = [...state.expenses]
+      const filtered = [...currentMonthExpenses()]
         .filter(item => expenseFilter === "Toutes" || item.category === expenseFilter)
         .filter(item => !normalizedSearch || `${item.label} ${item.category}`.toLowerCase().includes(normalizedSearch))
         .sort((a,b) => String(b.date).localeCompare(String(a.date)));
@@ -1380,6 +1480,7 @@
       const chips = ["Toutes", ...EXPENSE_CATEGORIES].map(cat => `<button class="chip ${expenseFilter === cat ? "active" : ""}" data-expense-filter="${cat}">${cat}</button>`).join("");
 
       container.innerHTML = `
+        ${renderMonthSwitcher()}
         <div class="section">
           <div class="search-shell">
             <span class="material-symbols-outlined">search</span>
@@ -1521,7 +1622,7 @@
 
 
         <div class="section">
-          <div class="section-header"><div><h2 class="section-title">Sauvegarde & données</h2><p class="section-subtitle">Les données restent sur cet appareil tant que tu ne les exportes pas.</p></div></div>
+          <div class="section-header"><div><h2 class="section-title">Sauvegarde & données</h2><p class="section-subtitle">Firebase synchronise automatiquement le compte Google connecté.</p></div></div>
           <div class="card">
             <div class="backup-actions">
               <button class="btn tonal" id="exportJsonBtn" aria-label="Exporter JSON"><span class="material-symbols-outlined">download</span>JSON</button>
@@ -1530,8 +1631,8 @@
             </div>
           </div>
           <div class="card danger-zone">
-            <div class="section-header" style="margin:0 0 10px"><div><h3 class="section-title" style="font-size:16px">Réinitialisation complète</h3><p class="section-subtitle">Supprime toutes les données locales de cette application.</p></div></div>
-            <button class="btn danger" id="resetBtn"><span class="material-symbols-outlined">delete_forever</span>Tout effacer</button>
+            <div class="section-header" style="margin:0 0 10px"><div><h3 class="section-title" style="font-size:16px">Supprimer mes données</h3><p class="section-subtitle">Efface les données de ce budget dans Firebase pour le compte Google connecté.</p></div></div>
+            <button class="btn danger" id="deleteCloudDataBtn" ${cloudUser ? "" : "disabled"}><span class="material-symbols-outlined">delete_forever</span>${cloudUser ? "Tout supprimer du cloud" : "Connexion Google requise"}</button>
           </div>
         </div>`;
     }
@@ -1604,6 +1705,8 @@
       const data = existing ? { ...existing } : { ...(prefill || {}) };
       const editing = !!existing;
       const form = document.getElementById("entityForm");
+      const entityModal = document.getElementById("entityModal");
+      entityModal.dataset.entityType = type;
       document.getElementById("entityModalTitle").textContent = editing ? `Modifier · ${entityLabel(type)}` : "Ajouter";
 
       const typeSelector = editing ? `<input type="hidden" name="entityType" value="${type}">` : `
@@ -1621,14 +1724,17 @@
       renderEntityFields(type, data, editing);
 
       const selector = form.querySelector("#entityType");
-      if (selector) selector.addEventListener("change", e => renderEntityFields(e.target.value, {}, false));
+      if (selector) selector.addEventListener("change", e => {
+        entityModal.dataset.entityType = e.target.value;
+        renderEntityFields(e.target.value, {}, false);
+      });
       openModal("entityModal");
     }
 
     function renderEntityFields(type, data = {}, editing = false) {
       const target = document.getElementById("dynamicFields");
       if (!target) return;
-      const today = todayISO();
+      const today = defaultDateForSelectedMonth();
       const commonBucket = data.bucket || "needs";
       let fields = "";
 
@@ -1780,7 +1886,7 @@
     function toggleChargePaid(id) {
       const charge = state.fixedCharges.find(x => x.id === id);
       if (!charge) return;
-      const mk = monthKey();
+      const mk = selectedMonth;
       charge.paidMonths = Array.isArray(charge.paidMonths) ? charge.paidMonths : [];
       if (charge.paidMonths.includes(mk)) charge.paidMonths = charge.paidMonths.filter(x => x !== mk);
       else charge.paidMonths.push(mk);
@@ -1907,7 +2013,7 @@
           id: uid("inc"),
           label: merchant ? capitalizeWords(merchant) : "Revenu vocal",
           amount: numberAmount,
-          date: todayISO()
+          date: defaultDateForSelectedMonth()
         };
         return { ok: true, type: "income", item: income, message: `Revenu de ${formatMoney(numberAmount)} ajouté.` };
       }
@@ -1918,7 +2024,7 @@
         id: uid("exp"),
         label: merchant ? capitalizeWords(merchant) : "Dépense vocale",
         amount: numberAmount,
-        date: todayISO(),
+        date: defaultDateForSelectedMonth(),
         category,
         bucket: defaultBucketForCategory(category)
       };
@@ -2018,11 +2124,9 @@
         const text = await file.text();
         const parsed = JSON.parse(text);
         const migrated = migrateState(parsed);
-        if (!confirm("Importer ce fichier remplacera les données actuellement enregistrées sur cet appareil. Continuer ?")) return;
+        if (!confirm("Importer ce fichier remplacera les données du budget actuellement synchronisées avec ce compte. Continuer ?")) return;
         state = migrated;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        showSnackbar("Sauvegarde JSON importée.");
-        renderAll();
+        saveState("Sauvegarde JSON importée et synchronisée.");
       } catch (error) {
         console.error(error);
         showSnackbar("Fichier JSON invalide ou illisible.");
@@ -2031,12 +2135,32 @@
       }
     }
 
-    function resetAllData() {
-      if (!confirm("Effacer définitivement toutes les données de cette application sur cet appareil ?")) return;
-      state = EMPTY_STATE();
-      localStorage.removeItem(STORAGE_KEY);
-      saveState("Toutes les données ont été effacées.");
-      setCurrentScreen("home");
+    async function deleteAllCloudData() {
+      if (!cloud || !cloudUser) {
+        showSnackbar("Connecte-toi à Google pour supprimer les données du cloud.");
+        return;
+      }
+      if (!confirm("Supprimer définitivement toutes les données de ce budget dans Firebase ?")) return;
+      clearTimeout(cloudSaveTimer);
+      applyingCloudState = true;
+      try {
+        state = EMPTY_STATE();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        const { doc, setDoc, serverTimestamp } = cloud.storeMod;
+        await setDoc(doc(cloud.db, "budgetUsers", cloudUser.uid), {
+          state,
+          schemaVersion: STATE_VERSION,
+          updatedAt: serverTimestamp()
+        }, { merge: false });
+        renderAll();
+        setCurrentScreen("home");
+        showSnackbar("Toutes les données du budget ont été supprimées de Firebase.");
+      } catch (error) {
+        console.error("Suppression cloud impossible", error);
+        showSnackbar("Suppression des données Firebase impossible.");
+      } finally {
+        applyingCloudState = false;
+      }
     }
 
     document.getElementById("fabAdd").addEventListener("click", () => openEntityModal("expense"));
@@ -2070,6 +2194,12 @@
         return;
       }
 
+      const monthShift = event.target.closest("[data-month-shift]");
+      if (monthShift) { shiftSelectedMonth(safeNumber(monthShift.dataset.monthShift)); return; }
+
+      const monthToday = event.target.closest("[data-month-today]");
+      if (monthToday) { selectedMonth = monthKey(); renderAll(); return; }
+
       const nav = event.target.closest("[data-screen]");
       if (nav) setCurrentScreen(nav.dataset.screen);
 
@@ -2100,7 +2230,7 @@
       if (event.target.id === "exportJsonBtn" || event.target.closest("#exportJsonBtn")) exportJSON();
       if (event.target.id === "exportCsvBtn" || event.target.closest("#exportCsvBtn")) exportCSV();
       if (event.target.id === "importJsonBtn" || event.target.closest("#importJsonBtn")) document.getElementById("jsonImportInput").click();
-      if (event.target.id === "resetBtn" || event.target.closest("#resetBtn")) resetAllData();
+      if (event.target.id === "deleteCloudDataBtn" || event.target.closest("#deleteCloudDataBtn")) deleteAllCloudData();
       if (event.target.id === "googleSignInBtn" || event.target.closest("#googleSignInBtn")) signInWithGoogle();
       if (event.target.id === "googleSignOutBtn" || event.target.closest("#googleSignOutBtn")) signOutGoogle().catch(error => { console.error(error); showSnackbar("Déconnexion Google impossible."); });
     });
