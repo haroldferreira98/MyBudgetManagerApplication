@@ -1055,6 +1055,9 @@
     .voice-action-btn:disabled { opacity: .42; cursor: default; }
     .voice-action-btn .material-symbols-outlined { font-size: 20px; }
 
+    /* VOICE-DISABLED-SAFELY */
+    #voiceHud { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -2108,16 +2111,16 @@
       }).join("");
     }
 
-    function openEntityModal(type = "expense", id = null, prefill = null) {
+    function openEntityModal(type = "expense", id = null, prefill = null, contextual = false) {
       const existing = id ? getEntity(type, id) : null;
       const data = existing ? { ...existing } : { ...(prefill || {}) };
       const editing = !!existing;
       const form = document.getElementById("entityForm");
       const entityModal = document.getElementById("entityModal");
       entityModal.dataset.entityType = type;
-      document.getElementById("entityModalTitle").textContent = editing ? `Modifier · ${entityLabel(type)}` : "Ajouter";
+      document.getElementById("entityModalTitle").textContent = editing ? `Modifier · ${entityLabel(type)}` : (contextual ? `Ajouter · ${entityLabel(type)}` : "Ajouter");
 
-      const typeSelector = editing ? `<input type="hidden" name="entityType" value="${type}">` : `
+      const typeSelector = (editing || contextual) ? `<input type="hidden" name="entityType" value="${type}">` : `
         <div class="field">
           <label for="entityType">Type</label>
           <select id="entityType" name="entityType">
@@ -2167,8 +2170,7 @@
           <div class="field-row">
             <div class="field"><label>Montant mensuel (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
             <div class="field"><label>Jour de prélèvement</label><input name="day" type="number" min="1" max="31" required value="${data.day ?? new Date().getDate()}"></div>
-          </div>
-          <label class="checkbox-row"><input name="active" type="checkbox" ${data.active !== false ? "checked" : ""}><span>Charge active</span></label>`;
+          </div>`;
       } else if (type === "credit") {
         const zero = !!data.zeroRate;
         fields = `
@@ -2244,7 +2246,7 @@
       } else if (type === "fixed") {
         item = {
           id: id || uid("fix"), label: String(fd.get("label") || "").trim(), amount: safeNumber(fd.get("amount")),
-          day: clamp(Math.round(safeNumber(fd.get("day"), 1)), 1, 31), bucket: "needs", active: fd.get("active") === "on",
+          day: clamp(Math.round(safeNumber(fd.get("day"), 1)), 1, 31), bucket: "needs", active: true,
           paidMonths: current?.paidMonths || []
         };
       } else if (type === "credit") {
@@ -2844,31 +2846,11 @@
     }
 
     const fabAdd = document.getElementById("fabAdd");
-    let fabHoldTimer = null;
-    let fabLongPress = false;
-    const clearFabHold = () => {
-      if (fabHoldTimer) clearTimeout(fabHoldTimer);
-      fabHoldTimer = null;
-    };
-    fabAdd?.addEventListener("pointerdown", event => {
-      if (event.pointerType === "mouse" && event.button !== 0) return;
-      clearFabHold();
-      fabLongPress = false;
-      fabAdd.setPointerCapture?.(event.pointerId);
-      fabHoldTimer = setTimeout(() => {
-        fabLongPress = true;
-        navigator.vibrate?.(18);
-        startVoiceRecognition({ source: "fab" });
-      }, 460);
+    fabAdd?.addEventListener("click", () => {
+      if (currentScreen === "income") openEntityModal("income", null, null, true);
+      else if (currentScreen === "expenses" || currentScreen === "home") openEntityModal("expense", null, null, true);
+      else openEntityModal("expense");
     });
-    fabAdd?.addEventListener("pointerup", event => {
-      clearFabHold();
-      try { fabAdd.releasePointerCapture?.(event.pointerId); } catch (_) {}
-      if (!fabLongPress) openEntityModal("expense");
-      setTimeout(() => { fabLongPress = false; }, 0);
-    });
-    fabAdd?.addEventListener("pointercancel", clearFabHold);
-    fabAdd?.addEventListener("contextmenu", event => event.preventDefault());
     document.getElementById("entityForm").addEventListener("submit", handleEntitySubmit);
     document.getElementById("voiceCancelBtn")?.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); cancelVoiceRecognition(); });
     document.getElementById("voiceValidateBtn")?.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); validateVoiceRecognition(); });
@@ -2931,7 +2913,7 @@
       if (nav) setCurrentScreen(nav.dataset.screen);
 
       const add = event.target.closest("[data-add-type]");
-      if (add) openEntityModal(add.dataset.addType);
+      if (add) openEntityModal(add.dataset.addType, null, null, true);
 
       const edit = event.target.closest("[data-edit-type]");
       if (edit) openEntityModal(edit.dataset.editType, edit.dataset.editId);
