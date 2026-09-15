@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mon Budget - Material You</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <style>
+    :root {
+      --md-sys-color-primary: #006874;
+      --md-sys-color-on-primary: #ffffff;
+      --md-sys-color-primary-container: #97f0ff;
+      --md-sys-color-on-primary-container: #001f24;
+      --md-sys-color-secondary: #4a6267;
+      --md-sys-color-surface: #f8fafb;
+      --md-sys-color-surface-container: #edf1f2;
+      --md-sys-color-surface-container-high: #e7ebec;
+      --md-sys-color-on-surface: #191c1d;
+      --md-sys-color-outline: #6f797a;
+      --md-sys-color-outline-variant: #bfc8ca;
+      --md-sys-color-error: #ba1a1a;
+      --md-sys-color-tertiary: #545d7e;
+      --md-sys-color-tertiary-container: #dce1ff;
+      --md-sys-color-on-tertiary-container: #101a37;
+      --radius-sm: 12px;
+      --radius-md: 20px;
+      --radius-lg: 28px;
+      --radius-pill: 100px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root[data-theme="auto"] {
+        --md-sys-color-primary: #4fd8eb;
+        --md-sys-color-on-primary: #00363d;
+        --md-sys-color-primary-container: #004f58;
+        --md-sys-color-on-primary-container: #97f0ff;
+        --md-sys-color-secondary: #b1cbd0;
+        --md-sys-color-surface: #0e1415;
+        --md-sys-color-surface-container: #1b2021;
+        --md-sys-color-surface-container-high: #252b2c;
+        --md-sys-color-on-surface: #e1e3e3;
+        --md-sys-color-outline: #899294;
+        --md-sys-color-outline-variant: #3f484a;
+        --md-sys-color-error: #ffb4ab;
+        --md-sys-color-tertiary: #bcc5eb;
+        --md-sys-color-tertiary-container: #3d4665;
+        --md-sys-color-on-tertiary-container: #dce1ff;
+      }
+    }
+    :root[data-theme="dark"] {
+      --md-sys-color-primary: #4fd8eb;
+      --md-sys-color-on-primary: #00363d;
+      --md-sys-color-primary-container: #004f58;
+      --md-sys-color-on-primary-container: #97f0ff;
+      --md-sys-color-secondary: #b1cbd0;
+      --md-sys-color-surface: #0e1415;
+      --md-sys-color-surface-container: #1b2021;
+      --md-sys-color-surface-container-high: #252b2c;
+      --md-sys-color-on-surface: #e1e3e3;
+      --md-sys-color-outline: #899294;
+      --md-sys-color-outline-variant: #3f484a;
+      --md-sys-color-error: #ffb4ab;
+      --md-sys-color-tertiary: #bcc5eb;
+      --md-sys-color-tertiary-container: #3d4665;
+      --md-sys-color-on-tertiary-container: #dce1ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Google Sans', 'Roboto', sans-serif;
+      background-color: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      padding-bottom: 96px;
+      min-height: 100vh;
+    }
+    .privacy-mode .monetary {
+      filter: blur(8px) !important;
+      user-select: none !important;
+    }
+    header.top-bar {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background-color: var(--md-sys-color-surface);
+      gap: 12px;
+    }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; flex-shrink: 0;
+    }
+    .search-box {
+      flex: 1; display: flex; align-items: center;
+      background: var(--md-sys-color-surface-container);
+      border-radius: var(--radius-pill); padding: 0 14px; height: 44px;
+    }
+    .search-box input {
+      border: none; background: transparent; outline: none;
+      width: 100%; margin-left: 8px; font-size: 15px;
+      color: var(--md-sys-color-on-surface);
+    }
+    .icon-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: none;
+      background: transparent; color: var(--md-sys-color-on-surface);
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    main { padding: 12px 16px; max-width: 600px; margin: 0 auto; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .card {
+      background: var(--md-sys-color-surface-container);
+      border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px;
+    }
+    .card-title { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.75; margin-bottom: 8px; }
+    .hero-card {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    }
+    .hero-amount { font-size: 34px; font-weight: 700; margin: 4px 0 8px; }
+    .gauge-track {
+      background: rgba(0,0,0,0.08); height: 8px; border-radius: var(--radius-pill);
+      overflow: hidden; margin-top: 8px;
+    }
+    .gauge-fill { height: 100%; border-radius: var(--radius-pill); }
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 76px;
+      background: var(--md-sys-color-surface-container-high);
+      display: flex; justify-content: space-around; align-items: center; z-index: 30;
+    }
+    .nav-item {
+      background: transparent; border: none; display: flex; flex-direction: column;
+      align-items: center; font-size: 12px; gap: 4px; color: var(--md-sys-color-on-surface);
+      cursor: pointer; opacity: 0.7; flex: 1;
+    }
+    .nav-item.active { opacity: 1; font-weight: 700; color: var(--md-sys-color-primary); }
+    .fab-btn {
+      width: 54px; height: 54px; border-radius: var(--radius-md);
+      background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);
+      border: none; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer;
+    }
+    .modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      display: none; align-items: flex-end; justify-content: center; z-index: 100;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: var(--md-sys-color-surface); width: 100%; max-width: 550px;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; max-height: 90vh; overflow-y: auto;
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 13px; margin-bottom: 6px; }
+    .form-control {
+      width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface); font-size: 15px; outline: none;
+    }
+    .btn {
+      width: 100%; padding: 14px; border-radius: var(--radius-pill); border: none;
+      background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);
+      font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px;
+    }
+    .btn-tonal {
+      background: var(--md-sys-color-tertiary-container);
+      color: var(--md-sys-color-on-tertiary-container);
+    }
+  </style>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="avatar">H</div>
+    <div class="search-box">
+      <span class="material-symbols-rounded">search</span>
+      <input type="text" id="globalSearch" placeholder="Rechercher une opération...">
+    </div>
+    <button class="icon-btn" id="togglePrivacy" title="Mode discrétion">
+      <span class="material-symbols-rounded" id="privacyIcon">visibility</span>
+    </button>
+  </header>
+
+  <main>
+    <!-- Accueil -->
+    <section id="screen-home" class="screen active">
+      <div class="card hero-card">
+        <div class="card-title">Reste à vivre (Ce mois)</div>
+        <div class="hero-amount monetary" id="resteAVivreVal">0,00 €</div>
+        <div style="font-size: 14px;">Soit <strong class="monetary" id="resteParJourVal">0,00 €</strong> / jour jusqu'à fin du mois</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Règle 50 / 30 / 20</div>
+        <div style="margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; font-size: 13px;">
+            <span>Besoins (50%)</span><span class="monetary" id="valBesoins">0 €</span>
+          </div>
+          <div class="gauge-track"><div class="gauge-fill" id="gaugeBesoins" style="background: var(--md-sys-color-primary); width: 0%;"></div></div>
+        </div>
+        <div style="margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; font-size: 13px;">
+            <span>Envies (30%)</span><span class="monetary" id="valEnvies">0 €</span>
+          </div>
+          <div class="gauge-track"><div class="gauge-fill" id="gaugeEnvies" style="background: var(--md-sys-color-tertiary); width: 0%;"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px;">
+            <span>Épargne & Projets (20%)</span><span class="monetary" id="valEpargne">0 €</span>
+          </div>
+          <div class="gauge-track"><div class="gauge-fill" id="gaugeEpargne" style="background: var(--md-sys-color-outline); width: 0%;"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Charges fixes du mois</div>
+        <div id="fixedChargesList"></div>
+      </div>
+    </section>
+
+    <!-- Revenus -->
+    <section id="screen-incomes" class="screen">
+      <div class="card">
+        <div class="card-title">Total des revenus</div>
+        <div class="hero-amount monetary" id="totalIncomesVal">0,00 €</div>
+      </div>
+      <div id="incomesList"></div>
+    </section>
+
+    <!-- Dépenses -->
+    <section id="screen-expenses" class="screen">
+      <div class="card">
+        <div class="card-title">Total des dépenses</div>
+        <div class="hero-amount monetary" id="totalExpensesVal">0,00 €</div>
+      </div>
+      <div id="expensesList"></div>
+    </section>
+
+    <!-- Profil & Arbitrage -->
+    <section id="screen-profile" class="screen">
+      <div class="card">
+        <div class="card-title">Simulateur d'arbitrage de crédit</div>
+        <div style="font-size: 14px; margin-bottom: 12px;">Majoration mensuelle de remboursement :</div>
+        <input type="range" id="creditBoostRange" min="0" max="300" step="25" value="50" style="width: 100%;">
+        <div style="display:flex; justify-content:space-between; margin-top:6px; font-weight:600;">
+          <span>+0 €</span><span id="boostDisplayVal">+50 €/mois</span><span>+300 €</span>
+        </div>
+        <div style="margin-top: 14px; padding: 12px; border-radius: var(--radius-sm); background: var(--md-sys-color-surface);" id="creditCalcResult">
+          Calcul en cours...
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Paramètres & Données</div>
+        <button class="btn btn-tonal" id="btnExportJSON" style="margin-bottom:8px;">Exporter les données (JSON)</button>
+        <button class="btn btn-tonal" id="btnResetData" style="background: rgba(186,26,26,0.1); color: var(--md-sys-color-error);">Réinitialiser les données</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modale Saisie Rapide -->
+  <div class="modal" id="modalAdd">
+    <div class="modal-content">
+      <h3 style="margin-bottom: 16px;">Nouvelle opération</h3>
+      <div class="form-group">
+        <label>Type</label>
+        <select class="form-control" id="txType">
+          <option value="expense">Dépense</option>
+          <option value="income">Revenu</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Titre</label>
+        <input type="text" class="form-control" id="txTitle" placeholder="Ex. Courses Supermarché">
+      </div>
+      <div class="form-group">
+        <label>Montant (€)</label>
+        <input type="number" step="0.01" class="form-control" id="txAmount" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Catégorie 50/30/20</label>
+        <select class="form-control" id="txCat">
+          <option value="besoins">Besoins (50%)</option>
+          <option value="envies">Envies (30%)</option>
+          <option value="epargne">Épargne & Projets (20%)</option>
+        </select>
+      </div>
+      <button class="btn" id="btnSaveTx">Enregistrer</button>
+      <button class="btn btn-tonal" id="btnCloseModal" style="margin-top:8px;">Annuler</button>
+    </div>
+  </div>
+
+  <!-- Barre de navigation inférieure -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-screen="screen-home">
+      <span class="material-symbols-rounded">dashboard</span><span>Accueil</span>
+    </button>
+    <button class="nav-item" data-screen="screen-incomes">
+      <span class="material-symbols-rounded">trending_up</span><span>Revenus</span>
+    </button>
+    <button class="fab-btn" id="openAddModal">
+      <span class="material-symbols-rounded">add</span>
+    </button>
+    <button class="nav-item" data-screen="screen-expenses">
+      <span class="material-symbols-rounded">trending_down</span><span>Dépenses</span>
+    </button>
+    <button class="nav-item" data-screen="screen-profile">
+      <span class="material-symbols-rounded">account_circle</span><span>Profil</span>
+    </button>
+  </nav>
+
+  <script>
+    const DEFAULT_DATA = {
+      incomes: [{ id: 1, title: 'Salaire net', amount: 2450 }],
+      fixedCharges: [
+        { id: 1, title: 'Loyer', amount: 750, day: 5 },
+        { id: 2, title: 'Assurances', amount: 52, day: 10 },
+        { id: 3, title: 'Électricité / Box', amount: 110, day: 20 }
+      ],
+      expenses: [
+        { id: 1, title: 'Courses Intermarché', amount: 84.50, cat: 'besoins' },
+        { id: 2, title: 'Restaurant', amount: 45.00, cat: 'envies' }
+      ],
+      credit: { capital: 8500, rate: 0.049, monthly: 210 },
+      savingsMonthly: 150
+    };
+
+    let state = JSON.parse(localStorage.getItem('m3_budget_data')) || DEFAULT_DATA;
+    function save() { localStorage.setItem('m3_budget_data', JSON.stringify(state)); render(); }
+
+    function formatEuro(val) {
+      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(val);
+    }
+
+    function render() {
+      const totalIncomes = state.incomes.reduce((acc, x) => acc + x.amount, 0);
+      const totalFixed = state.fixedCharges.reduce((acc, x) => acc + x.amount, 0);
+      const totalExpenses = state.expenses.reduce((acc, x) => acc + x.amount, 0);
+      const creditMonthly = state.credit.monthly;
+      const savingsMonthly = state.savingsMonthly;
+
+      const resteAVivre = totalIncomes - totalFixed - creditMonthly - savingsMonthly - totalExpenses;
+      const daysInMonth = 30;
+      const today = new Date().getDate();
+      const daysLeft = Math.max(1, daysInMonth - today);
+      const parJour = Math.max(0, resteAVivre / daysLeft);
+
+      document.getElementById('resteAVivreVal').textContent = formatEuro(resteAVivre);
+      document.getElementById('resteParJourVal').textContent = formatEuro(parJour);
+      document.getElementById('totalIncomesVal').textContent = formatEuro(totalIncomes);
+      document.getElementById('totalExpensesVal').textContent = formatEuro(totalExpenses);
+
+      // 50/30/20
+      const sumBesoins = totalFixed + creditMonthly + state.expenses.filter(x => x.cat === 'besoins').reduce((a, b) => a + b.amount, 0);
+      const sumEnvies = state.expenses.filter(x => x.cat === 'envies').reduce((a, b) => a + b.amount, 0);
+      const sumEpargne = savingsMonthly;
+
+      document.getElementById('valBesoins').textContent = formatEuro(sumBesoins);
+      document.getElementById('valEnvies').textContent = formatEuro(sumEnvies);
+      document.getElementById('valEpargne').textContent = formatEuro(sumEpargne);
+
+      if (totalIncomes > 0) {
+        document.getElementById('gaugeBesoins').style.width = Math.min(100, (sumBesoins / (totalIncomes * 0.5)) * 100) + '%';
+        document.getElementById('gaugeEnvies').style.width = Math.min(100, (sumEnvies / (totalIncomes * 0.3)) * 100) + '%';
+        document.getElementById('gaugeEpargne').style.width = Math.min(100, (sumEpargne / (totalIncomes * 0.2)) * 100) + '%';
+      }
+
+      // Charges fixes list
+      const fcList = document.getElementById('fixedChargesList');
+      fcList.innerHTML = state.fixedCharges.map(fc => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div><strong>${fc.title}</strong><div style="font-size:12px; opacity:0.7;">Le ${fc.day} du mois</div></div>
+          <div class="monetary">${formatEuro(fc.amount)}</div>
+        </div>
+      `).join('');
+
+      renderLists();
+      computeCredit();
+    }
+
+    function renderLists() {
+      const expList = document.getElementById('expensesList');
+      expList.innerHTML = state.expenses.map(e => `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div><strong>${e.title}</strong><div style="font-size:12px; opacity:0.7;">Catégorie : ${e.cat}</div></div>
+          <div class="monetary" style="color:var(--md-sys-color-error); font-weight:700;">-${formatEuro(e.amount)}</div>
+        </div>
+      `).join('');
+
+      const incList = document.getElementById('incomesList');
+      incList.innerHTML = state.incomes.map(i => `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div><strong>${i.title}</strong></div>
+          <div class="monetary" style="color:var(--md-sys-color-primary); font-weight:700;">+${formatEuro(i.amount)}</div>
+        </div>
+      `).join('');
+    }
+
+    function computeCredit() {
+      const boost = parseFloat(document.getElementById('creditBoostRange').value);
+      document.getElementById('boostDisplayVal').textContent = `+${boost} €/mois`;
+      const C = state.credit.capital;
+      const r = state.credit.rate / 12;
+      const M = state.credit.monthly;
+      const M2 = M + boost;
+
+      const n1 = -Math.log(1 - (r * C) / M) / Math.log(1 + r);
+      const n2 = -Math.log(1 - (r * C) / M2) / Math.log(1 + r);
+
+      const savedMonths = Math.max(0, Math.round(n1 - n2));
+      const totalCost1 = (n1 * M) - C;
+      const totalCost2 = (n2 * M2) - C;
+      const savedInterest = Math.max(0, totalCost1 - totalCost2);
+
+      document.getElementById('creditCalcResult').innerHTML = `
+        <div>⚡ <strong>${savedMonths} mois</strong> d'échéances gagnés</div>
+        <div style="margin-top:4px;">💰 Économie d'intérêts : <strong>${formatEuro(savedInterest)}</strong></div>
+        <div style="margin-top:4px; font-size:12px; color:var(--md-sys-color-primary);">Arbitrage conseillé : amortissement avantageux (TAEG > Livret A).</div>
+      `;
+    }
+
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.screen).classList.add('active');
+      });
+    });
+
+    // Privacy Mode
+    document.getElementById('togglePrivacy').addEventListener('click', () => {
+      document.body.classList.toggle('privacy-mode');
+      const isMuted = document.body.classList.contains('privacy-mode');
+      document.getElementById('privacyIcon').textContent = isMuted ? 'visibility_off' : 'visibility';
+    });
+
+    // Modal
+    const modal = document.getElementById('modalAdd');
+    document.getElementById('openAddModal').addEventListener('click', () => modal.classList.add('active'));
+    document.getElementById('btnCloseModal').addEventListener('click', () => modal.classList.remove('active'));
+
+    document.getElementById('btnSaveTx').addEventListener('click', () => {
+      const title = document.getElementById('txTitle').value.trim();
+      const amount = parseFloat(document.getElementById('txAmount').value);
+      const type = document.getElementById('txType').value;
+      const cat = document.getElementById('txCat').value;
+
+      if (!title || isNaN(amount) || amount <= 0) return alert('Veuillez saisir un libellé et un montant valides.');
+
+      if (type === 'expense') {
+        state.expenses.unshift({ id: Date.now(), title, amount, cat });
+      } else {
+        state.incomes.unshift({ id: Date.now(), title, amount });
+      }
+      save();
+      modal.classList.remove('active');
+      document.getElementById('txTitle').value = '';
+      document.getElementById('txAmount').value = '';
+    });
+
+    // Credit Simulator Range
+    document.getElementById('creditBoostRange').addEventListener('input', computeCredit);
+
+    // Export & Reset
+    document.getElementById('btnExportJSON').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'budget-data.json';
+      a.click();
+    });
+
+    document.getElementById('btnResetData').addEventListener('click', () => {
+      if (confirm('Réinitialiser toutes les données ?')) {
+        state = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        save();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
