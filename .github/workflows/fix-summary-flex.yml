@@ -1,0 +1,32 @@
+name: Fix summary flex
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-summary-flex.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix summary flex
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          exec(base64.b64decode('CmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aApwID0gUGF0aCgiaW5kZXguaHRtbCIpCnMgPSBwLnJlYWRfdGV4dChlbmNvZGluZz0idXRmLTgiKQpvbGQgPSAiLnN1bW1hcnktY2FyZCAuaGVyby1tZXRhIHsgbWFyZ2luLXRvcDogMTRweDsgZ2FwOiA4cHg7IGZsZXgtd3JhcDogbm9uZTsgfSIKbmV3ID0gIi5zdW1tYXJ5LWNhcmQgLmhlcm8tbWV0YSB7IG1hcmdpbi10b3A6IDE0cHg7IGdhcDogOHB4OyBmbGV4LXdyYXA6IG5vd3JhcDsgfSIKaWYgb2xkIG5vdCBpbiBzOgogICAgcmFpc2UgU3lzdGVtRXhpdCgic3VtbWFyeSBmbGV4IHJ1bGUgbm90IGZvdW5kIikKcC53cml0ZV90ZXh0KHMucmVwbGFjZShvbGQsIG5ldywgMSksIGVuY29kaW5nPSJ1dGYtOCIpCg==').decode())
+          PY
+      - name: Validate
+        run: git diff --check
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix compact summary metadata row"
+          git push
