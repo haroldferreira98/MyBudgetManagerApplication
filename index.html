@@ -734,6 +734,126 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
     }
+  
+    /* MOBILE-UX-VOICE-V2 */
+    #screen-home > .home-search-wrap {
+      margin: -10px -16px 14px;
+      padding: 8px 16px 14px;
+      background: var(--surface-container-lowest);
+    }
+    #screen-home > .home-search-wrap .search-shell {
+      margin: 0;
+    }
+
+    .nav-wrap {
+      bottom: 0 !important;
+    }
+    .bottom-nav {
+      height: calc(var(--nav-height) + var(--safe-bottom)) !important;
+      padding: 6px 10px max(6px, var(--safe-bottom)) !important;
+      align-items: center;
+    }
+    .fab {
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    #entityModal[data-entity-type="expense"] .field-row {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+      gap: 12px !important;
+      width: 100%;
+    }
+    #entityModal[data-entity-type="expense"] .field,
+    #entityModal[data-entity-type="expense"] .field-row > .field {
+      min-width: 0;
+      width: 100%;
+    }
+    #entityModal[data-entity-type="expense"] input,
+    #entityModal[data-entity-type="expense"] select {
+      min-width: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box;
+    }
+    #entityModal[data-entity-type="expense"] input[type="date"] {
+      min-inline-size: 0 !important;
+      inline-size: 100% !important;
+    }
+
+    .voice-hud {
+      position: fixed;
+      z-index: 90;
+      left: 50%;
+      bottom: calc(var(--nav-height) + var(--safe-bottom) + 18px);
+      width: min(calc(100% - 32px), 520px);
+      transform: translate(-50%, 18px) scale(.96);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .voice-hud.active {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+      pointer-events: auto;
+    }
+    .voice-hud-card {
+      display: grid;
+      grid-template-columns: 50px minmax(0,1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 24px;
+      background: color-mix(in srgb, var(--surface-container-high) 96%, transparent);
+      border: 1px solid color-mix(in srgb, var(--outline-variant) 55%, transparent);
+      box-shadow: 0 18px 42px var(--shadow);
+      backdrop-filter: blur(18px) saturate(1.15);
+      -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    }
+    .voice-mic {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--on-primary);
+      background: var(--primary);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 25%, transparent);
+      animation: voicePulse 1.35s ease-out infinite;
+    }
+    .voice-mic .material-symbols-outlined { font-size: 27px; }
+    .voice-copy { min-width: 0; }
+    .voice-title { font-size: 14px; font-weight: 700; }
+    .voice-transcript {
+      margin-top: 3px;
+      color: var(--on-surface-variant);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .voice-bars {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding-left: 4px;
+    }
+    .voice-bars span {
+      width: 3px;
+      height: 8px;
+      border-radius: var(--pill);
+      background: var(--primary);
+      animation: voiceBar .7s ease-in-out infinite alternate;
+    }
+    .voice-bars span:nth-child(2) { animation-delay: -.18s; }
+    .voice-bars span:nth-child(3) { animation-delay: -.34s; }
+    .voice-bars span:nth-child(4) { animation-delay: -.12s; }
+    .voice-bars span:nth-child(5) { animation-delay: -.28s; }
+    @keyframes voiceBar { from { height: 7px; opacity: .45; } to { height: 28px; opacity: 1; } }
+    @keyframes voicePulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 24%, transparent); } 70% { box-shadow: 0 0 0 11px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
   </style>
 </head>
 <body>
@@ -779,6 +899,18 @@
         <span class="material-symbols-outlined">person</span><span>Profil</span>
       </button>
     </nav>
+  </div>
+
+
+  <div class="voice-hud" id="voiceHud" role="status" aria-live="polite" aria-hidden="true">
+    <div class="voice-hud-card">
+      <div class="voice-mic"><span class="material-symbols-outlined">mic</span></div>
+      <div class="voice-copy">
+        <div class="voice-title" id="voiceHudTitle">Je vous écoute…</div>
+        <div class="voice-transcript" id="voiceHudText">Parlez naturellement, par exemple « 25 € d’alimentation chez Auchan aujourd’hui ».</div>
+      </div>
+      <div class="voice-bars" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
   </div>
 
   <div class="sheet-backdrop" id="entityModal" role="dialog" aria-modal="true" aria-labelledby="entityModalTitle">
@@ -1966,120 +2098,231 @@
     }
 
     function normalizeVoice(text) {
-      return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return String(text || "")
+        .toLowerCase()
+        .replace(/[’']/g, " ")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
     function voiceCategory(normalized) {
       const rules = [
-        ["Courses", ["course", "courses", "alimentation", "alimentaire", "supermarche", "epicerie", "auchan", "carrefour", "lidl", "leclerc", "monoprix"]],
-        ["Carburant", ["carburant", "essence", "diesel", "station", "gazole"]],
-        ["Loisirs", ["loisir", "cinema", "jeu", "jeux", "concert", "sortie"]],
-        ["Restaurant", ["restaurant", "resto", "cafe", "bar", "uber eats", "deliveroo"]],
-        ["Santé", ["sante", "medecin", "pharmacie", "dentiste", "kine", "hopital"]]
+        ["Restaurant", ["restaurant", "resto", "cafe", "bar", "brasserie", "mcdo", "mcdonald", "burger king", "kfc", "uber eats", "ubereats", "deliveroo", "pizza", "sushi"]],
+        ["Courses", ["course", "courses", "alimentation", "alimentaire", "nourriture", "supermarche", "epicerie", "auchan", "carrefour", "leclerc", "lidl", "aldi", "monoprix", "franprix", "intermarche"]],
+        ["Carburant", ["carburant", "essence", "diesel", "gazole", "station service", "total", "esso", "shell", "bp"]],
+        ["Santé", ["sante", "pharmacie", "medecin", "dentiste", "kine", "hopital", "opticien", "docteur", "medical"]],
+        ["Loisirs", ["loisir", "cinema", "concert", "jeu", "jeux", "sortie", "musee", "spectacle", "netflix", "spotify"]]
       ];
       for (const [cat, words] of rules) if (words.some(word => normalized.includes(word))) return cat;
       return "Autre";
     }
 
+    function localISOFromDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function parseVoiceDate(normalized) {
+      const now = new Date();
+      const offsetDate = days => {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+        d.setDate(d.getDate() + days);
+        return localISOFromDate(d);
+      };
+      if (/\bavant hier\b/.test(normalized)) return offsetDate(-2);
+      if (/\bhier\b/.test(normalized)) return offsetDate(-1);
+      if (/\b(demain)\b/.test(normalized)) return offsetDate(1);
+      if (/\b(aujourd hui|ce jour|ce matin|cet apres midi|ce soir)\b/.test(normalized)) return todayISO();
+
+      const numeric = normalized.match(/\b(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?\b/);
+      if (numeric) {
+        let year = numeric[3] ? Number(numeric[3]) : selectedMonthDate().getFullYear();
+        if (year < 100) year += 2000;
+        const month = clamp(Number(numeric[2]), 1, 12);
+        const day = clamp(Number(numeric[1]), 1, new Date(year, month, 0).getDate());
+        return `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+      }
+
+      const months = { janvier:1, fevrier:2, mars:3, avril:4, mai:5, juin:6, juillet:7, aout:8, septembre:9, octobre:10, novembre:11, decembre:12 };
+      const monthNames = Object.keys(months).join("|");
+      const named = normalized.match(new RegExp(`\\b(?:le\\s+)?(\\d{1,2})\\s+(${monthNames})(?:\\s+(\\d{4}))?\\b`));
+      if (named) {
+        const year = named[3] ? Number(named[3]) : selectedMonthDate().getFullYear();
+        const month = months[named[2]];
+        const day = clamp(Number(named[1]), 1, new Date(year, month, 0).getDate());
+        return `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+      }
+
+      const weekdays = { dimanche:0, lundi:1, mardi:2, mercredi:3, jeudi:4, vendredi:5, samedi:6 };
+      const weekdayName = Object.keys(weekdays).find(name => new RegExp(`\\b${name}\\b`).test(normalized));
+      if (weekdayName) {
+        const target = weekdays[weekdayName];
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+        let diff = (d.getDay() - target + 7) % 7;
+        if (/\bprochain\b/.test(normalized)) diff = -((target - d.getDay() + 7) % 7 || 7);
+        else if (/\bdernier\b/.test(normalized) && diff === 0) diff = 7;
+        d.setDate(d.getDate() - diff);
+        return localISOFromDate(d);
+      }
+      return defaultDateForSelectedMonth();
+    }
+
+    function extractVoiceMerchant(normalized) {
+      const stop = '(?:aujourd hui|hier|avant hier|demain|ce matin|cet apres midi|ce soir|dans|categorie|catégorie|pour la categorie|le \\d{1,2}|\\d{1,2}[\\/.\\-]\\d{1,2})';
+      const match = normalized.match(new RegExp(`\\b(?:chez|au|aux|a)\\s+(.+?)(?=\\s+${stop}\\b|$)`));
+      let merchant = match ? match[1].trim() : "";
+      merchant = merchant
+        .replace(/\b(?:pour|de|d)\s+(?:l alimentation|alimentation|courses?|carburant|essence|restaurant|resto|sante|loisirs?)\b.*$/g, "")
+        .replace(/\b\d+(?:[.,]\d+)?\s*(?:€|euros?|eur)\b/g, "")
+        .trim();
+      if (/^\d/.test(merchant) || merchant.length > 45) merchant = "";
+      if (merchant) return merchant;
+      const known = ["auchan","carrefour","leclerc","lidl","aldi","monoprix","franprix","intermarche","amazon","ikea","action","uber eats","deliveroo","total","esso","shell","bp","ratp","sncf","netflix","spotify"];
+      return known.find(name => normalized.includes(name)) || "";
+    }
+
+    function voiceFallbackLabel(normalized, category) {
+      const subject = normalized.match(/\b(?:achete|achetee|achat|pour)\s+(?:de |du |des |un |une )?([a-z ]{2,35}?)(?=\s+\d+(?:[.,]\d+)?\s*(?:€|euros?|eur)|\s+(?:chez|aujourd hui|hier|demain)|$)/);
+      if (subject?.[1]) {
+        const cleaned = subject[1].trim().replace(/\b(dans|categorie)\b.*$/, "").trim();
+        if (cleaned && !/^(la|le|les|de|du|des)$/.test(cleaned)) return capitalizeWords(cleaned);
+      }
+      return category === "Autre" ? "Dépense vocale" : category;
+    }
+
     function parseVoiceCommand(transcript) {
       const normalized = normalizeVoice(transcript);
-      const amountMatch = normalized.match(/(\d+(?:[.,]\d+)?)\s*(?:€|euros?|eur)\b/);
+      const amountMatch = normalized.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:€|euros?|eur)\b/)
+        || normalized.match(/\b(?:depense|depensees?|paye|payee?|cout|coute|pour|de)\s+(\d+(?:[.,]\d{1,2})?)\b/);
       const percentageMatch = normalized.match(/(\d+(?:[.,]\d+)?)\s*(?:%|pour\s*cent|pourcent)\b/);
       const numberAmount = amountMatch ? safeNumber(amountMatch[1]) : 0;
-
-      const merchantMatch = normalized.match(/(?:chez|\ba\b|\bau\b)\s+([a-z0-9&' -]+?)(?=\s+(?:dans|en|pour|categorie|catégorie|avec|au taux|a\s+\d+(?:[.,]\d+)?\s*(?:%|pourcent|pour\s*cent))|$)/i);
-      let merchant = merchantMatch ? merchantMatch[1].trim().replace(/\s+/g, " ") : "";
-      if (/^\d/.test(merchant) || /pour\s*cent|pourcent|%/.test(merchant)) merchant = "";
+      const date = parseVoiceDate(normalized);
+      const merchant = extractVoiceMerchant(normalized);
 
       if (/(credit|pret|emprunt)/.test(normalized)) {
-        if (!numberAmount) return { ok: false, message: "Je n'ai pas trouvé le montant du crédit." };
+        if (!numberAmount) return { ok: false, message: "Je n’ai pas trouvé le montant du crédit." };
         const rate = percentageMatch ? safeNumber(percentageMatch[1]) : 0;
-        const credit = {
-          id: uid("crd"),
-          name: merchant ? `Crédit ${capitalizeWords(merchant)}` : "Crédit vocal",
-          principal: numberAmount,
-          balance: numberAmount,
-          zeroRate: rate === 0,
-          annualRate: rate,
-          monthlyPayment: 0,
-          active: true
+        return {
+          ok: true,
+          type: "credit",
+          item: { id: uid("crd"), name: merchant ? `Crédit ${capitalizeWords(merchant)}` : "Crédit vocal", principal: numberAmount, balance: numberAmount, durationMonths: 1, monthsPaid: 0, zeroRate: rate === 0, annualRate: rate, monthlyPayment: 0, active: true },
+          message: `Crédit de ${formatMoney(numberAmount)} ajouté.`
         };
-        return { ok: true, type: "credit", item: credit, message: "Crédit ajouté. Complète sa mensualité dans Profil pour activer une simulation fiable." };
       }
 
-      if (/(revenu|salaire|remboursement|recu|reçoit|recois|gagne|gagné)/.test(normalized) && !/(depense|depensé|paye|payé|achete|acheté)/.test(normalized)) {
-        if (!numberAmount) return { ok: false, message: "Je n'ai pas trouvé le montant du revenu." };
-        const income = {
-          id: uid("inc"),
-          label: merchant ? capitalizeWords(merchant) : "Revenu vocal",
-          amount: numberAmount,
-          date: defaultDateForSelectedMonth()
+      if (/(revenu|salaire|remboursement|recu|recois|gagne|versement)/.test(normalized) && !/(depense|paye|achete|achat)/.test(normalized)) {
+        if (!numberAmount) return { ok: false, message: "Je n’ai pas trouvé le montant du revenu." };
+        return {
+          ok: true,
+          type: "income",
+          item: { id: uid("inc"), label: merchant ? capitalizeWords(merchant) : "Revenu vocal", amount: numberAmount, date },
+          message: `Revenu de ${formatMoney(numberAmount)} ajouté.`
         };
-        return { ok: true, type: "income", item: income, message: `Revenu de ${formatMoney(numberAmount)} ajouté.` };
       }
 
-      if (!numberAmount) return { ok: false, message: "Je n'ai pas trouvé de montant en euros dans la phrase." };
+      if (!numberAmount) return { ok: false, message: "Je n’ai pas trouvé de montant. Dites par exemple « 25 euros chez Auchan aujourd’hui »." };
       const category = voiceCategory(normalized);
-      const expense = {
-        id: uid("exp"),
-        label: merchant ? capitalizeWords(merchant) : "Dépense vocale",
-        amount: numberAmount,
-        date: defaultDateForSelectedMonth(),
-        category,
-        bucket: defaultBucketForCategory(category)
+      const label = merchant ? capitalizeWords(merchant) : voiceFallbackLabel(normalized, category);
+      return {
+        ok: true,
+        type: "expense",
+        item: { id: uid("exp"), label, amount: numberAmount, date, category, bucket: "wants" },
+        message: `${formatMoney(numberAmount)} · ${label} · ${category} · ${formatDate(date)}`
       };
-      return { ok: true, type: "expense", item: expense, message: `${formatMoney(numberAmount)} ajouté dans ${category}.` };
     }
 
     function capitalizeWords(value) {
       return String(value || "").replace(/\b\w/g, char => char.toUpperCase());
     }
 
-    function startVoiceRecognition() {
+    function setVoiceHud(active, title = "Je vous écoute…", text = "Parlez naturellement") {
+      const hud = document.getElementById("voiceHud");
+      if (!hud) return;
+      document.getElementById("voiceHudTitle").textContent = title;
+      document.getElementById("voiceHudText").textContent = text;
+      hud.classList.toggle("active", !!active);
+      hud.setAttribute("aria-hidden", active ? "false" : "true");
+    }
+
+    function startVoiceRecognition(options = {}) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const micBtn = document.getElementById("micBtn");
       if (!SpeechRecognition) {
-        showSnackbar("La reconnaissance vocale Web Speech n'est pas disponible dans ce navigateur.");
+        setVoiceHud(false);
+        showSnackbar("La reconnaissance vocale n’est pas disponible dans ce navigateur.");
         return;
       }
       if (recognition) {
         recognition.abort();
         recognition = null;
         micBtn?.classList.remove("listening");
+        setVoiceHud(false);
         return;
       }
 
+      let completed = false;
       recognition = new SpeechRecognition();
       recognition.lang = "fr-FR";
-      recognition.interimResults = false;
+      recognition.interimResults = true;
+      recognition.continuous = false;
       recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
         document.getElementById("micBtn")?.classList.add("listening");
-        showSnackbar("J'écoute… Exemple : « J'ai dépensé 35 euros à Auchan dans alimentation ».");
+        setVoiceHud(true, "Je vous écoute…", "Dites une dépense naturellement : montant, achat ou magasin, catégorie et date.");
       };
       recognition.onresult = event => {
-        const transcript = event.results?.[0]?.[0]?.transcript || "";
-        const parsed = parseVoiceCommand(transcript);
+        let transcript = "";
+        let finalTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+          const chunk = event.results[i]?.[0]?.transcript || "";
+          transcript += chunk;
+          if (event.results[i].isFinal) finalTranscript += chunk;
+        }
+        if (transcript.trim()) setVoiceHud(true, "Je vous écoute…", transcript.trim());
+        if (!finalTranscript.trim() || completed) return;
+
+        const parsed = parseVoiceCommand(finalTranscript.trim());
         if (!parsed.ok) {
+          completed = true;
+          setVoiceHud(true, "Je n’ai pas compris", parsed.message);
           showSnackbar(parsed.message);
+          setTimeout(() => setVoiceHud(false), 1600);
           return;
         }
         const collection = collectionForType(parsed.type);
-        if (collection) {
-          state[collection].push(parsed.item);
-          saveState(parsed.message);
-        }
+        if (!collection) return;
+        completed = true;
+        state[collection].push(parsed.item);
+        saveState(parsed.message);
+        setVoiceHud(true, "Ajouté", parsed.message);
+        setTimeout(() => setVoiceHud(false), 1200);
       };
       recognition.onerror = event => {
-        const map = { "not-allowed": "Autorisation du microphone refusée.", "no-speech": "Aucune parole détectée.", "network": "Le service vocal n'est pas disponible pour le moment." };
-        showSnackbar(map[event.error] || "La reconnaissance vocale a échoué.");
+        completed = true;
+        const map = { "not-allowed": "Autorisation du microphone refusée.", "no-speech": "Aucune parole détectée.", "network": "Le service vocal n’est pas disponible pour le moment.", "aborted": "Écoute arrêtée." };
+        const message = map[event.error] || "La reconnaissance vocale a échoué.";
+        setVoiceHud(true, "Écoute interrompue", message);
+        if (event.error !== "aborted") showSnackbar(message);
+        setTimeout(() => setVoiceHud(false), 1300);
       };
       recognition.onend = () => {
         document.getElementById("micBtn")?.classList.remove("listening");
         recognition = null;
+        if (!completed) setTimeout(() => setVoiceHud(false), 250);
       };
-      recognition.start();
+      try {
+        recognition.start();
+      } catch (error) {
+        console.error(error);
+        recognition = null;
+        setVoiceHud(false);
+        showSnackbar("Impossible de démarrer le microphone.");
+      }
     }
 
     function exportJSON() {
@@ -2163,7 +2406,32 @@
       }
     }
 
-    document.getElementById("fabAdd").addEventListener("click", () => openEntityModal("expense"));
+    const fabAdd = document.getElementById("fabAdd");
+    let fabHoldTimer = null;
+    let fabLongPress = false;
+    const clearFabHold = () => {
+      if (fabHoldTimer) clearTimeout(fabHoldTimer);
+      fabHoldTimer = null;
+    };
+    fabAdd?.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      clearFabHold();
+      fabLongPress = false;
+      fabAdd.setPointerCapture?.(event.pointerId);
+      fabHoldTimer = setTimeout(() => {
+        fabLongPress = true;
+        navigator.vibrate?.(18);
+        startVoiceRecognition({ source: "fab" });
+      }, 460);
+    });
+    fabAdd?.addEventListener("pointerup", event => {
+      clearFabHold();
+      try { fabAdd.releasePointerCapture?.(event.pointerId); } catch (_) {}
+      if (!fabLongPress) openEntityModal("expense");
+      setTimeout(() => { fabLongPress = false; }, 0);
+    });
+    fabAdd?.addEventListener("pointercancel", clearFabHold);
+    fabAdd?.addEventListener("contextmenu", event => event.preventDefault());
     document.getElementById("entityForm").addEventListener("submit", handleEntitySubmit);
 
     document.addEventListener("click", event => {
