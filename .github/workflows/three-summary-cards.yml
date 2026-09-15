@@ -1,0 +1,130 @@
+name: Add three home summary cards
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/three-summary-cards.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch home summary
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old_css = '''    .summary-bottom {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid color-mix(in srgb, var(--on-primary-container) 14%, transparent);
+    }
+    .summary-mini {
+      min-width: 0;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--surface-container-lowest) 58%, transparent);
+    }
+    .summary-mini-label { color: var(--on-surface-variant); font-size: 11px; font-weight: 600; }
+    .summary-mini-value { display: block; margin-top: 3px; color: var(--on-primary-container); font-size: 19px; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .summary-mini-note { margin-top: 2px; color: var(--on-surface-variant); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+'''
+          new_css = '''    .summary-bottom {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid color-mix(in srgb, var(--on-primary-container) 14%, transparent);
+    }
+    .summary-mini {
+      min-width: 0;
+      padding: 10px 8px;
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--surface-container-lowest) 58%, transparent);
+      overflow: visible;
+    }
+    .summary-mini-label {
+      display: block;
+      color: var(--on-surface-variant);
+      font-size: clamp(9px, 2.8vw, 11px);
+      font-weight: 600;
+      white-space: nowrap;
+      letter-spacing: -.01em;
+    }
+    .summary-mini-value {
+      display: block;
+      margin-top: 3px;
+      color: var(--on-primary-container);
+      font-size: clamp(13px, 4vw, 19px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -.035em;
+      white-space: nowrap;
+    }
+    .summary-mini-note {
+      margin-top: 3px;
+      color: var(--on-surface-variant);
+      font-size: clamp(8px, 2.35vw, 10px);
+      line-height: 1.1;
+      white-space: nowrap;
+      letter-spacing: -.01em;
+    }
+'''
+          if old_css not in s:
+              raise SystemExit('summary css block not found')
+          s = s.replace(old_css, new_css, 1)
+
+          old_html = '''            <div class="summary-bottom">
+              <div class="summary-mini">
+                <span class="summary-mini-label">Revenus</span>
+                <strong class="summary-mini-value money">${formatMoney(s.income)}</strong>
+                <div class="summary-mini-note">Ce mois</div>
+              </div>
+              <div class="summary-mini">
+                <span class="summary-mini-label">Dépenses</span>
+                <strong class="summary-mini-value money">${formatMoney(s.engaged)}</strong>
+                <div class="summary-mini-note">Total du mois</div>
+              </div>
+            </div>'''
+          new_html = '''            <div class="summary-bottom">
+              <div class="summary-mini">
+                <span class="summary-mini-label">Revenus</span>
+                <strong class="summary-mini-value money">${formatMoney(s.income)}</strong>
+                <div class="summary-mini-note">Ce mois</div>
+              </div>
+              <div class="summary-mini">
+                <span class="summary-mini-label">Dépenses</span>
+                <strong class="summary-mini-value money">${formatMoney(s.engaged)}</strong>
+                <div class="summary-mini-note">Total du mois</div>
+              </div>
+              <div class="summary-mini">
+                <span class="summary-mini-label">Charges fixes</span>
+                <strong class="summary-mini-value money">${formatMoney(s.fixed + s.credits)}</strong>
+                <div class="summary-mini-note">Ce mois</div>
+              </div>
+            </div>'''
+          if old_html not in s:
+              raise SystemExit('summary html block not found')
+          s = s.replace(old_html, new_html, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+          rm -f .github/workflows/three-summary-cards.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Show revenue expenses and fixed charges summary"
+          git push origin main
