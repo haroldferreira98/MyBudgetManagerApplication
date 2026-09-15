@@ -1,0 +1,31 @@
+name: Add credit total
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-credit-total.yml'
+      - '.github/scripts/add_credit_total.py'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch profile
+        run: python .github/scripts/add_credit_total.py
+      - name: Validate and commit
+        run: |
+          git diff --check
+          rm -f .github/workflows/add-credit-total.yml
+          rm -f .github/scripts/add_credit_total.py
+          rm -f .github/workflows/add-income-categories.yml
+          rm -f .github/scripts/add_income_categories.py
+          rm -f .github/scripts/income_amount_date_row.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Show total remaining credit balance"
+          git push
