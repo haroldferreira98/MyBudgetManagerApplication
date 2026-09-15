@@ -1496,7 +1496,7 @@
       const income = sum(currentMonthIncomes(), x => x.amount);
       const expenses = sum(currentMonthExpenses(), x => x.amount);
       const fixed = sum(activeFixedCharges(), x => x.amount);
-      const credits = sum(activeCredits(), x => x.monthlyPayment);
+      const credits = sum(state.credits, x => x.monthlyPayment);
       const projects = sum(activeProjects(), x => x.monthlyAllocation);
       const engaged = fixed + credits + projects + expenses;
       const remaining = income - engaged;
@@ -1597,7 +1597,7 @@
       const charges = [...activeFixedCharges()].sort((a,b) => safeNumber(a.day, 1) - safeNumber(b.day, 1));
 
       const bucketCards = [
-        { key: "needs", label: "Charges fixes", target: 50, value: s.buckets.needs },
+        { key: "needs", label: "Charges fixes", target: 50, value: s.fixed + sum(state.credits, x => x.monthlyPayment) },
         { key: "wants", label: "Dépenses courantes", target: 30, value: s.buckets.wants },
         { key: "savings", label: "Épargne possible", target: 20, value: s.buckets.savings }
       ].map(item => {
