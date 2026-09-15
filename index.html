@@ -159,6 +159,15 @@
     .top-account-btn:active { transform: scale(.94); }
     .top-account-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .account-letter { font-size: 21px; font-weight: 700; font-family: Arial, sans-serif; }
+    .account-modal-profile { display:flex; align-items:center; gap:14px; padding:8px 2px 18px; }
+    .account-modal-avatar { width:58px; height:58px; flex:0 0 58px; border-radius:50%; overflow:hidden; display:grid; place-items:center; background:var(--primary-container); color:var(--on-primary-container); font-size:24px; font-weight:700; }
+    .account-modal-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+    .account-modal-name { font-weight:700; font-size:17px; }
+    .account-modal-email { margin-top:3px; color:var(--on-surface-variant); font-size:13px; overflow-wrap:anywhere; }
+    .cloud-status { display:flex; align-items:center; gap:8px; padding:12px 14px; border-radius:18px; background:var(--surface-container); color:var(--on-surface-variant); font-size:13px; margin-bottom:14px; }
+    .home-search-wrap { margin: 2px 0 18px; }
+    .home-search-results { display:grid; gap:10px; margin-top:10px; }
+    .search-result-type { font-size:11px; color:var(--on-surface-variant); text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
     .brand-eyebrow {
       margin: 0 0 2px;
       color: var(--on-surface-variant);
@@ -727,6 +736,17 @@
     </div>
   </div>
 
+  <div class="sheet-backdrop" id="accountModal" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h2 class="sheet-title" id="accountModalTitle">Compte Google</h2>
+        <button class="icon-btn" data-close-modal="accountModal" aria-label="Fermer"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="sheet-body" id="accountModalBody"></div>
+    </div>
+  </div>
+
   <input type="file" id="jsonImportInput" accept="application/json,.json" hidden>
   <div class="snackbar" id="snackbar" role="status" aria-live="polite"></div>
 
@@ -768,6 +788,7 @@
     let currentScreen = "home";
     let expenseFilter = "Toutes";
     let expenseSearch = "";
+    let globalSearch = "";
     let snackbarTimer = null;
     let recognition = null;
     let cloud = null;
@@ -905,6 +926,7 @@
           cloudUser = user || null;
           renderProfile();
           updateTopAccountButton();
+          renderAccountModal();
           if (cloudUser) await reconcileCloudState();
         });
       } catch (error) {
@@ -944,19 +966,9 @@
       }
 
       const remote = migrateState(snap.data().state);
-      const localHasData = hasMeaningfulData(state);
-      const remoteHasData = hasMeaningfulData(remote);
-      const differs = JSON.stringify(state) !== JSON.stringify(remote);
 
-      if (localHasData && remoteHasData && differs) {
-        const loadCloud = confirm("Des données différentes existent déjà dans votre compte Google. OK pour charger la version cloud, Annuler pour conserver cet appareil et remplacer la version cloud.");
-        if (!loadCloud) {
-          await writeCloudState();
-          showSnackbar("Les données de cet appareil ont été envoyées dans le cloud.");
-          return;
-        }
-      }
-
+      // Dès qu'une sauvegarde Firebase existe, elle devient la source de vérité.
+      // Aucun dialogue de conflit : les données cloud sont chargées automatiquement.
       applyingCloudState = true;
       state = remote;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -1038,6 +1050,30 @@
       });
     }
 
+    function renderAccountModal() {
+      const body = document.getElementById("accountModalBody");
+      if (!body) return;
+      if (cloudUser) {
+        const photo = cloudUser.photoURL ? `<img src="${escapeHtml(cloudUser.photoURL)}" alt="">` : `<span class="material-symbols-outlined">person</span>`;
+        const name = escapeHtml(cloudUser.displayName || "Compte Google");
+        const email = escapeHtml(cloudUser.email || "");
+        body.innerHTML = `
+          <div class="account-modal-profile">
+            <div class="account-modal-avatar">${photo}</div>
+            <div><div class="account-modal-name">${name}</div><div class="account-modal-email">${email}</div></div>
+          </div>
+          <div class="cloud-status"><span class="material-symbols-outlined">cloud_done</span><span>Synchronisation Firebase active. Les données du cloud sont chargées automatiquement.</span></div>
+          <button class="btn outlined full" id="accountSignOutBtn"><span class="material-symbols-outlined">logout</span>Se déconnecter</button>`;
+      } else {
+        body.innerHTML = `
+          <div class="account-modal-profile">
+            <div class="account-modal-avatar"><span class="account-letter">G</span></div>
+            <div><div class="account-modal-name">Compte Google</div><div class="account-modal-email">Connecte-toi pour retrouver automatiquement tes données Firebase.</div></div>
+          </div>
+          <button class="btn primary full" id="accountSignInBtn"><span class="material-symbols-outlined">login</span>Se connecter avec Google</button>`;
+      }
+    }
+
     function sum(list, selector = x => x) {
       return list.reduce((total, item) => total + safeNumber(selector(item)), 0);
     }
@@ -1077,7 +1113,7 @@
         buckets: {
           needs: fixed,
           wants: expenses,
-          savings: projects
+          savings: Math.max(0, remaining)
         }
       };
     }
@@ -1109,6 +1145,57 @@
       setCurrentScreen(currentScreen, false);
     }
 
+    function normalizeSearch(value) {
+      return String(value ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function globalSearchResults(query) {
+      const q = normalizeSearch(query);
+      if (!q) return [];
+      const amountTokens = value => {
+        const n = safeNumber(value);
+        return [String(n), n.toFixed(2), String(n).replace(".", ","), n.toFixed(2).replace(".", ","), formatMoney(n)];
+      };
+      const rows = [];
+      state.expenses.forEach(item => rows.push({
+        type: "expense", id: item.id, icon: categoryIcon(item.category), kind: "Dépense", title: item.label,
+        subtitle: `${item.category} · ${formatDate(item.date)}`, amount: -safeNumber(item.amount),
+        haystack: [item.label, item.category, item.date, "dépense", "depense", ...amountTokens(item.amount)].join(" ")
+      }));
+      state.incomes.forEach(item => rows.push({
+        type: "income", id: item.id, icon: "payments", kind: "Revenu", title: item.label,
+        subtitle: formatDate(item.date), amount: safeNumber(item.amount),
+        haystack: [item.label, item.date, "revenu", ...amountTokens(item.amount)].join(" ")
+      }));
+      state.fixedCharges.forEach(item => rows.push({
+        type: "fixed", id: item.id, icon: "event_repeat", kind: "Charge fixe", title: item.label,
+        subtitle: `Jour ${safeNumber(item.day, 1)}`, amount: -safeNumber(item.amount),
+        haystack: [item.label, "charge fixe", "charges fixes", item.day, ...amountTokens(item.amount)].join(" ")
+      }));
+      state.credits.forEach(item => rows.push({
+        type: "credit", id: item.id, icon: "credit_card", kind: "Crédit", title: item.name,
+        subtitle: `Mensualité ${formatMoney(item.monthlyPayment)}`, amount: -safeNumber(item.monthlyPayment),
+        haystack: [item.name, "crédit", "credit", "mensualité", "mensualite", ...amountTokens(item.monthlyPayment)].join(" ")
+      }));
+      return rows.filter(row => normalizeSearch(row.haystack).includes(q)).slice(0, 50);
+    }
+
+    function renderGlobalSearchResults(query) {
+      const results = globalSearchResults(query);
+      if (!normalizeSearch(query)) return "";
+      if (!results.length) return `<div class="empty-state" style="margin-top:10px"><span class="material-symbols-outlined">search_off</span><strong>Aucun résultat</strong><span>Essaie un libellé, une catégorie ou un montant.</span></div>`;
+      return `<div class="home-search-results">${results.map(row => `
+        <button class="list-item" data-edit-type="${row.type}" data-edit-id="${row.id}" style="width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer">
+          <div class="list-icon"><span class="material-symbols-outlined">${row.icon}</span></div>
+          <div class="list-main"><div class="search-result-type">${row.kind}</div><div class="list-title">${escapeHtml(row.title)}</div><div class="list-sub">${escapeHtml(row.subtitle)}</div></div>
+          <div class="list-side"><div class="list-amount money ${row.amount < 0 ? "negative" : "positive"}">${row.amount < 0 ? "−" : "+"}${formatMoney(Math.abs(row.amount))}</div></div>
+        </button>`).join("")}</div>`;
+    }
+
     function renderHome() {
       const container = document.getElementById("screen-home");
       const s = financialSnapshot();
@@ -1119,7 +1206,7 @@
       const bucketCards = [
         { key: "needs", label: "Charges fixes", target: 50, value: s.buckets.needs },
         { key: "wants", label: "Dépenses courantes", target: 30, value: s.buckets.wants },
-        { key: "savings", label: "Épargne", target: 20, value: s.buckets.savings }
+        { key: "savings", label: "Épargne / investissement disponible", target: 20, value: s.buckets.savings }
       ].map(item => {
         const pctIncome = s.income > 0 ? (item.value / s.income) * 100 : 0;
         const fill = item.target > 0 ? clamp((pctIncome / item.target) * 100, 0, 100) : 0;
@@ -1152,6 +1239,15 @@
       }).join("") : emptyState("calendar_month", "Aucune charge fixe", "Ajoute tes charges récurrentes pour obtenir un reste à vivre précis.");
 
       container.innerHTML = `
+        <div class="home-search-wrap">
+          <div class="search-shell">
+            <span class="material-symbols-outlined">search</span>
+            <input id="globalSearchInput" type="search" inputmode="search" autocomplete="off" placeholder="Rechercher catégorie, opération, montant…" value="${escapeHtml(globalSearch)}">
+            <button class="icon-btn ${globalSearch ? "" : "hidden"}" id="globalSearchClear" type="button" aria-label="Effacer la recherche"><span class="material-symbols-outlined">close</span></button>
+          </div>
+          ${renderGlobalSearchResults(globalSearch)}
+        </div>
+
         <div class="section">
           <div class="card hero-card">
             <button class="icon-btn hero-privacy-btn" id="privacyBtn" type="button" aria-label="Masquer les montants" title="Masquer les montants"><span class="material-symbols-outlined" id="privacyIcon">visibility</span></button>
@@ -1191,6 +1287,20 @@
           </div>
           <div class="list">${chargesHtml}</div>
         </div>`;
+
+      const searchInput = document.getElementById("globalSearchInput");
+      if (searchInput) {
+        searchInput.addEventListener("input", event => {
+          globalSearch = event.target.value;
+          renderHome();
+          applyPrivacy();
+          requestAnimationFrame(() => {
+            const next = document.getElementById("globalSearchInput");
+            if (next) { next.focus(); next.setSelectionRange(next.value.length, next.value.length); }
+          });
+        });
+      }
+      document.getElementById("globalSearchClear")?.addEventListener("click", () => { globalSearch = ""; renderHome(); applyPrivacy(); });
     }
 
     function renderIncome() {
@@ -1918,12 +2028,19 @@
       if (settings) { updateSettingsUI(); openModal("settingsModal"); return; }
 
       const account = event.target.closest("#accountBtn");
-      if (account) {
-        if (cloudUser) {
-          if (confirm("Se déconnecter de ce compte Google ?")) signOutGoogle().catch(error => { console.error(error); showSnackbar("Déconnexion Google impossible."); });
-        } else {
-          signInWithGoogle();
-        }
+      if (account) { renderAccountModal(); openModal("accountModal"); return; }
+
+      const accountSignIn = event.target.closest("#accountSignInBtn");
+      if (accountSignIn) {
+        closeModal("accountModal");
+        signInWithGoogle();
+        return;
+      }
+
+      const accountSignOut = event.target.closest("#accountSignOutBtn");
+      if (accountSignOut) {
+        closeModal("accountModal");
+        signOutGoogle().catch(error => { console.error(error); showSnackbar("Déconnexion Google impossible."); });
         return;
       }
 
