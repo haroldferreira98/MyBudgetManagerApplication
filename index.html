@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <meta name="theme-color" content="#f7f2fa" />
+  <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,29 +11,29 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,0" rel="stylesheet">
   <style>
     :root {
-      --primary: #6750a4;
+      --primary: #0b57d0;
       --on-primary: #ffffff;
-      --primary-container: #eaddff;
-      --on-primary-container: #21005d;
-      --secondary: #625b71;
+      --primary-container: #d3e3fd;
+      --on-primary-container: #041e49;
+      --secondary: #44546f;
       --on-secondary: #ffffff;
-      --secondary-container: #e8def8;
-      --on-secondary-container: #1d192b;
-      --tertiary: #7d5260;
-      --tertiary-container: #ffd8e4;
-      --on-tertiary-container: #31111d;
-      --surface: #fff7ff;
-      --surface-dim: #ded8e1;
-      --surface-bright: #fff7ff;
+      --secondary-container: #dce3f2;
+      --on-secondary-container: #111c2f;
+      --tertiary: #3f6379;
+      --tertiary-container: #cbe6f5;
+      --on-tertiary-container: #071e2b;
+      --surface: #f8fafd;
+      --surface-dim: #d9dce2;
+      --surface-bright: #f8fafd;
       --surface-container-lowest: #ffffff;
-      --surface-container-low: #f7f2fa;
-      --surface-container: #f3edf7;
-      --surface-container-high: #ece6f0;
-      --surface-container-highest: #e6e0e9;
-      --on-surface: #1d1b20;
-      --on-surface-variant: #49454f;
-      --outline: #79747e;
-      --outline-variant: #cac4d0;
+      --surface-container-low: #f3f6fb;
+      --surface-container: #edf1f7;
+      --surface-container-high: #e7ebf2;
+      --surface-container-highest: #e0e5ec;
+      --on-surface: #1b1b1f;
+      --on-surface-variant: #44474e;
+      --outline: #74777f;
+      --outline-variant: #c4c7cf;
       --error: #b3261e;
       --on-error: #ffffff;
       --error-container: #f9dedc;
@@ -55,29 +55,29 @@
     }
 
     html[data-theme="dark"] {
-      --primary: #d0bcff;
-      --on-primary: #381e72;
-      --primary-container: #4f378b;
-      --on-primary-container: #eaddff;
-      --secondary: #ccc2dc;
-      --on-secondary: #332d41;
-      --secondary-container: #4a4458;
-      --on-secondary-container: #e8def8;
-      --tertiary: #efb8c8;
-      --tertiary-container: #633b48;
-      --on-tertiary-container: #ffd8e4;
-      --surface: #141218;
-      --surface-dim: #141218;
-      --surface-bright: #3b383e;
-      --surface-container-lowest: #0f0d13;
-      --surface-container-low: #1d1b20;
-      --surface-container: #211f26;
-      --surface-container-high: #2b2930;
-      --surface-container-highest: #36343b;
-      --on-surface: #e6e0e9;
-      --on-surface-variant: #cac4d0;
-      --outline: #938f99;
-      --outline-variant: #49454f;
+      --primary: #a8c7fa;
+      --on-primary: #062e6f;
+      --primary-container: #0842a0;
+      --on-primary-container: #d3e3fd;
+      --secondary: #bcc7dc;
+      --on-secondary: #263141;
+      --secondary-container: #3c4858;
+      --on-secondary-container: #dce3f2;
+      --tertiary: #afcbe0;
+      --tertiary-container: #294c60;
+      --on-tertiary-container: #cbe6f5;
+      --surface: #111318;
+      --surface-dim: #111318;
+      --surface-bright: #37393e;
+      --surface-container-lowest: #0c0e12;
+      --surface-container-low: #191c20;
+      --surface-container: #1d2024;
+      --surface-container-high: #272a2f;
+      --surface-container-highest: #32353a;
+      --on-surface: #e2e2e9;
+      --on-surface-variant: #c4c7cf;
+      --outline: #8e9199;
+      --outline-variant: #44474e;
       --error: #f2b8b5;
       --on-error: #601410;
       --error-container: #8c1d18;
@@ -424,15 +424,16 @@
       position: fixed;
       z-index: 40;
       left: 50%;
-      bottom: calc(12px + var(--safe-bottom));
+      bottom: 0;
       transform: translateX(-50%);
-      width: min(calc(100% - 24px), 720px);
+      width: min(calc(100% - 16px), 720px);
       pointer-events: none;
     }
     .bottom-nav {
-      height: var(--nav-height);
-      padding: 8px 10px;
-      border-radius: var(--pill);
+      min-height: calc(var(--nav-height) + var(--safe-bottom));
+      height: auto;
+      padding: 8px 10px calc(8px + var(--safe-bottom));
+      border-radius: 30px 30px 0 0;
       background: color-mix(in srgb, var(--surface-container-high) 94%, transparent);
       box-shadow: 0 14px 36px var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--outline-variant) 45%, transparent);
       backdrop-filter: blur(18px) saturate(1.2);
@@ -490,14 +491,14 @@
       display: none;
       align-items: flex-end;
       justify-content: center;
-      padding-top: calc(24px + var(--safe-top));
+      padding: calc(8px + var(--safe-top)) 6px calc(6px + var(--safe-bottom));
     }
     .sheet-backdrop.open { display: flex; }
     .sheet {
-      width: min(100%, 760px);
-      max-height: min(92dvh, 920px);
+      width: min(100%, 748px);
+      max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 20px);
       background: var(--surface-container-low);
-      border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+      border-radius: var(--radius-sheet);
       box-shadow: 0 -20px 50px var(--shadow);
       display: flex;
       flex-direction: column;
@@ -507,7 +508,7 @@
     .sheet-handle { width: 42px; height: 4px; border-radius: var(--pill); background: var(--outline); margin: 10px auto 6px; opacity: .6; }
     .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 18px 8px 22px; }
     .sheet-title { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
-    .sheet-body { overflow-y: auto; padding: 8px 18px calc(20px + var(--safe-bottom)); }
+    .sheet-body { overflow-y: auto; padding: 8px 18px 20px; }
 
     .field { display: grid; gap: 7px; margin: 14px 0; }
     .field label { font-size: 13px; font-weight: 600; color: var(--on-surface-variant); padding-left: 4px; }
@@ -523,6 +524,9 @@
     }
     .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
     .field textarea { min-height: 92px; resize: vertical; }
+    .field input[type="date"] { min-width: 0; max-width: 100%; font-size: 16px; }
+    .field input[type="date"]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
     .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .checkbox-row {
       display: flex;
@@ -591,7 +595,7 @@
       .sheet-backdrop { align-items: center; padding: 28px; }
     }
 
-    @media (max-width: 390px) {
+    @media (max-width: 560px) {
       .grid-2, .field-row, .sim-grid { grid-template-columns: 1fr; }
       .nav-btn { font-size: 9px; }
       .bottom-nav { grid-template-columns: 1fr 1fr 64px 1fr 1fr; }
@@ -672,6 +676,7 @@
   <input type="file" id="jsonImportInput" accept="application/json,.json" hidden>
   <div class="snackbar" id="snackbar" role="status" aria-live="polite"></div>
 
+  <script src="firebase-config.js"></script>
   <script>
     "use strict";
 
@@ -711,6 +716,10 @@
     let expenseSearch = "";
     let snackbarTimer = null;
     let recognition = null;
+    let cloud = null;
+    let cloudUser = null;
+    let cloudSaveTimer = null;
+    let applyingCloudState = false;
 
     const euro = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const shortDate = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
@@ -804,8 +813,118 @@
 
     function saveState(message = "") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (!applyingCloudState) scheduleCloudSave();
       if (message) showSnackbar(message);
       renderAll();
+    }
+
+
+    function isFirebaseConfigured() {
+      const cfg = window.BUDGET_FIREBASE_CONFIG;
+      return !!(cfg && cfg.apiKey && cfg.authDomain && cfg.projectId && cfg.appId);
+    }
+
+    function hasMeaningfulData(candidate) {
+      if (!candidate) return false;
+      return ["incomes", "expenses", "fixedCharges", "credits", "projects", "envelopes"]
+        .some(key => Array.isArray(candidate[key]) && candidate[key].length > 0);
+    }
+
+    async function initCloudSync() {
+      if (!isFirebaseConfigured()) {
+        renderProfile();
+        return;
+      }
+      try {
+        const [appMod, authMod, storeMod] = await Promise.all([
+          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
+          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js")
+        ]);
+        const app = appMod.initializeApp(window.BUDGET_FIREBASE_CONFIG);
+        const auth = authMod.getAuth(app);
+        const db = storeMod.getFirestore(app);
+        const provider = new authMod.GoogleAuthProvider();
+        cloud = { auth, db, provider, authMod, storeMod };
+
+        authMod.onAuthStateChanged(auth, async user => {
+          cloudUser = user || null;
+          renderProfile();
+          if (cloudUser) await reconcileCloudState();
+        });
+        await authMod.getRedirectResult(auth);
+      } catch (error) {
+        console.error("Initialisation Firebase impossible", error);
+        showSnackbar("Connexion cloud indisponible pour le moment.");
+      }
+    }
+
+    function scheduleCloudSave() {
+      if (!cloud || !cloudUser) return;
+      clearTimeout(cloudSaveTimer);
+      cloudSaveTimer = setTimeout(() => writeCloudState().catch(error => {
+        console.error("Synchronisation cloud impossible", error);
+        showSnackbar("La sauvegarde cloud a échoué. Les données locales sont conservées.");
+      }), 450);
+    }
+
+    async function writeCloudState() {
+      if (!cloud || !cloudUser) return;
+      const { doc, setDoc, serverTimestamp } = cloud.storeMod;
+      await setDoc(doc(cloud.db, "budgetUsers", cloudUser.uid), {
+        state,
+        schemaVersion: STATE_VERSION,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }
+
+    async function reconcileCloudState() {
+      if (!cloud || !cloudUser) return;
+      const { doc, getDoc } = cloud.storeMod;
+      const ref = doc(cloud.db, "budgetUsers", cloudUser.uid);
+      const snap = await getDoc(ref);
+      if (!snap.exists() || !snap.data()?.state) {
+        await writeCloudState();
+        showSnackbar("Compte Google connecté. Les données locales sont sauvegardées en ligne.");
+        return;
+      }
+
+      const remote = migrateState(snap.data().state);
+      const localHasData = hasMeaningfulData(state);
+      const remoteHasData = hasMeaningfulData(remote);
+      const differs = JSON.stringify(state) !== JSON.stringify(remote);
+
+      if (localHasData && remoteHasData && differs) {
+        const loadCloud = confirm("Des données différentes existent déjà dans votre compte Google. OK pour charger la version cloud, Annuler pour conserver cet appareil et remplacer la version cloud.");
+        if (!loadCloud) {
+          await writeCloudState();
+          showSnackbar("Les données de cet appareil ont été envoyées dans le cloud.");
+          return;
+        }
+      }
+
+      applyingCloudState = true;
+      state = remote;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      applyingCloudState = false;
+      renderAll();
+      showSnackbar("Données cloud chargées.");
+    }
+
+    async function signInWithGoogle() {
+      if (!cloud) {
+        showSnackbar("Firebase doit d'abord être configuré.");
+        return;
+      }
+      await cloud.authMod.signInWithRedirect(cloud.auth, cloud.provider);
+    }
+
+    async function signOutGoogle() {
+      if (!cloud) return;
+      await cloud.authMod.signOut(cloud.auth);
+      cloudUser = null;
+      renderProfile();
+      showSnackbar("Compte Google déconnecté. Les données locales restent sur cet appareil.");
     }
 
     function applyTheme() {
@@ -813,7 +932,7 @@
       const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
       const effective = chosen === "auto" ? (systemDark ? "dark" : "light") : chosen;
       document.documentElement.dataset.theme = effective;
-      document.querySelector('meta[name="theme-color"]').setAttribute("content", effective === "dark" ? "#141218" : "#fff7ff");
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", effective === "dark" ? "#111318" : "#f8fafd");
     }
 
     function applyPrivacy() {
@@ -906,7 +1025,6 @@
       const s = financialSnapshot();
       const status = financialStatus(s);
       const days = daysRemainingInMonth();
-      const incomeProgress = s.income > 0 ? clamp((s.engaged / s.income) * 100, 0, 100) : (s.engaged > 0 ? 100 : 0);
       const charges = [...activeFixedCharges()].sort((a,b) => safeNumber(a.day, 1) - safeNumber(b.day, 1));
 
       const bucketCards = [
@@ -968,10 +1086,6 @@
               <div class="metric-value money">${formatMoney(s.engaged)}</div>
               <div class="metric-note">Charges + crédits + projets + dépenses</div>
             </div>
-          </div>
-          <div class="card" style="margin-top:12px">
-            <div class="balance-head"><strong>Revenus vs engagé</strong><span>${s.income > 0 ? `${Math.min(999, (s.engaged / s.income) * 100).toFixed(0)}%` : (s.engaged > 0 ? "—" : "0%")}</span></div>
-            <div class="progress-track"><div class="progress-fill ${s.engaged > s.income && s.income > 0 ? "error" : ""}" style="width:${incomeProgress}%"></div></div>
           </div>
         </div>
 
@@ -1079,6 +1193,35 @@
       }[category] || "receipt_long";
     }
 
+
+    function estimateRemainingBalance(principal, annualRate, monthlyPayment, monthsPaid) {
+      let balance = Math.max(0, safeNumber(principal));
+      const payment = Math.max(0, safeNumber(monthlyPayment));
+      const paid = Math.max(0, Math.round(safeNumber(monthsPaid)));
+      const monthlyRate = Math.max(0, safeNumber(annualRate)) / 100 / 12;
+      if (!payment || !paid) return balance;
+      for (let i = 0; i < paid && balance > 0.005; i += 1) {
+        const interest = balance * monthlyRate;
+        const principalPaid = Math.max(0, payment - interest);
+        if (principalPaid <= 0) break;
+        balance -= Math.min(balance, principalPaid);
+      }
+      return Math.max(0, balance);
+    }
+
+    function creditProgress(credit) {
+      const durationMonths = Math.max(0, Math.round(safeNumber(credit.durationMonths)));
+      const monthsPaid = durationMonths > 0
+        ? clamp(Math.round(safeNumber(credit.monthsPaid)), 0, durationMonths)
+        : Math.max(0, Math.round(safeNumber(credit.monthsPaid)));
+      const remainingPayments = durationMonths > 0 ? Math.max(0, durationMonths - monthsPaid) : null;
+      const rate = credit.zeroRate ? 0 : safeNumber(credit.annualRate);
+      const calculatedBalance = durationMonths > 0
+        ? estimateRemainingBalance(credit.principal, rate, credit.monthlyPayment, monthsPaid)
+        : safeNumber(credit.balance);
+      return { durationMonths, monthsPaid, remainingPayments, calculatedBalance };
+    }
+
     function renderProfile() {
       const container = document.getElementById("screen-profile");
       const monthExpenses = currentMonthExpenses();
@@ -1100,16 +1243,19 @@
 
       const creditsHtml = state.credits.length ? state.credits.map(credit => {
         const rate = credit.zeroRate ? 0 : safeNumber(credit.annualRate);
+        const progress = creditProgress(credit);
+        const durationText = progress.durationMonths > 0 ? `${progress.monthsPaid}/${progress.durationMonths} mensualités remboursées` : "Durée à compléter";
         return `
           <div class="card">
             <div class="section-header" style="margin:0 0 8px">
-              <div><h3 class="section-title" style="font-size:16px">${escapeHtml(credit.name)}</h3><p class="section-subtitle">${rate.toFixed(2)}% · mensualité <span class="money">${formatMoney(credit.monthlyPayment)}</span></p></div>
+              <div><h3 class="section-title" style="font-size:16px">${escapeHtml(credit.name)}</h3><p class="section-subtitle">${rate.toFixed(2)}% · ${durationText}</p></div>
               <button class="mini-btn" data-edit-type="credit" data-edit-id="${credit.id}" aria-label="Modifier"><span class="material-symbols-outlined">edit</span></button>
             </div>
             <div class="grid-2">
-              <div><div class="tiny">Capital restant</div><strong class="money">${formatMoney(credit.balance)}</strong></div>
-              <div><div class="tiny">Capital initial</div><strong class="money">${formatMoney(credit.principal)}</strong></div>
+              <div><div class="tiny">Capital restant estimé</div><strong class="money">${formatMoney(progress.calculatedBalance)}</strong></div>
+              <div><div class="tiny">Mensualités restantes</div><strong>${progress.remainingPayments ?? "—"}</strong></div>
             </div>
+            <div class="tiny" style="margin-top:10px">Mensualité : <span class="money">${formatMoney(credit.monthlyPayment)}</span> · Capital initial : <span class="money">${formatMoney(credit.principal)}</span></div>
             <div class="spacer-12"></div>
             <button class="btn outlined full" data-sim-credit="${credit.id}"><span class="material-symbols-outlined">calculate</span>Simuler un remboursement anticipé</button>
           </div>`;
@@ -1153,6 +1299,24 @@
         <div class="section">
           <div class="section-header"><div><h2 class="section-title">Projets d'épargne</h2></div><button class="btn tonal small" data-add-type="project"><span class="material-symbols-outlined">add</span>Ajouter</button></div>
           <div>${projectsHtml}</div>
+        </div>
+
+
+        <div class="section">
+          <div class="section-header"><div><h2 class="section-title">Compte & synchronisation</h2><p class="section-subtitle">Sauvegarde en ligne avec votre compte Google.</p></div></div>
+          <div class="card">
+            <div class="list-item" style="padding:12px 0;background:transparent;border:0">
+              <div class="list-icon"><span class="material-symbols-outlined">cloud</span></div>
+              <div class="list-main">
+                <div class="list-title">${cloudUser ? escapeHtml(cloudUser.email || "Compte Google") : (isFirebaseConfigured() ? "Non connecté" : "Configuration Firebase requise")}</div>
+                <div class="list-sub">${cloudUser ? "Synchronisation automatique activée" : (isFirebaseConfigured() ? "Connectez-vous pour sauvegarder et retrouver vos données" : "La partie Google est prête dans le code, il reste à ajouter la configuration Firebase")}</div>
+              </div>
+            </div>
+            <div class="button-row" style="margin-top:10px">
+              <button class="btn primary" id="googleSignInBtn" ${(!isFirebaseConfigured() || cloudUser) ? "disabled" : ""}><span class="material-symbols-outlined">login</span>Se connecter avec Google</button>
+              <button class="btn outlined ${cloudUser ? "" : "hidden"}" id="googleSignOutBtn"><span class="material-symbols-outlined">logout</span>Se déconnecter</button>
+            </div>
+          </div>
         </div>
 
         <div class="section">
@@ -1300,13 +1464,15 @@
           <div class="field"><label>Nom du crédit</label><input name="name" required maxlength="80" value="${escapeHtml(data.name || "")}" placeholder="Ex. Crédit auto"></div>
           <div class="field-row">
             <div class="field"><label>Capital initial (€)</label><input name="principal" type="number" min="0" step="0.01" required value="${data.principal ?? ""}"></div>
-            <div class="field"><label>Capital restant (€)</label><input name="balance" type="number" min="0" step="0.01" value="${data.balance ?? data.principal ?? ""}"></div>
-          </div>
-          <label class="checkbox-row"><input id="zeroRateInput" name="zeroRate" type="checkbox" ${zero ? "checked" : ""}><span>Prêt à taux zéro (0%)</span></label>
-          <div class="field-row">
-            <div class="field"><label>Taux annuel (%)</label><input id="annualRateInput" name="annualRate" type="number" min="0" step="0.01" value="${zero ? 0 : (data.annualRate ?? "")}" ${zero ? "disabled" : ""}></div>
             <div class="field"><label>Mensualité (€)</label><input name="monthlyPayment" type="number" min="0" step="0.01" required value="${data.monthlyPayment ?? ""}"></div>
           </div>
+          <div class="field-row">
+            <div class="field"><label>Durée totale (mois)</label><input name="durationMonths" type="number" min="1" max="600" step="1" required value="${data.durationMonths ?? ""}"></div>
+            <div class="field"><label>Mois déjà remboursés</label><input name="monthsPaid" type="number" min="0" max="600" step="1" required value="${data.monthsPaid ?? 0}"></div>
+          </div>
+          <label class="checkbox-row"><input id="zeroRateInput" name="zeroRate" type="checkbox" ${zero ? "checked" : ""}><span>Prêt à taux zéro (0%)</span></label>
+          <div class="field"><label>Taux annuel (%)</label><input id="annualRateInput" name="annualRate" type="number" min="0" step="0.01" value="${zero ? 0 : (data.annualRate ?? "")}" ${zero ? "disabled" : ""}></div>
+          <div class="tiny" style="margin:6px 4px 14px">Le capital restant et le nombre de mensualités restantes sont calculés automatiquement à partir de ces informations.</div>
           <label class="checkbox-row"><input name="active" type="checkbox" ${data.active !== false ? "checked" : ""}><span>Crédit actif</span></label>`;
       } else if (type === "project") {
         fields = `
@@ -1373,11 +1539,14 @@
       } else if (type === "credit") {
         const zeroRate = fd.get("zeroRate") === "on";
         const principal = safeNumber(fd.get("principal"));
-        const balanceRaw = fd.get("balance");
+        const monthlyPayment = safeNumber(fd.get("monthlyPayment"));
+        const durationMonths = clamp(Math.round(safeNumber(fd.get("durationMonths"), 1)), 1, 600);
+        const monthsPaid = clamp(Math.round(safeNumber(fd.get("monthsPaid"), 0)), 0, durationMonths);
+        const annualRate = zeroRate ? 0 : safeNumber(fd.get("annualRate"));
+        const balance = estimateRemainingBalance(principal, annualRate, monthlyPayment, monthsPaid);
         item = {
-          id: id || uid("crd"), name: String(fd.get("name") || "").trim(), principal,
-          balance: balanceRaw === "" || balanceRaw == null ? principal : safeNumber(balanceRaw),
-          zeroRate, annualRate: zeroRate ? 0 : safeNumber(fd.get("annualRate")), monthlyPayment: safeNumber(fd.get("monthlyPayment")), active: fd.get("active") === "on"
+          id: id || uid("crd"), name: String(fd.get("name") || "").trim(), principal, balance,
+          durationMonths, monthsPaid, zeroRate, annualRate, monthlyPayment, active: fd.get("active") === "on"
         };
       } else if (type === "project") {
         item = {
@@ -1713,6 +1882,8 @@
       if (event.target.id === "exportCsvBtn" || event.target.closest("#exportCsvBtn")) exportCSV();
       if (event.target.id === "importJsonBtn" || event.target.closest("#importJsonBtn")) document.getElementById("jsonImportInput").click();
       if (event.target.id === "resetBtn" || event.target.closest("#resetBtn")) resetAllData();
+      if (event.target.id === "googleSignInBtn" || event.target.closest("#googleSignInBtn")) signInWithGoogle().catch(error => { console.error(error); showSnackbar("Connexion Google impossible."); });
+      if (event.target.id === "googleSignOutBtn" || event.target.closest("#googleSignOutBtn")) signOutGoogle().catch(error => { console.error(error); showSnackbar("Déconnexion Google impossible."); });
     });
 
     document.querySelectorAll(".sheet-backdrop").forEach(backdrop => {
@@ -1738,6 +1909,7 @@
     }
 
     renderAll();
+    initCloudSync();
   </script>
 </body>
 </html>
