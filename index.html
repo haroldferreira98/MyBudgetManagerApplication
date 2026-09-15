@@ -2,7 +2,7 @@
 <html lang="fr" data-theme="light">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f7f2fa" />
   <meta name="color-scheme" content="light dark" />
   <title>Budget Pixel</title>
@@ -674,6 +674,16 @@
 
   <script>
     "use strict";
+
+
+    // Désactive le zoom par pincement sur mobile sans bloquer le défilement à un doigt.
+    const preventZoomGesture = event => event.preventDefault();
+    ["gesturestart", "gesturechange", "gestureend"].forEach(type => {
+      document.addEventListener(type, preventZoomGesture, { passive: false });
+    });
+    document.addEventListener("touchmove", event => {
+      if (event.touches.length > 1) event.preventDefault();
+    }, { passive: false });
 
     const STORAGE_KEY = "budgetPixelM3_v1";
     const STATE_VERSION = 1;
