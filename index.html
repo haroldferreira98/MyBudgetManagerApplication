@@ -931,6 +931,64 @@
   padding-top: 8px !important;
   margin-top: 2px !important;
 }
+
+
+    /* PROFILE-FOLD-MONTH-PICKER-V1 */
+    .profile-fold { overflow: hidden; }
+    .profile-fold .section-header { align-items: flex-start; gap: 8px; }
+    .profile-fold-heading { min-width: 0; flex: 1; }
+    .profile-fold .section-title,
+    .profile-fold .section-subtitle {
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      overflow-wrap: anywhere;
+    }
+    .profile-fold .section-subtitle { line-height: 1.35; }
+    .profile-fold-actions { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+    .profile-fold-summary { margin-top: 6px; }
+    .profile-fold .profile-fold-summary.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px; }
+    .profile-fold-summary > * { min-width: 0; }
+    .profile-fold-summary strong { overflow-wrap: anywhere; }
+    .project-fold-summary { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; color: var(--on-surface-variant); font-size: 13px; }
+    .project-fold-summary strong { color: var(--on-surface); }
+    .profile-fold-detail { margin-top: 10px; }
+    .profile-fold.collapsed .profile-fold-detail { display: none; }
+    .profile-fold.collapsed { padding-bottom: 14px; }
+
+    .month-picker-sheet { width: min(calc(100% - 12px), 520px); }
+    .month-picker-year-row {
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .month-picker-year-row strong { text-align: center; font-size: 18px; }
+    .month-picker-year-btn {
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--surface-container);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .month-picker-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .month-picker-option {
+      min-height: 46px;
+      border: 1px solid var(--outline-variant);
+      border-radius: 16px;
+      background: var(--surface-container-lowest);
+      color: var(--on-surface);
+      font-weight: 600;
+      text-transform: capitalize;
+      cursor: pointer;
+      padding: 8px 6px;
+    }
+    .month-picker-option.active { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
+
 </style>
 </head>
 <body>
@@ -1096,6 +1154,8 @@
     let cloudSaveTimer = null;
     let applyingCloudState = false;
     let selectedMonth = monthKey();
+    let monthPickerYear = Number(selectedMonth.slice(0, 4));
+    const expandedProfileItems = new Set();
 
     const euro = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const shortDate = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
@@ -1169,8 +1229,51 @@
       return `
         <div class="month-switcher" aria-label="Mois affiché">
           <button class="month-arrow" type="button" data-month-shift="-1" aria-label="Mois précédent"><span class="material-symbols-outlined">chevron_left</span></button>
-          <button class="month-current" type="button" data-month-today aria-label="Revenir au mois actuel"><span class="material-symbols-outlined">calendar_month</span><span>${escapeHtml(selectedMonthLabel())}</span></button>
+          <button class="month-current" type="button" data-month-picker aria-label="Choisir un mois"><span class="material-symbols-outlined">calendar_month</span><span>${escapeHtml(selectedMonthLabel())}</span></button>
           <button class="month-arrow" type="button" data-month-shift="1" aria-label="Mois suivant"><span class="material-symbols-outlined">chevron_right</span></button>
+        </div>`;
+    }
+
+
+    function openMonthPicker() {
+      const [year] = selectedMonth.split("-").map(Number);
+      monthPickerYear = year || new Date().getFullYear();
+      let modal = document.getElementById("monthPickerModal");
+      if (!modal) {
+        document.body.insertAdjacentHTML("beforeend", `
+          <div class="sheet-backdrop" id="monthPickerModal" role="dialog" aria-modal="true" aria-labelledby="monthPickerTitle">
+            <div class="sheet month-picker-sheet">
+              <div class="sheet-handle"></div>
+              <div class="sheet-head">
+                <h2 class="sheet-title" id="monthPickerTitle">Choisir un mois</h2>
+                <button class="icon-btn" data-close-modal="monthPickerModal" aria-label="Fermer"><span class="material-symbols-outlined">close</span></button>
+              </div>
+              <div class="sheet-body" id="monthPickerBody"></div>
+            </div>
+          </div>`);
+        modal = document.getElementById("monthPickerModal");
+      }
+      renderMonthPicker();
+      modal.classList.add("open");
+    }
+
+    function renderMonthPicker() {
+      const body = document.getElementById("monthPickerBody");
+      if (!body) return;
+      const currentMonthIndex = Number(selectedMonth.slice(5, 7)) - 1;
+      const selectedYear = Number(selectedMonth.slice(0, 4));
+      const labels = Array.from({ length: 12 }, (_, index) => new Intl.DateTimeFormat("fr-FR", { month: "long" }).format(new Date(2026, index, 1)));
+      body.innerHTML = `
+        <div class="month-picker-year-row">
+          <button class="month-picker-year-btn" data-picker-year="-1" aria-label="Année précédente"><span class="material-symbols-outlined">chevron_left</span></button>
+          <strong>${monthPickerYear}</strong>
+          <button class="month-picker-year-btn" data-picker-year="1" aria-label="Année suivante"><span class="material-symbols-outlined">chevron_right</span></button>
+        </div>
+        <div class="month-picker-grid">
+          ${labels.map((label, index) => {
+            const active = monthPickerYear === selectedYear && index === currentMonthIndex;
+            return `<button class="month-picker-option ${active ? "active" : ""}" data-picker-month="${index}">${escapeHtml(label)}</button>`;
+          }).join("")}
         </div>`;
     }
 
@@ -1781,19 +1884,26 @@
         const rate = credit.zeroRate ? 0 : safeNumber(credit.annualRate);
         const progress = creditProgress(credit);
         const durationText = progress.durationMonths > 0 ? `${progress.monthsPaid}/${progress.durationMonths} mensualités remboursées` : "Durée à compléter";
+        const foldKey = `credit:${credit.id}`;
+        const collapsed = state.credits.length > 1 && !expandedProfileItems.has(foldKey);
         return `
-          <div class="card">
+          <div class="card profile-fold ${collapsed ? "collapsed" : ""}">
             <div class="section-header" style="margin:0 0 8px">
-              <div><h3 class="section-title" style="font-size:16px">${escapeHtml(credit.name)}</h3><p class="section-subtitle">${rate.toFixed(2)}% · ${durationText}</p></div>
-              <button class="mini-btn" data-edit-type="credit" data-edit-id="${credit.id}" aria-label="Modifier"><span class="material-symbols-outlined">edit</span></button>
+              <div class="profile-fold-heading"><h3 class="section-title" style="font-size:16px">${escapeHtml(credit.name)}</h3><p class="section-subtitle">${rate.toFixed(2)}% · ${durationText}</p></div>
+              <div class="profile-fold-actions">
+                <button class="mini-btn" data-edit-type="credit" data-edit-id="${credit.id}" aria-label="Modifier"><span class="material-symbols-outlined">edit</span></button>
+                ${state.credits.length > 1 ? `<button class="mini-btn" data-toggle-profile-fold="${foldKey}" aria-label="${collapsed ? "Déplier" : "Replier"}"><span class="material-symbols-outlined">${collapsed ? "expand_more" : "expand_less"}</span></button>` : ""}
+              </div>
             </div>
-            <div class="grid-2">
+            <div class="profile-fold-summary grid-2">
               <div><div class="tiny">Capital restant estimé</div><strong class="money">${formatMoney(progress.calculatedBalance)}</strong></div>
               <div><div class="tiny">Mensualités restantes</div><strong>${progress.remainingPayments ?? "—"}</strong></div>
             </div>
-            <div class="tiny" style="margin-top:10px">Mensualité : <span class="money">${formatMoney(credit.monthlyPayment)}</span> · Capital initial : <span class="money">${formatMoney(credit.principal)}</span></div>
-            <div class="spacer-12"></div>
-            <button class="btn outlined full" data-sim-credit="${credit.id}"><span class="material-symbols-outlined">calculate</span>Simuler un remboursement anticipé</button>
+            <div class="profile-fold-detail">
+              <div class="tiny" style="margin-top:10px">Mensualité : <span class="money">${formatMoney(credit.monthlyPayment)}</span> · Capital initial : <span class="money">${formatMoney(credit.principal)}</span></div>
+              <div class="spacer-12"></div>
+              <button class="btn outlined full" data-sim-credit="${credit.id}"><span class="material-symbols-outlined">calculate</span>Simuler un remboursement anticipé</button>
+            </div>
           </div>`;
       }).join("") : emptyState("credit_card", "Aucun crédit", "Ajoute un crédit pour suivre sa mensualité et simuler un surplus de remboursement.");
 
@@ -1801,14 +1911,25 @@
         const target = safeNumber(project.target);
         const current = safeNumber(project.current);
         const pct = target > 0 ? (current / target) * 100 : 0;
+        const foldKey = `project:${project.id}`;
+        const collapsed = state.projects.length > 1 && !expandedProfileItems.has(foldKey);
         return `
-          <div class="card">
+          <div class="card profile-fold ${collapsed ? "collapsed" : ""}">
             <div class="section-header" style="margin:0 0 10px">
-              <div><h3 class="section-title" style="font-size:16px">${escapeHtml(project.name)}</h3><p class="section-subtitle"><span class="money">${formatMoney(current)}</span> / <span class="money">${formatMoney(target)}</span> · allocation <span class="money">${formatMoney(project.monthlyAllocation)}</span>/mois</p></div>
-              <button class="mini-btn" data-edit-type="project" data-edit-id="${project.id}" aria-label="Modifier"><span class="material-symbols-outlined">edit</span></button>
+              <div class="profile-fold-heading"><h3 class="section-title" style="font-size:16px">${escapeHtml(project.name)}</h3><p class="section-subtitle">Allocation <span class="money">${formatMoney(project.monthlyAllocation)}</span>/mois</p></div>
+              <div class="profile-fold-actions">
+                <button class="mini-btn" data-edit-type="project" data-edit-id="${project.id}" aria-label="Modifier"><span class="material-symbols-outlined">edit</span></button>
+                ${state.projects.length > 1 ? `<button class="mini-btn" data-toggle-profile-fold="${foldKey}" aria-label="${collapsed ? "Déplier" : "Replier"}"><span class="material-symbols-outlined">${collapsed ? "expand_more" : "expand_less"}</span></button>` : ""}
+              </div>
             </div>
-            <div class="progress-track"><div class="progress-fill success" style="width:${clamp(pct,0,100)}%"></div></div>
-            <div class="tiny" style="margin-top:7px">${target > 0 ? `${pct.toFixed(0)}% de l'objectif` : "Objectif à définir"}</div>
+            <div class="profile-fold-summary project-fold-summary">
+              <span><strong class="money">${formatMoney(current)}</strong> / <span class="money">${formatMoney(target)}</span></span>
+              <span>${target > 0 ? `${pct.toFixed(0)}%` : "Objectif à définir"}</span>
+            </div>
+            <div class="profile-fold-detail">
+              <div class="progress-track"><div class="progress-fill success" style="width:${clamp(pct,0,100)}%"></div></div>
+              <div class="tiny" style="margin-top:7px">${target > 0 ? `${pct.toFixed(0)}% de l'objectif` : "Objectif à définir"}</div>
+            </div>
           </div>`;
       }).join("") : emptyState("savings", "Aucun projet d'épargne", "Ajoute un objectif. Son allocation mensuelle sera automatiquement déduite du reste à vivre.");
 
@@ -2545,8 +2666,28 @@
       const monthShift = event.target.closest("[data-month-shift]");
       if (monthShift) { shiftSelectedMonth(safeNumber(monthShift.dataset.monthShift)); return; }
 
-      const monthToday = event.target.closest("[data-month-today]");
-      if (monthToday) { selectedMonth = monthKey(); renderAll(); return; }
+      const monthPicker = event.target.closest("[data-month-picker]");
+      if (monthPicker) { openMonthPicker(); return; }
+
+      const pickerYear = event.target.closest("[data-picker-year]");
+      if (pickerYear) { monthPickerYear += safeNumber(pickerYear.dataset.pickerYear); renderMonthPicker(); return; }
+
+      const pickerMonth = event.target.closest("[data-picker-month]");
+      if (pickerMonth) {
+        selectedMonth = `${monthPickerYear}-${String(safeNumber(pickerMonth.dataset.pickerMonth) + 1).padStart(2, "0")}`;
+        closeModal("monthPickerModal");
+        renderAll();
+        return;
+      }
+
+      const foldToggle = event.target.closest("[data-toggle-profile-fold]");
+      if (foldToggle) {
+        const key = foldToggle.dataset.toggleProfileFold;
+        if (expandedProfileItems.has(key)) expandedProfileItems.delete(key);
+        else expandedProfileItems.add(key);
+        renderProfile();
+        return;
+      }
 
       const nav = event.target.closest("[data-screen]");
       if (nav) setCurrentScreen(nav.dataset.screen);
