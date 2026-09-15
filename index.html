@@ -123,7 +123,7 @@
       min-height: 100dvh;
       margin: 0 auto;
       position: relative;
-      padding-bottom: calc(var(--nav-height) + 42px + var(--safe-bottom));
+      padding-bottom: calc(var(--nav-height) + 54px + var(--safe-bottom));
     }
 
     .topbar {
@@ -321,9 +321,13 @@
     .progress-fill.error { background: var(--error); }
     .progress-fill.success { background: var(--success); }
 
-    .balance-row { margin: 14px 0; }
-    .balance-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 7px; font-size: 13px; }
-    .balance-head strong { font-size: 14px; }
+    .balance-row { margin: 15px 0; }
+    .balance-head { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; margin-bottom:8px; font-size:13px; }
+    .balance-label { min-width:0; display:flex; align-items:center; gap:7px; white-space:nowrap; }
+    .balance-label strong { min-width:0; overflow:hidden; text-overflow:ellipsis; font-size:14px; }
+    .target-badge { flex:0 0 auto; min-width:38px; padding:4px 7px; border-radius:var(--pill); background:var(--primary-container); color:var(--on-primary-container); font-size:11px; font-weight:700; text-align:center; }
+    .balance-value { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; text-align:right; }
+    .balance-pct { color:var(--on-surface-variant); font-size:12px; }
 
     .list { display: grid; gap: 10px; }
     .list-item {
@@ -458,21 +462,23 @@
     .btn.danger { background: var(--error-container); color: var(--on-error-container); }
     .btn.small { min-height: 38px; padding: 0 13px; font-size: 13px; }
     .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .backup-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+    .backup-actions .btn { min-width:0; min-height:48px; padding:0 8px; gap:5px; white-space:nowrap; font-size:12px; }
+    .backup-actions .btn .material-symbols-outlined { font-size:20px; }
 
     .nav-wrap {
       position: fixed;
       z-index: 40;
       left: 50%;
-      bottom: 0;
+      bottom: calc(8px + var(--safe-bottom));
       transform: translateX(-50%);
-      width: min(calc(100% - 16px), 720px);
+      width: min(calc(100% - 24px), 720px);
       pointer-events: none;
     }
     .bottom-nav {
-      min-height: calc(var(--nav-height) + var(--safe-bottom));
-      height: auto;
-      padding: 8px 10px calc(8px + var(--safe-bottom));
-      border-radius: 30px 30px 0 0;
+      height: var(--nav-height);
+      padding: 8px 10px;
+      border-radius: 32px;
       background: color-mix(in srgb, var(--surface-container-high) 94%, transparent);
       box-shadow: 0 14px 36px var(--shadow), inset 0 0 0 1px color-mix(in srgb, var(--outline-variant) 45%, transparent);
       backdrop-filter: blur(18px) saturate(1.2);
@@ -1206,7 +1212,7 @@
       const bucketCards = [
         { key: "needs", label: "Charges fixes", target: 50, value: s.buckets.needs },
         { key: "wants", label: "Dépenses courantes", target: 30, value: s.buckets.wants },
-        { key: "savings", label: "Épargne / investissement disponible", target: 20, value: s.buckets.savings }
+        { key: "savings", label: "Épargne possible", target: 20, value: s.buckets.savings }
       ].map(item => {
         const pctIncome = s.income > 0 ? (item.value / s.income) * 100 : 0;
         const fill = item.target > 0 ? clamp((pctIncome / item.target) * 100, 0, 100) : 0;
@@ -1214,8 +1220,8 @@
         return `
           <div class="balance-row">
             <div class="balance-head">
-              <strong>${item.label} · ${item.target}%</strong>
-              <span><span class="money">${formatMoney(item.value)}</span> · ${pctIncome.toFixed(0)}%</span>
+              <div class="balance-label"><strong>${item.label}</strong><span class="target-badge">${item.target}%</span></div>
+              <span class="balance-value"><span class="money">${formatMoney(item.value)}</span><span class="balance-pct">${pctIncome.toFixed(0)}%</span></span>
             </div>
             <div class="progress-track"><div class="progress-fill ${over ? "warn" : ""}" style="width:${fill}%"></div></div>
           </div>`;
@@ -1497,10 +1503,10 @@
         <div class="section">
           <div class="section-header"><div><h2 class="section-title">Sauvegarde & données</h2><p class="section-subtitle">Les données restent sur cet appareil tant que tu ne les exportes pas.</p></div></div>
           <div class="card">
-            <div class="button-row">
-              <button class="btn tonal" id="exportJsonBtn"><span class="material-symbols-outlined">download</span>Exporter JSON</button>
-              <button class="btn tonal" id="exportCsvBtn"><span class="material-symbols-outlined">table_view</span>Exporter CSV</button>
-              <button class="btn outlined" id="importJsonBtn"><span class="material-symbols-outlined">upload</span>Importer JSON</button>
+            <div class="backup-actions">
+              <button class="btn tonal" id="exportJsonBtn" aria-label="Exporter JSON"><span class="material-symbols-outlined">download</span>JSON</button>
+              <button class="btn tonal" id="exportCsvBtn" aria-label="Exporter CSV"><span class="material-symbols-outlined">table_view</span>CSV</button>
+              <button class="btn outlined" id="importJsonBtn" aria-label="Importer JSON"><span class="material-symbols-outlined">upload</span>Importer</button>
             </div>
           </div>
           <div class="card danger-zone">
