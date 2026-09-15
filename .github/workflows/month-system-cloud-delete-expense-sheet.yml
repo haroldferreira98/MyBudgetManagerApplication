@@ -1,0 +1,112 @@
+name: Month system and cloud UX refinement
+
+on:
+  push:
+    paths:
+      - '.github/workflows/month-system-cloud-delete-expense-sheet.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch monthly budget UX
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          def rep(old, new, label):
+              global s
+              if old not in s:
+                  raise SystemExit(f'missing block: {label}')
+              s = s.replace(old, new, 1)
+
+          # ---------- Visual refinements ----------
+          css_marker = '''    .summary-mini-note { margin-top: 2px; color: var(--on-surface-variant); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n'''
+          css_extra = '''    .summary-card::after { display: none; }\n    .balance-section-subtitle {\n      white-space: nowrap;\n      font-size: clamp(10.5px, 3.1vw, 12px);\n      letter-spacing: -.01em;\n    }\n    .month-switcher {\n      height: 46px;\n      display: grid;\n      grid-template-columns: 42px minmax(0,1fr) 42px;\n      align-items: center;\n      gap: 6px;\n      padding: 3px 5px;\n      margin: 4px 0 12px;\n      border-radius: var(--pill);\n      background: var(--surface-container-low);\n      border: 1px solid color-mix(in srgb, var(--outline-variant) 55%, transparent);\n    }\n    .month-switcher button {\n      border: 0;\n      background: transparent;\n      color: var(--on-surface);\n      cursor: pointer;\n    }\n    .month-arrow {\n      width: 38px;\n      height: 38px;\n      border-radius: 50%;\n      display: grid;\n      place-items: center;\n    }\n    .month-arrow:active { background: var(--surface-container-highest); }\n    .month-current {\n      min-width: 0;\n      height: 38px;\n      border-radius: var(--pill);\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      gap: 7px;\n      font-weight: 700;\n      font-size: 14px;\n      white-space: nowrap;\n      text-transform: capitalize;\n    }\n    .month-current .material-symbols-outlined { font-size: 19px; color: var(--primary); }\n\n    #entityModal[data-entity-type="expense"] .sheet {\n      height: min(52dvh, 500px);\n      max-height: min(52dvh, 500px);\n    }\n    #entityModal[data-entity-type="expense"] .sheet-head { padding-top: 5px; padding-bottom: 4px; }\n    #entityModal[data-entity-type="expense"] .sheet-title { font-size: 20px; }\n    #entityModal[data-entity-type="expense"] .sheet-body { flex: 1; min-height: 0; padding-top: 2px; padding-bottom: 10px; }\n    #entityModal[data-entity-type="expense"] .field { gap: 4px; margin: 7px 0; }\n    #entityModal[data-entity-type="expense"] .field label { font-size: 12px; }\n    #entityModal[data-entity-type="expense"] .field input,\n    #entityModal[data-entity-type="expense"] .field select { min-height: 44px; padding: 8px 11px; border-radius: 15px; }\n    #entityModal[data-entity-type="expense"] .field-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }\n    #entityModal[data-entity-type="expense"] .modal-actions { padding-top: 7px; }\n    #entityModal[data-entity-type="expense"] .modal-actions .btn { min-height: 46px; }\n'''
+          if css_extra not in s:
+              rep(css_marker, css_marker + css_extra, 'summary css marker')
+
+          # ---------- Month state/helpers ----------
+          rep('''    let applyingCloudState = false;\n''', '''    let applyingCloudState = false;\n    let selectedMonth = monthKey();\n''', 'selected month state')
+
+          old_month_helpers = '''    function isCurrentMonth(dateString) {\n      if (!dateString) return false;\n      return monthKey(dateString) === monthKey();\n    }\n\n    function daysRemainingInMonth() {\n      const now = new Date();\n      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();\n      return Math.max(1, lastDay - now.getDate() + 1);\n    }'''
+          new_month_helpers = '''    function isCurrentMonth(dateString) {\n      if (!dateString) return false;\n      return monthKey(dateString) === selectedMonth;\n    }\n\n    function selectedMonthDate() {\n      const [year, month] = selectedMonth.split("-").map(Number);\n      return new Date(year, month - 1, 1, 12, 0, 0);\n    }\n\n    function selectedMonthLabel() {\n      const label = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(selectedMonthDate());\n      return label.charAt(0).toUpperCase() + label.slice(1);\n    }\n\n    function daysInSelectedMonth() {\n      const [year, month] = selectedMonth.split("-").map(Number);\n      return new Date(year, month, 0).getDate();\n    }\n\n    function averageDayCount() {\n      const current = monthKey();\n      if (selectedMonth === current) return Math.max(1, new Date().getDate());\n      return Math.max(1, daysInSelectedMonth());\n    }\n\n    function defaultDateForSelectedMonth() {\n      if (selectedMonth === monthKey()) return todayISO();\n      const todayDay = new Date().getDate();\n      return `${selectedMonth}-${String(Math.min(todayDay, daysInSelectedMonth())).padStart(2, "0")}`;\n    }\n\n    function shiftSelectedMonth(delta) {\n      const date = selectedMonthDate();\n      date.setMonth(date.getMonth() + Number(delta || 0));\n      selectedMonth = monthKey(date);\n      renderAll();\n    }\n\n    function renderMonthSwitcher() {\n      return `\n        <div class="month-switcher" aria-label="Mois affiché">\n          <button class="month-arrow" type="button" data-month-shift="-1" aria-label="Mois précédent"><span class="material-symbols-outlined">chevron_left</span></button>\n          <button class="month-current" type="button" data-month-today aria-label="Revenir au mois actuel"><span class="material-symbols-outlined">calendar_month</span><span>${escapeHtml(selectedMonthLabel())}</span></button>\n          <button class="month-arrow" type="button" data-month-shift="1" aria-label="Mois suivant"><span class="material-symbols-outlined">chevron_right</span></button>\n        </div>`;\n    }'''
+          rep(old_month_helpers, new_month_helpers, 'month helper functions')
+
+          # ---------- Daily average: only everyday expenses ----------
+          rep('''      const daily = remaining / daysRemainingInMonth();''', '''      const daily = expenses / averageDayCount();''', 'daily expense average')
+
+          # ---------- Home month, labels, subtitle and hero ----------
+          s = s.replace('''      const days = daysRemainingInMonth();\n''', '', 1)
+          s = s.replace('''        const paid = (charge.paidMonths || []).includes(monthKey());''', '''        const paid = (charge.paidMonths || []).includes(selectedMonth);''', 1)
+
+          rep('''          ${renderGlobalSearchResults(globalSearch)}\n        </div>\n\n        <div class="section home-summary-section">''', '''          ${renderGlobalSearchResults(globalSearch)}\n        </div>\n        ${renderMonthSwitcher()}\n\n        <div class="section home-summary-section">''', 'home month switcher')
+
+          rep('''              <span class="daily-pill"><span class="material-symbols-outlined">today</span><span class="money">${formatMoney(s.daily)}</span>/jour · ${days} jour${days > 1 ? "s" : ""}</span>''', '''              <span class="daily-pill"><span class="material-symbols-outlined">monitoring</span>Dépenses moy. <span class="money">${formatMoney(s.daily)}</span>/jour</span>''', 'daily pill')
+
+          rep('''                <span class="summary-mini-label">Total engagé</span>\n                <strong class="summary-mini-value money">${formatMoney(s.engaged)}</strong>\n                <div class="summary-mini-note">Charges + crédits + dépenses</div>''', '''                <span class="summary-mini-label">Dépenses</span>\n                <strong class="summary-mini-value money">${formatMoney(s.engaged)}</strong>\n                <div class="summary-mini-note">Total du mois</div>''', 'engaged label')
+
+          rep('''<p class="section-subtitle">50 % charges fixes · 30 % dépenses courantes · 20 % épargne.</p>''', '''<p class="section-subtitle balance-section-subtitle">50% fixes · 30% quotidien · 20% disponible</p>''', 'balance subtitle')
+
+          # ---------- Month-aware income and expense screens ----------
+          rep('''      const items = [...state.incomes].sort((a,b) => String(b.date).localeCompare(String(a.date)));''', '''      const items = [...currentMonthIncomes()].sort((a,b) => String(b.date).localeCompare(String(a.date)));''', 'income selected month list')
+          rep('''      container.innerHTML = `\n        <div class="section">\n          <div class="card hero-card">''', '''      container.innerHTML = `\n        ${renderMonthSwitcher()}\n        <div class="section">\n          <div class="card hero-card">''', 'income month switcher')
+          rep('''${escapeHtml(new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date()))}''', '''${escapeHtml(selectedMonthLabel())}''', 'income month label')
+          rep('''      const filtered = [...state.expenses]\n        .filter(item => expenseFilter === "Toutes" || item.category === expenseFilter)''', '''      const filtered = [...currentMonthExpenses()]\n        .filter(item => expenseFilter === "Toutes" || item.category === expenseFilter)''', 'expenses selected month list')
+          rep('''      container.innerHTML = `\n        <div class="section">\n          <div class="search-shell">''', '''      container.innerHTML = `\n        ${renderMonthSwitcher()}\n        <div class="section">\n          <div class="search-shell">''', 'expense month switcher')
+
+          # ---------- Selected month for fixed-charge status ----------
+          rep('''      const mk = monthKey();\n      charge.paidMonths = Array.isArray(charge.paidMonths) ? charge.paidMonths : [];''', '''      const mk = selectedMonth;\n      charge.paidMonths = Array.isArray(charge.paidMonths) ? charge.paidMonths : [];''', 'charge month status')
+
+          # ---------- New items default to selected month ----------
+          rep('''      const today = todayISO();''', '''      const today = defaultDateForSelectedMonth();''', 'entity default selected date')
+          s = s.replace('''          date: todayISO()\n''', '''          date: defaultDateForSelectedMonth()\n''')
+          s = s.replace('''        date: todayISO(),\n        category,''', '''        date: defaultDateForSelectedMonth(),\n        category,''')
+
+          # ---------- Expense sheet: keep it around half of the viewport ----------
+          rep('''      const form = document.getElementById("entityForm");\n      document.getElementById("entityModalTitle").textContent = editing ? `Modifier · ${entityLabel(type)}` : "Ajouter";''', '''      const form = document.getElementById("entityForm");\n      const entityModal = document.getElementById("entityModal");\n      entityModal.dataset.entityType = type;\n      document.getElementById("entityModalTitle").textContent = editing ? `Modifier · ${entityLabel(type)}` : "Ajouter";''', 'entity modal type dataset')
+          rep('''      const selector = form.querySelector("#entityType");\n      if (selector) selector.addEventListener("change", e => renderEntityFields(e.target.value, {}, false));''', '''      const selector = form.querySelector("#entityType");\n      if (selector) selector.addEventListener("change", e => {\n        entityModal.dataset.entityType = e.target.value;\n        renderEntityFields(e.target.value, {}, false);\n      });''', 'entity type change compact mode')
+
+          # ---------- Cloud-first deletion; no local-only reset ----------
+          old_profile_delete = '''          <div class="card danger-zone">\n            <div class="section-header" style="margin:0 0 10px"><div><h3 class="section-title" style="font-size:16px">Réinitialisation complète</h3><p class="section-subtitle">Supprime toutes les données locales de cette application.</p></div></div>\n            <button class="btn danger" id="resetBtn"><span class="material-symbols-outlined">delete_forever</span>Tout effacer</button>\n          </div>'''
+          new_profile_delete = '''          <div class="card danger-zone">\n            <div class="section-header" style="margin:0 0 10px"><div><h3 class="section-title" style="font-size:16px">Supprimer mes données</h3><p class="section-subtitle">Efface les données de ce budget dans Firebase pour le compte Google connecté.</p></div></div>\n            <button class="btn danger" id="deleteCloudDataBtn" ${cloudUser ? "" : "disabled"}><span class="material-symbols-outlined">delete_forever</span>${cloudUser ? "Tout supprimer du cloud" : "Connexion Google requise"}</button>\n          </div>'''
+          rep(old_profile_delete, new_profile_delete, 'cloud delete profile card')
+
+          s = s.replace('''<div class="section-header"><div><h2 class="section-title">Sauvegarde & données</h2><p class="section-subtitle">Les données restent sur cet appareil tant que tu ne les exportes pas.</p></div></div>''', '''<div class="section-header"><div><h2 class="section-title">Sauvegarde & données</h2><p class="section-subtitle">Firebase synchronise automatiquement le compte Google connecté.</p></div></div>''', 1)
+
+          old_reset = '''    function resetAllData() {\n      if (!confirm("Effacer définitivement toutes les données de cette application sur cet appareil ?")) return;\n      state = EMPTY_STATE();\n      localStorage.removeItem(STORAGE_KEY);\n      saveState("Toutes les données ont été effacées.");\n      setCurrentScreen("home");\n    }'''
+          new_reset = '''    async function deleteAllCloudData() {\n      if (!cloud || !cloudUser) {\n        showSnackbar("Connecte-toi à Google pour supprimer les données du cloud.");\n        return;\n      }\n      if (!confirm("Supprimer définitivement toutes les données de ce budget dans Firebase ?")) return;\n      clearTimeout(cloudSaveTimer);\n      applyingCloudState = true;\n      try {\n        state = EMPTY_STATE();\n        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));\n        const { doc, setDoc, serverTimestamp } = cloud.storeMod;\n        await setDoc(doc(cloud.db, "budgetUsers", cloudUser.uid), {\n          state,\n          schemaVersion: STATE_VERSION,\n          updatedAt: serverTimestamp()\n        }, { merge: false });\n        renderAll();\n        setCurrentScreen("home");\n        showSnackbar("Toutes les données du budget ont été supprimées de Firebase.");\n      } catch (error) {\n        console.error("Suppression cloud impossible", error);\n        showSnackbar("Suppression des données Firebase impossible.");\n      } finally {\n        applyingCloudState = false;\n      }\n    }'''
+          rep(old_reset, new_reset, 'cloud delete function')
+
+          rep('''      if (event.target.id === "resetBtn" || event.target.closest("#resetBtn")) resetAllData();''', '''      if (event.target.id === "deleteCloudDataBtn" || event.target.closest("#deleteCloudDataBtn")) deleteAllCloudData();''', 'cloud delete click')
+
+          # Imported backups should sync to Firebase instead of remaining local-only.
+          rep('''        if (!confirm("Importer ce fichier remplacera les données actuellement enregistrées sur cet appareil. Continuer ?")) return;\n        state = migrated;\n        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));\n        showSnackbar("Sauvegarde JSON importée.");\n        renderAll();''', '''        if (!confirm("Importer ce fichier remplacera les données du budget actuellement synchronisées avec ce compte. Continuer ?")) return;\n        state = migrated;\n        saveState("Sauvegarde JSON importée et synchronisée.");''', 'cloud-aware import')
+
+          # ---------- Global month navigation clicks ----------
+          event_marker = '''      const nav = event.target.closest("[data-screen]");\n      if (nav) setCurrentScreen(nav.dataset.screen);'''
+          event_insert = '''      const monthShift = event.target.closest("[data-month-shift]");\n      if (monthShift) { shiftSelectedMonth(safeNumber(monthShift.dataset.monthShift)); return; }\n\n      const monthToday = event.target.closest("[data-month-today]");\n      if (monthToday) { selectedMonth = monthKey(); renderAll(); return; }\n\n      const nav = event.target.closest("[data-screen]");\n      if (nav) setCurrentScreen(nav.dataset.screen);'''
+          rep(event_marker, event_insert, 'month click handlers')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Validate patch
+        run: git diff --check
+
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Add monthly budget navigation and cloud-first deletion"
+          git push
