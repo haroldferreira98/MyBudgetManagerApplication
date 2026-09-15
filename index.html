@@ -134,7 +134,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: calc(12px + var(--safe-top)) 18px 12px;
+      padding: calc(8px + var(--safe-top)) 18px 8px;
       background: color-mix(in srgb, var(--surface) 88%, transparent);
       backdrop-filter: blur(18px) saturate(1.15);
       -webkit-backdrop-filter: blur(18px) saturate(1.15);
@@ -142,9 +142,9 @@
 
     .brand { min-width: 0; flex: 1; }
     .top-account-btn {
-      width: 46px;
-      height: 46px;
-      flex: 0 0 46px;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
       border: 1px solid color-mix(in srgb, var(--outline-variant) 65%, transparent);
       border-radius: 50%;
       padding: 0;
@@ -169,16 +169,16 @@
     .home-search-results { display:grid; gap:10px; margin-top:10px; }
     .search-result-type { font-size:11px; color:var(--on-surface-variant); text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
     .brand-eyebrow {
-      margin: 0 0 2px;
+      margin: 0;
       color: var(--on-surface-variant);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       letter-spacing: .07em;
       text-transform: uppercase;
     }
     .brand-title {
       margin: 0;
-      font-size: clamp(24px, 7vw, 32px);
+      font-size: clamp(23px, 6.7vw, 30px);
       font-weight: 700;
       letter-spacing: -.03em;
       white-space: nowrap;
@@ -373,12 +373,12 @@
     .month-current .material-symbols-outlined { font-size: 19px; color: var(--primary); }
 
     #entityModal[data-entity-type="expense"] .sheet {
-      height: min(52dvh, 500px);
-      max-height: min(52dvh, 500px);
+      height: auto;
+      max-height: min(52dvh, 610px);
     }
     #entityModal[data-entity-type="expense"] .sheet-head { padding-top: 5px; padding-bottom: 4px; }
     #entityModal[data-entity-type="expense"] .sheet-title { font-size: 20px; }
-    #entityModal[data-entity-type="expense"] .sheet-body { flex: 1; min-height: 0; padding-top: 2px; padding-bottom: 10px; }
+    #entityModal[data-entity-type="expense"] .sheet-body { flex: 0 1 auto; min-height: 0; padding-top: 2px; padding-bottom: 8px; }
     #entityModal[data-entity-type="expense"] .field { gap: 4px; margin: 7px 0; }
     #entityModal[data-entity-type="expense"] .field label { font-size: 12px; }
     #entityModal[data-entity-type="expense"] .field input,
@@ -469,7 +469,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      min-height: 56px;
+      min-height: 50px;
       padding: 7px 8px 7px 16px;
       background: var(--surface-container-high);
       border-radius: var(--pill);
@@ -737,8 +737,8 @@
   
     /* MOBILE-UX-VOICE-V2 */
     #screen-home > .home-search-wrap {
-      margin: -10px -16px 14px;
-      padding: 8px 16px 14px;
+      margin: -8px -16px 10px;
+      padding: 4px 16px 10px;
       background: var(--surface-container-lowest);
     }
     #screen-home > .home-search-wrap .search-shell {
@@ -1312,7 +1312,6 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       applyingCloudState = false;
       renderAll();
-      showSnackbar("Données cloud chargées.");
     }
 
     function firebaseAuthErrorMessage(error) {
