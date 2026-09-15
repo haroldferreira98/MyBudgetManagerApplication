@@ -1,0 +1,76 @@
+name: Remove voice input
+
+on:
+  push:
+    paths:
+      - '.github/workflows/remove-voice-input.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove voice input behavior
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+
+          # 1) Never trigger microphone access from the central + button.
+          replacements = [
+              'startVoiceRecognition({source:"fab"});',
+              'startVoiceRecognition({ source: "fab" });',
+              "startVoiceRecognition({source:'fab'});",
+              "startVoiceRecognition({ source: 'fab' });",
+          ]
+          replaced = False
+          for old in replacements:
+              if old in text:
+                  text = text.replace(old, 'openEntityModal("expense");')
+                  replaced = True
+
+          # 2) Neutralise any remaining programmatic entry point to voice recognition.
+          start = text.find('    function startVoiceRecognition(')
+          if start >= 0:
+              next_fn = text.find('\n    function exportJSON()', start)
+              if next_fn < 0:
+                  raise SystemExit('Could not locate end of voice section')
+              # Keep earlier parsing helpers untouched, but replace the active voice engine section.
+              engine_start = text.rfind('\n    function startRecognitionCycle(', start, next_fn)
+              if engine_start < 0:
+                  engine_start = start
+              replacement = '''\n    function startVoiceRecognition(options = {}) {\n      openEntityModal("expense");\n    }\n'''
+              text = text[:engine_start] + replacement + text[next_fn:]
+
+          # 3) Hide the legacy voice overlay in case stale markup remains in the document.
+          marker = '    /* VOICE-FEATURE-REMOVED */\n    #voiceHud { display: none !important; }\n'
+          if '/* VOICE-FEATURE-REMOVED */' not in text:
+              text = text.replace('</style>', marker + '\n</style>', 1)
+
+          # 4) Remove the hard-reload workaround now that voice validation can no longer run.
+          text = re.sub(
+              r'\n\s*const reloadAfterVoiceSave = \(\) => setTimeout\(\(\) => \{.*?\}, 220\);',
+              '', text, count=1, flags=re.S
+          )
+
+          if not replaced:
+              print('No FAB voice call found; voice engine was still neutralised directly.')
+
+          p.write_text(text, encoding='utf-8')
+          PY
+      - name: Validate and commit
+        shell: bash
+        run: |
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Remove voice input feature"
+          git push
