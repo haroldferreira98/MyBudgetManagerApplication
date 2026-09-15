@@ -20,57 +20,16 @@ jobs:
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-
           s = s.replace('      showSnackbar("Données cloud chargées.");\n', '')
-
-          css = '''
-
-    /* COMPACT-HEADER-SHEET-CLOUD-V1 */
-    .topbar {
-      padding: calc(8px + var(--safe-top)) 18px 8px !important;
-      gap: 10px !important;
-    }
-    .topbar .top-account-btn,
-    .topbar .icon-btn {
-      width: 42px !important;
-      height: 42px !important;
-      flex: 0 0 42px !important;
-    }
-    .brand-eyebrow {
-      margin-bottom: 0 !important;
-      font-size: 11px !important;
-    }
-    .brand-title {
-      font-size: clamp(23px, 6.7vw, 30px) !important;
-    }
-    #screen-home > .home-search-wrap {
-      margin: -8px -16px 10px !important;
-      padding: 4px 16px 10px !important;
-    }
-    #screen-home > .home-search-wrap .search-shell {
-      min-height: 50px !important;
-      padding: 5px 8px 5px 14px !important;
-    }
-
-    #entityModal[data-entity-type="expense"] .sheet {
-      height: auto !important;
-      max-height: min(52dvh, 610px) !important;
-    }
-    #entityModal[data-entity-type="expense"] .sheet-body {
-      flex: 0 1 auto !important;
-      padding-bottom: 8px !important;
-    }
-    #entityModal[data-entity-type="expense"] form {
-      margin: 0 !important;
-    }
-    #entityModal[data-entity-type="expense"] .modal-actions {
-      margin-bottom: 0 !important;
-      padding-bottom: 0 !important;
-    }
-'''
-          if '/* COMPACT-HEADER-SHEET-CLOUD-V1 */' not in s:
-              s = s.replace('</style>', css + '\n</style>', 1)
-
+          s = s.replace('padding: calc(12px + var(--safe-top)) 18px 12px;', 'padding: calc(8px + var(--safe-top)) 18px 8px;', 1)
+          s = s.replace('width: 46px;\n      height: 46px;\n      flex: 0 0 46px;', 'width: 42px;\n      height: 42px;\n      flex: 0 0 42px;', 1)
+          s = s.replace('margin: 0 0 2px;', 'margin: 0;', 1)
+          s = s.replace('font-size: 12px;\n      font-weight: 600;\n      letter-spacing: .07em;', 'font-size: 11px;\n      font-weight: 600;\n      letter-spacing: .07em;', 1)
+          s = s.replace('font-size: clamp(24px, 7vw, 32px);', 'font-size: clamp(23px, 6.7vw, 30px);', 1)
+          s = s.replace('min-height: 56px;', 'min-height: 50px;', 1)
+          s = s.replace('margin: -10px -16px 14px;\n      padding: 8px 16px 14px;', 'margin: -8px -16px 10px;\n      padding: 4px 16px 10px;', 1)
+          s = s.replace('height: min(52dvh, 500px);\n      max-height: min(52dvh, 500px);', 'height: auto;\n      max-height: min(52dvh, 610px);', 1)
+          s = s.replace('flex: 1; min-height: 0; padding-top: 2px; padding-bottom: 10px;', 'flex: 0 1 auto; min-height: 0; padding-top: 2px; padding-bottom: 8px;', 1)
           p.write_text(s, encoding='utf-8')
           PY
       - name: Commit patch
