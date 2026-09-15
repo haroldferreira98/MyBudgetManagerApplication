@@ -140,7 +140,25 @@
       -webkit-backdrop-filter: blur(18px) saturate(1.15);
     }
 
-    .brand { min-width: 0; }
+    .brand { min-width: 0; flex: 1; }
+    .top-account-btn {
+      width: 46px;
+      height: 46px;
+      flex: 0 0 46px;
+      border: 1px solid color-mix(in srgb, var(--outline-variant) 65%, transparent);
+      border-radius: 50%;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: var(--surface-container-lowest);
+      color: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 1px 2px color-mix(in srgb, var(--shadow) 35%, transparent);
+    }
+    .top-account-btn:active { transform: scale(.94); }
+    .top-account-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .account-letter { font-size: 21px; font-weight: 700; font-family: Arial, sans-serif; }
     .brand-eyebrow {
       margin: 0 0 2px;
       color: var(--on-surface-variant);
@@ -224,6 +242,18 @@
       right: -92px;
       top: -112px;
       background: color-mix(in srgb, var(--primary) 11%, transparent);
+      pointer-events: none;
+    }
+    .hero-card > * { position: relative; z-index: 1; }
+    .hero-privacy-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 2;
+      width: 42px;
+      height: 42px;
+      background: color-mix(in srgb, var(--surface-container-lowest) 72%, transparent);
+      color: var(--on-primary-container);
     }
     .hero-label { color: var(--on-primary-container); font-size: 14px; font-weight: 600; }
     .hero-value {
@@ -610,13 +640,16 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
+      <button class="top-account-btn" id="accountBtn" type="button" aria-label="Se connecter avec Google" title="Se connecter avec Google">
+        <span class="account-letter">G</span>
+      </button>
       <div class="brand">
         <p class="brand-eyebrow">Budget personnel</p>
         <h1 class="brand-title" id="screenTitle">Accueil</h1>
       </div>
       <div class="top-actions">
-        <button class="icon-btn" id="privacyBtn" aria-label="Masquer les montants" title="Masquer les montants">
-          <span class="material-symbols-outlined" id="privacyIcon">visibility</span>
+        <button class="icon-btn" id="settingsBtn" type="button" aria-label="Paramètres" title="Paramètres">
+          <span class="material-symbols-outlined">settings</span>
         </button>
       </div>
     </header>
@@ -670,6 +703,27 @@
         <button class="icon-btn" data-close-modal="creditSimModal" aria-label="Fermer"><span class="material-symbols-outlined">close</span></button>
       </div>
       <div class="sheet-body" id="creditSimBody"></div>
+    </div>
+  </div>
+
+
+  <div class="sheet-backdrop" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h2 class="sheet-title" id="settingsTitle">Paramètres</h2>
+        <button class="icon-btn" data-close-modal="settingsModal" aria-label="Fermer"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="sheet-body">
+        <div class="section" style="margin-top:4px">
+          <div class="section-header"><div><h3 class="section-title">Apparence</h3><p class="section-subtitle">Le mode Automatique suit le thème de l’iPhone.</p></div></div>
+          <div class="segmented" id="settingsThemeSegment">
+            <button data-theme-choice="light">Clair</button>
+            <button data-theme-choice="dark">Sombre</button>
+            <button data-theme-choice="auto">Automatique</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -850,6 +904,7 @@
         authMod.onAuthStateChanged(auth, async user => {
           cloudUser = user || null;
           renderProfile();
+          updateTopAccountButton();
           if (cloudUser) await reconcileCloudState();
         });
       } catch (error) {
@@ -938,6 +993,7 @@
       await cloud.authMod.signOut(cloud.auth);
       cloudUser = null;
       renderProfile();
+      updateTopAccountButton();
       showSnackbar("Compte Google déconnecté. Les données locales restent sur cet appareil.");
     }
 
@@ -953,9 +1009,33 @@
       document.body.classList.toggle("privacy", !!state.settings.privacy);
       const icon = document.getElementById("privacyIcon");
       const btn = document.getElementById("privacyBtn");
-      icon.textContent = state.settings.privacy ? "visibility_off" : "visibility";
-      btn.setAttribute("aria-label", state.settings.privacy ? "Afficher les montants" : "Masquer les montants");
-      btn.title = state.settings.privacy ? "Afficher les montants" : "Masquer les montants";
+      if (icon) icon.textContent = state.settings.privacy ? "visibility_off" : "visibility";
+      if (btn) {
+        btn.setAttribute("aria-label", state.settings.privacy ? "Afficher les montants" : "Masquer les montants");
+        btn.title = state.settings.privacy ? "Afficher les montants" : "Masquer les montants";
+      }
+    }
+
+    function updateTopAccountButton() {
+      const btn = document.getElementById("accountBtn");
+      if (!btn) return;
+      if (cloudUser) {
+        const photo = cloudUser.photoURL ? escapeHtml(cloudUser.photoURL) : "";
+        btn.innerHTML = photo ? `<img src="${photo}" alt="">` : `<span class="material-symbols-outlined">account_circle</span>`;
+        const who = cloudUser.displayName || cloudUser.email || "Compte Google";
+        btn.setAttribute("aria-label", `${who} — se déconnecter`);
+        btn.title = `${who} — se déconnecter`;
+      } else {
+        btn.innerHTML = `<span class="account-letter">G</span>`;
+        btn.setAttribute("aria-label", "Se connecter avec Google");
+        btn.title = "Se connecter avec Google";
+      }
+    }
+
+    function updateSettingsUI() {
+      document.querySelectorAll('#settingsModal [data-theme-choice]').forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.themeChoice === (state.settings.theme || "auto"));
+      });
     }
 
     function sum(list, selector = x => x) {
@@ -992,19 +1072,12 @@
       const remaining = income - engaged;
       const daily = remaining / daysRemainingInMonth();
 
-      const needsExpenses = sum(currentMonthExpenses().filter(x => (x.bucket || defaultBucketForCategory(x.category)) === "needs"), x => x.amount);
-      const wantsExpenses = sum(currentMonthExpenses().filter(x => (x.bucket || defaultBucketForCategory(x.category)) === "wants"), x => x.amount);
-      const needsFixed = sum(activeFixedCharges().filter(x => (x.bucket || "needs") === "needs"), x => x.amount);
-      const wantsFixed = sum(activeFixedCharges().filter(x => x.bucket === "wants"), x => x.amount);
-      const savingsExpense = sum(currentMonthExpenses().filter(x => x.bucket === "savings"), x => x.amount);
-      const savingsFixed = sum(activeFixedCharges().filter(x => x.bucket === "savings"), x => x.amount);
-
       return {
         income, expenses, fixed, credits, projects, engaged, remaining, daily,
         buckets: {
-          needs: needsExpenses + needsFixed,
-          wants: wantsExpenses + wantsFixed,
-          savings: savingsExpense + savingsFixed + credits + projects
+          needs: fixed,
+          wants: expenses,
+          savings: projects
         }
       };
     }
@@ -1026,11 +1099,13 @@
 
     function renderAll() {
       applyTheme();
-      applyPrivacy();
       renderHome();
       renderIncome();
       renderExpenses();
       renderProfile();
+      applyPrivacy();
+      updateTopAccountButton();
+      updateSettingsUI();
       setCurrentScreen(currentScreen, false);
     }
 
@@ -1042,9 +1117,9 @@
       const charges = [...activeFixedCharges()].sort((a,b) => safeNumber(a.day, 1) - safeNumber(b.day, 1));
 
       const bucketCards = [
-        { key: "needs", label: "Besoins", target: 50, value: s.buckets.needs },
-        { key: "wants", label: "Envies", target: 30, value: s.buckets.wants },
-        { key: "savings", label: "Épargne / Crédit", target: 20, value: s.buckets.savings }
+        { key: "needs", label: "Charges fixes", target: 50, value: s.buckets.needs },
+        { key: "wants", label: "Dépenses courantes", target: 30, value: s.buckets.wants },
+        { key: "savings", label: "Épargne", target: 20, value: s.buckets.savings }
       ].map(item => {
         const pctIncome = s.income > 0 ? (item.value / s.income) * 100 : 0;
         const fill = item.target > 0 ? clamp((pctIncome / item.target) * 100, 0, 100) : 0;
@@ -1079,6 +1154,7 @@
       container.innerHTML = `
         <div class="section">
           <div class="card hero-card">
+            <button class="icon-btn hero-privacy-btn" id="privacyBtn" type="button" aria-label="Masquer les montants" title="Masquer les montants"><span class="material-symbols-outlined" id="privacyIcon">visibility</span></button>
             <div class="hero-label">Reste à vivre ce mois-ci</div>
             <div class="hero-value money">${formatMoney(s.remaining)}</div>
             <div class="hero-meta">
@@ -1104,7 +1180,7 @@
         </div>
 
         <div class="section">
-          <div class="section-header"><div><h2 class="section-title">Équilibre 50 / 30 / 20</h2><p class="section-subtitle">Répartition réelle par rapport aux revenus du mois.</p></div></div>
+          <div class="section-header"><div><h2 class="section-title">Équilibre 50 / 30 / 20</h2><p class="section-subtitle">50 % charges fixes · 30 % dépenses courantes · 20 % épargne.</p></div></div>
           <div class="card">${bucketCards}</div>
         </div>
 
@@ -1291,14 +1367,6 @@
       }).join("") : emptyState("savings", "Aucun projet d'épargne", "Ajoute un objectif. Son allocation mensuelle sera automatiquement déduite du reste à vivre.");
 
       container.innerHTML = `
-        <div class="section">
-          <div class="section-header"><div><h2 class="section-title">Apparence</h2><p class="section-subtitle">Le mode Automatique suit le thème du système.</p></div></div>
-          <div class="segmented" id="themeSegment">
-            <button data-theme-choice="light" class="${state.settings.theme === "light" ? "active" : ""}">Clair</button>
-            <button data-theme-choice="dark" class="${state.settings.theme === "dark" ? "active" : ""}">Sombre</button>
-            <button data-theme-choice="auto" class="${state.settings.theme === "auto" ? "active" : ""}">Automatique</button>
-          </div>
-        </div>
 
         <div class="section">
           <div class="section-header"><div><h2 class="section-title">Enveloppes mensuelles</h2></div><button class="btn tonal small" data-add-type="envelope"><span class="material-symbols-outlined">add</span>Ajouter</button></div>
@@ -1315,23 +1383,6 @@
           <div>${projectsHtml}</div>
         </div>
 
-
-        <div class="section">
-          <div class="section-header"><div><h2 class="section-title">Compte & synchronisation</h2><p class="section-subtitle">Sauvegarde en ligne avec votre compte Google.</p></div></div>
-          <div class="card">
-            <div class="list-item" style="padding:12px 0;background:transparent;border:0">
-              <div class="list-icon"><span class="material-symbols-outlined">cloud</span></div>
-              <div class="list-main">
-                <div class="list-title">${cloudUser ? escapeHtml(cloudUser.email || "Compte Google") : (isFirebaseConfigured() ? "Non connecté" : "Configuration Firebase requise")}</div>
-                <div class="list-sub">${cloudUser ? "Synchronisation automatique activée" : (isFirebaseConfigured() ? "Connectez-vous pour sauvegarder et retrouver vos données" : "La partie Google est prête dans le code, il reste à ajouter la configuration Firebase")}</div>
-              </div>
-            </div>
-            <div class="button-row" style="margin-top:10px">
-              <button class="btn primary" id="googleSignInBtn" ${(!isFirebaseConfigured() || cloudUser) ? "disabled" : ""}><span class="material-symbols-outlined">login</span>Se connecter avec Google</button>
-              <button class="btn outlined ${cloudUser ? "" : "hidden"}" id="googleSignOutBtn"><span class="material-symbols-outlined">logout</span>Se déconnecter</button>
-            </div>
-          </div>
-        </div>
 
         <div class="section">
           <div class="section-header"><div><h2 class="section-title">Sauvegarde & données</h2><p class="section-subtitle">Les données restent sur cet appareil tant que tu ne les exportes pas.</p></div></div>
@@ -1452,10 +1503,7 @@
             <div class="field"><label>Montant (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
             <div class="field"><label>Date</label><input name="date" type="date" required value="${escapeHtml(data.date || today)}"></div>
           </div>
-          <div class="field-row">
-            <div class="field"><label>Catégorie</label><select name="category">${optionTags(EXPENSE_CATEGORIES, data.category || "Autre")}</select></div>
-            <div class="field"><label>Affectation 50/30/20</label><select name="bucket">${optionTags(BUDGET_BUCKETS, data.bucket || defaultBucketForCategory(data.category || "Autre"))}</select></div>
-          </div>`;
+          <div class="field"><label>Catégorie</label><select name="category">${optionTags(EXPENSE_CATEGORIES, data.category || "Autre")}</select></div>`;
       } else if (type === "income") {
         fields = `
           <div class="field"><label>Libellé</label><input name="label" required maxlength="80" value="${escapeHtml(data.label || "")}" placeholder="Ex. Salaire"></div>
@@ -1470,7 +1518,6 @@
             <div class="field"><label>Montant mensuel (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
             <div class="field"><label>Jour de prélèvement</label><input name="day" type="number" min="1" max="31" required value="${data.day ?? new Date().getDate()}"></div>
           </div>
-          <div class="field"><label>Affectation 50/30/20</label><select name="bucket">${optionTags(BUDGET_BUCKETS, commonBucket)}</select></div>
           <label class="checkbox-row"><input name="active" type="checkbox" ${data.active !== false ? "checked" : ""}><span>Charge active</span></label>`;
       } else if (type === "credit") {
         const zero = !!data.zeroRate;
@@ -1540,14 +1587,14 @@
       if (type === "expense") {
         item = {
           id: id || uid("exp"), label: String(fd.get("label") || "").trim(), amount: safeNumber(fd.get("amount")),
-          date: fd.get("date") || todayISO(), category: fd.get("category") || "Autre", bucket: fd.get("bucket") || "needs"
+          date: fd.get("date") || todayISO(), category: fd.get("category") || "Autre", bucket: "wants"
         };
       } else if (type === "income") {
         item = { id: id || uid("inc"), label: String(fd.get("label") || "").trim(), amount: safeNumber(fd.get("amount")), date: fd.get("date") || todayISO() };
       } else if (type === "fixed") {
         item = {
           id: id || uid("fix"), label: String(fd.get("label") || "").trim(), amount: safeNumber(fd.get("amount")),
-          day: clamp(Math.round(safeNumber(fd.get("day"), 1)), 1, 31), bucket: fd.get("bucket") || "needs", active: fd.get("active") === "on",
+          day: clamp(Math.round(safeNumber(fd.get("day"), 1)), 1, 31), bucket: "needs", active: fd.get("active") === "on",
           paidMonths: current?.paidMonths || []
         };
       } else if (type === "credit") {
@@ -1856,15 +1903,30 @@
       setCurrentScreen("home");
     }
 
-    document.getElementById("privacyBtn").addEventListener("click", () => {
-      state.settings.privacy = !state.settings.privacy;
-      saveState();
-    });
-
     document.getElementById("fabAdd").addEventListener("click", () => openEntityModal("expense"));
     document.getElementById("entityForm").addEventListener("submit", handleEntitySubmit);
 
     document.addEventListener("click", event => {
+      const privacy = event.target.closest("#privacyBtn");
+      if (privacy) {
+        state.settings.privacy = !state.settings.privacy;
+        saveState();
+        return;
+      }
+
+      const settings = event.target.closest("#settingsBtn");
+      if (settings) { updateSettingsUI(); openModal("settingsModal"); return; }
+
+      const account = event.target.closest("#accountBtn");
+      if (account) {
+        if (cloudUser) {
+          if (confirm("Se déconnecter de ce compte Google ?")) signOutGoogle().catch(error => { console.error(error); showSnackbar("Déconnexion Google impossible."); });
+        } else {
+          signInWithGoogle();
+        }
+        return;
+      }
+
       const nav = event.target.closest("[data-screen]");
       if (nav) setCurrentScreen(nav.dataset.screen);
 
