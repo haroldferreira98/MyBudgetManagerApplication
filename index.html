@@ -871,6 +871,8 @@
       overflow: visible !important;
     }
 
+      /* VOICE-CANCEL-SILENT-V1 */
+    .voice-hud-card{position:relative}.voice-cancel-btn{width:38px;height:38px;flex:0 0 38px;border:0;border-radius:50%;display:grid;place-items:center;background:var(--surface-container-high);color:var(--on-surface);cursor:pointer;margin-left:4px}.voice-cancel-btn:active{transform:scale(.94)}
   </style>
 </head>
 <body>
@@ -927,6 +929,7 @@
         <div class="voice-transcript" id="voiceHudText">Parlez naturellement, par exemple « 25 € d’alimentation chez Auchan aujourd’hui ».</div>
       </div>
       <div class="voice-bars" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+      <button class="voice-cancel-btn" id="voiceCancelBtn" type="button" aria-label="Annuler la saisie vocale"><span class="material-symbols-outlined">close</span></button>
     </div>
   </div>
 
@@ -2265,6 +2268,13 @@
       hud.setAttribute("aria-hidden", active ? "false" : "true");
     }
 
+    function cancelVoiceRecognition() {
+      try { recognition?.abort(); } catch (_) {}
+      recognition = null;
+      setVoiceHud(false);
+      document.getElementById("micBtn")?.classList.remove("listening");
+    }
+
     function startVoiceRecognition(options = {}) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const micBtn = document.getElementById("micBtn");
@@ -2306,9 +2316,8 @@
         const parsed = parseVoiceCommand(finalTranscript.trim());
         if (!parsed.ok) {
           completed = true;
-          setVoiceHud(true, "Je n’ai pas compris", parsed.message);
-          showSnackbar(parsed.message);
-          setTimeout(() => setVoiceHud(false), 1600);
+          try { recognition?.abort(); } catch (_) {}
+          setVoiceHud(false);
           return;
         }
         const collection = collectionForType(parsed.type);
@@ -2321,11 +2330,7 @@
       };
       recognition.onerror = event => {
         completed = true;
-        const map = { "not-allowed": "Autorisation du microphone refusée.", "no-speech": "Aucune parole détectée.", "network": "Le service vocal n’est pas disponible pour le moment.", "aborted": "Écoute arrêtée." };
-        const message = map[event.error] || "La reconnaissance vocale a échoué.";
-        setVoiceHud(true, "Écoute interrompue", message);
-        if (event.error !== "aborted") showSnackbar(message);
-        setTimeout(() => setVoiceHud(false), 1300);
+        setVoiceHud(false);
       };
       recognition.onend = () => {
         document.getElementById("micBtn")?.classList.remove("listening");
@@ -2450,6 +2455,7 @@
     fabAdd?.addEventListener("pointercancel", clearFabHold);
     fabAdd?.addEventListener("contextmenu", event => event.preventDefault());
     document.getElementById("entityForm").addEventListener("submit", handleEntitySubmit);
+    document.getElementById("voiceCancelBtn")?.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); cancelVoiceRecognition(); });
 
     document.addEventListener("click", event => {
       const privacy = event.target.closest("#privacyBtn");
