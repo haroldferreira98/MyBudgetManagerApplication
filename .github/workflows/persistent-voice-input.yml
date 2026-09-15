@@ -15,7 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch persistent voice experience
-        run: python .github/scripts/persistent_voice_patch.py
+        shell: bash
+        run: |
+          sed -i 's/voice_pattern.subn(voice_replacement, text, count=1)/voice_pattern.subn(lambda _m: voice_replacement, text, count=1)/' .github/scripts/persistent_voice_patch.py
+          python .github/scripts/persistent_voice_patch.py
       - name: Validate and commit
         shell: bash
         run: |
