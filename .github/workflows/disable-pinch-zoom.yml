@@ -33,17 +33,17 @@ jobs:
               raise SystemExit("Viewport meta tag not found in expected form")
 
           marker = '    "use strict";\n'
-          anti_zoom_block = '''
-
-    // Désactive le zoom par pincement sur mobile sans bloquer le défilement à un doigt.
-    const preventZoomGesture = event => event.preventDefault();
-    ["gesturestart", "gesturechange", "gestureend"].forEach(type => {
-      document.addEventListener(type, preventZoomGesture, { passive: false });
-    });
-    document.addEventListener("touchmove", event => {
-      if (event.touches.length > 1) event.preventDefault();
-    }, { passive: false });
-'''
+          anti_zoom_block = (
+              '\n\n'
+              '    // Désactive le zoom par pincement sur mobile sans bloquer le défilement à un doigt.\n'
+              '    const preventZoomGesture = event => event.preventDefault();\n'
+              '    ["gesturestart", "gesturechange", "gestureend"].forEach(type => {\n'
+              '      document.addEventListener(type, preventZoomGesture, { passive: false });\n'
+              '    });\n'
+              '    document.addEventListener("touchmove", event => {\n'
+              '      if (event.touches.length > 1) event.preventDefault();\n'
+              '    }, { passive: false });\n'
+          )
 
           if "const preventZoomGesture" not in text:
               if marker not in text:
