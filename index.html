@@ -1505,7 +1505,7 @@
       return {
         income, expenses, fixed, credits, projects, engaged, remaining, daily,
         buckets: {
-          needs: fixed,
+          needs: fixed + credits,
           wants: expenses,
           savings: Math.max(0, remaining)
         }
