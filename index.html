@@ -2,8 +2,8 @@
 <html lang="fr" data-theme="auto">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mon Budget - Material You</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Mon Budget - Material You V2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -71,7 +71,7 @@
       font-family: 'Google Sans', 'Roboto', sans-serif;
       background-color: var(--md-sys-color-surface);
       color: var(--md-sys-color-on-surface);
-      padding-bottom: 96px;
+      padding-bottom: 120px;
       min-height: 100vh;
     }
     .privacy-mode .monetary {
@@ -113,34 +113,47 @@
       background: var(--md-sys-color-surface-container);
       border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px;
     }
-    .card-title { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.75; margin-bottom: 8px; }
+    .card-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; margin-bottom: 10px; font-weight: 700; }
     .hero-card {
       background: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-on-primary-container);
     }
-    .hero-amount { font-size: 34px; font-weight: 700; margin: 4px 0 8px; }
+    .hero-amount { font-size: 36px; font-weight: 700; margin: 4px 0 8px; }
     .gauge-track {
       background: rgba(0,0,0,0.08); height: 8px; border-radius: var(--radius-pill);
-      overflow: hidden; margin-top: 8px;
+      overflow: hidden; margin-top: 6px;
     }
-    .gauge-fill { height: 100%; border-radius: var(--radius-pill); }
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; height: 76px;
+    .gauge-fill { height: 100%; border-radius: var(--radius-pill); transition: width 0.3s ease; }
+    
+    .pill-nav-container {
+      position: fixed; bottom: 20px; left: 0; right: 0;
+      display: flex; justify-content: center; align-items: center;
+      z-index: 30; pointer-events: none; padding: 0 16px;
+    }
+    .pill-nav {
+      pointer-events: auto;
       background: var(--md-sys-color-surface-container-high);
-      display: flex; justify-content: space-around; align-items: center; z-index: 30;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+      max-width: 440px; width: 100%; justify-content: space-between;
     }
     .nav-item {
       background: transparent; border: none; display: flex; flex-direction: column;
-      align-items: center; font-size: 12px; gap: 4px; color: var(--md-sys-color-on-surface);
-      cursor: pointer; opacity: 0.7; flex: 1;
+      align-items: center; font-size: 11px; gap: 2px; color: var(--md-sys-color-on-surface);
+      cursor: pointer; opacity: 0.7; padding: 6px 8px; border-radius: var(--radius-pill);
     }
     .nav-item.active { opacity: 1; font-weight: 700; color: var(--md-sys-color-primary); }
-    .fab-btn {
-      width: 54px; height: 54px; border-radius: var(--radius-md);
+    .fab-raised {
+      width: 48px; height: 48px; border-radius: 50%;
       background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);
       border: none; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.22); cursor: pointer; flex-shrink: 0;
     }
+    
     .modal {
       position: fixed; inset: 0; background: rgba(0,0,0,0.4);
       display: none; align-items: flex-end; justify-content: center; z-index: 100;
@@ -151,7 +164,7 @@
       border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; max-height: 90vh; overflow-y: auto;
     }
     .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 13px; margin-bottom: 6px; }
+    .form-group label { display: block; font-size: 13px; margin-bottom: 6px; font-weight: 500; }
     .form-control {
       width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
       border: 1px solid var(--md-sys-color-outline-variant);
@@ -161,12 +174,19 @@
     .btn {
       width: 100%; padding: 14px; border-radius: var(--radius-pill); border: none;
       background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);
-      font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px;
+      font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px;
     }
     .btn-tonal {
       background: var(--md-sys-color-tertiary-container);
       color: var(--md-sys-color-on-tertiary-container);
     }
+    .empty-state { text-align: center; padding: 16px; font-size: 14px; opacity: 0.6; }
+    .badge {
+      font-size: 11px; padding: 4px 10px; border-radius: var(--radius-pill);
+      font-weight: 600; text-transform: uppercase;
+    }
+    .badge-ok { background: rgba(0, 104, 116, 0.15); color: var(--md-sys-color-primary); }
+    .badge-pending { background: rgba(84, 93, 126, 0.15); color: var(--md-sys-color-tertiary); }
   </style>
 </head>
 <body>
@@ -174,7 +194,7 @@
     <div class="avatar">H</div>
     <div class="search-box">
       <span class="material-symbols-rounded">search</span>
-      <input type="text" id="globalSearch" placeholder="Rechercher une opération...">
+      <input type="text" id="globalSearch" placeholder="Rechercher...">
     </div>
     <button class="icon-btn" id="togglePrivacy" title="Mode discrétion">
       <span class="material-symbols-rounded" id="privacyIcon">visibility</span>
@@ -186,34 +206,43 @@
     <section id="screen-home" class="screen active">
       <div class="card hero-card">
         <div class="card-title">Reste à vivre (Ce mois)</div>
-        <div class="hero-amount monetary" id="resteAVivreVal">0,00 €</div>
-        <div style="font-size: 14px;">Soit <strong class="monetary" id="resteParJourVal">0,00 €</strong> / jour jusqu'à fin du mois</div>
+        <div class="hero-amount monetary" id="resteAVivreVal">--</div>
+        <div style="font-size: 14px;">Soit <strong class="monetary" id="resteParJourVal">--</strong> / jour jusqu'à fin du mois</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Synthèse Revenus vs Dépenses</div>
+        <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+          <span>Revenus : <strong class="monetary" id="synthIncomes">--</strong></span>
+          <span>Dépenses : <strong class="monetary" id="synthExpenses" style="color:var(--md-sys-color-error);">--</strong></span>
+        </div>
+        <div class="gauge-track"><div class="gauge-fill" id="gaugeFlow" style="background: var(--md-sys-color-primary); width: 0%;"></div></div>
       </div>
 
       <div class="card">
         <div class="card-title">Règle 50 / 30 / 20</div>
-        <div style="margin-bottom: 8px;">
+        <div style="margin-bottom: 10px;">
           <div style="display: flex; justify-content: space-between; font-size: 13px;">
-            <span>Besoins (50%)</span><span class="monetary" id="valBesoins">0 €</span>
+            <span>Besoins (50%)</span><span class="monetary" id="valBesoins">--</span>
           </div>
           <div class="gauge-track"><div class="gauge-fill" id="gaugeBesoins" style="background: var(--md-sys-color-primary); width: 0%;"></div></div>
         </div>
-        <div style="margin-bottom: 8px;">
+        <div style="margin-bottom: 10px;">
           <div style="display: flex; justify-content: space-between; font-size: 13px;">
-            <span>Envies (30%)</span><span class="monetary" id="valEnvies">0 €</span>
+            <span>Envies (30%)</span><span class="monetary" id="valEnvies">--</span>
           </div>
           <div class="gauge-track"><div class="gauge-fill" id="gaugeEnvies" style="background: var(--md-sys-color-tertiary); width: 0%;"></div></div>
         </div>
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 13px;">
-            <span>Épargne & Projets (20%)</span><span class="monetary" id="valEpargne">0 €</span>
+            <span>Épargne & Projets (20%)</span><span class="monetary" id="valEpargne">--</span>
           </div>
           <div class="gauge-track"><div class="gauge-fill" id="gaugeEpargne" style="background: var(--md-sys-color-outline); width: 0%;"></div></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title">Charges fixes du mois</div>
+        <div class="card-title">Charges fixes & Prélèvements auto</div>
         <div id="fixedChargesList"></div>
       </div>
     </section>
@@ -221,8 +250,8 @@
     <!-- Revenus -->
     <section id="screen-incomes" class="screen">
       <div class="card">
-        <div class="card-title">Total des revenus</div>
-        <div class="hero-amount monetary" id="totalIncomesVal">0,00 €</div>
+        <div class="card-title">Total des revenus du mois</div>
+        <div class="hero-amount monetary" id="totalIncomesVal">--</div>
       </div>
       <div id="incomesList"></div>
     </section>
@@ -230,130 +259,254 @@
     <!-- Dépenses -->
     <section id="screen-expenses" class="screen">
       <div class="card">
-        <div class="card-title">Total des dépenses</div>
-        <div class="hero-amount monetary" id="totalExpensesVal">0,00 €</div>
+        <div class="card-title">Total des dépenses courantes</div>
+        <div class="hero-amount monetary" id="totalExpensesVal">--</div>
       </div>
       <div id="expensesList"></div>
     </section>
 
-    <!-- Profil & Arbitrage -->
+    <!-- Profil / Mon Argent -->
     <section id="screen-profile" class="screen">
+      <!-- Crédits -->
       <div class="card">
-        <div class="card-title">Simulateur d'arbitrage de crédit</div>
-        <div style="font-size: 14px; margin-bottom: 12px;">Majoration mensuelle de remboursement :</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+          <div class="card-title" style="margin:0;">Mes Crédits en cours</div>
+          <button class="btn-tonal" id="btnOpenCreditModal" style="border:none; padding:4px 12px; border-radius:var(--radius-pill); font-size:12px; cursor:pointer;">+ Ajouter</button>
+        </div>
+        <div id="creditsContainer"></div>
+        
+        <hr style="border:none; border-top:1px solid rgba(0,0,0,0.08); margin:16px 0;">
+        <div class="card-title">Simulateur d'arbitrage de remboursement</div>
+        <div style="font-size: 13px; margin-bottom: 8px;">Remboursement anticipé mensuel supplémentaire :</div>
         <input type="range" id="creditBoostRange" min="0" max="300" step="25" value="50" style="width: 100%;">
-        <div style="display:flex; justify-content:space-between; margin-top:6px; font-weight:600;">
+        <div style="display:flex; justify-content:space-between; margin-top:6px; font-weight:600; font-size:13px;">
           <span>+0 €</span><span id="boostDisplayVal">+50 €/mois</span><span>+300 €</span>
         </div>
         <div style="margin-top: 14px; padding: 12px; border-radius: var(--radius-sm); background: var(--md-sys-color-surface);" id="creditCalcResult">
-          Calcul en cours...
+          Sélectionnez ou ajoutez un crédit pour simuler.
         </div>
       </div>
 
+      <!-- Projets -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+          <div class="card-title" style="margin:0;">Mes Projets en cours</div>
+          <button class="btn-tonal" id="btnOpenProjectModal" style="border:none; padding:4px 12px; border-radius:var(--radius-pill); font-size:12px; cursor:pointer;">+ Nouveau</button>
+        </div>
+        <div id="projectsContainer"></div>
+      </div>
+
+      <!-- Enveloppes -->
+      <div class="card">
+        <div class="card-title">Mes budgétisations du mois (Enveloppes)</div>
+        <div id="envelopesContainer"></div>
+      </div>
+
+      <!-- Paramètres -->
       <div class="card">
         <div class="card-title">Paramètres & Données</div>
-        <button class="btn btn-tonal" id="btnExportJSON" style="margin-bottom:8px;">Exporter les données (JSON)</button>
-        <button class="btn btn-tonal" id="btnResetData" style="background: rgba(186,26,26,0.1); color: var(--md-sys-color-error);">Réinitialiser les données</button>
+        <div class="form-group">
+          <label>Thème</label>
+          <select class="form-control" id="themeSelect">
+            <option value="auto">Automatique (système)</option>
+            <option value="light">Clair</option>
+            <option value="dark">Sombre</option>
+          </select>
+        </div>
+        <button class="btn btn-tonal" id="btnExportJSON" style="margin-bottom:8px;">Exporter en JSON</button>
+        <button class="btn btn-tonal" id="btnExportCSV" style="margin-bottom:8px;">Exporter en CSV</button>
+        <button class="btn btn-tonal" id="btnResetData" style="background: rgba(186,26,26,0.1); color: var(--md-sys-color-error);">Réinitialiser toutes les données</button>
       </div>
     </section>
   </main>
 
-  <!-- Modale Saisie Rapide -->
+  <!-- Barre de navigation pilule flottante -->
+  <div class="pill-nav-container">
+    <nav class="pill-nav">
+      <button class="nav-item active" data-screen="screen-home">
+        <span class="material-symbols-rounded">dashboard</span><span>Accueil</span>
+      </button>
+      <button class="nav-item" data-screen="screen-incomes">
+        <span class="material-symbols-rounded">trending_up</span><span>Revenus</span>
+      </button>
+      <button class="fab-raised" id="openAddModal" title="Ajouter">
+        <span class="material-symbols-rounded">add</span>
+      </button>
+      <button class="nav-item" data-screen="screen-expenses">
+        <span class="material-symbols-rounded">trending_down</span><span>Dépenses</span>
+      </button>
+      <button class="nav-item" data-screen="screen-profile">
+        <span class="material-symbols-rounded">account_circle</span><span>Profil</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Modale Opération Rapide -->
   <div class="modal" id="modalAdd">
     <div class="modal-content">
       <h3 style="margin-bottom: 16px;">Nouvelle opération</h3>
       <div class="form-group">
-        <label>Type</label>
+        <label>Type d'opération</label>
         <select class="form-control" id="txType">
-          <option value="expense">Dépense</option>
+          <option value="expense">Dépense courante</option>
           <option value="income">Revenu</option>
+          <option value="fixed">Charge fixe mensuelle</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Titre</label>
-        <input type="text" class="form-control" id="txTitle" placeholder="Ex. Courses Supermarché">
+        <label>Libellé</label>
+        <input type="text" class="form-control" id="txTitle" placeholder="Ex. Courses, Loyer, Salaire...">
       </div>
       <div class="form-group">
         <label>Montant (€)</label>
         <input type="number" step="0.01" class="form-control" id="txAmount" placeholder="0.00">
       </div>
-      <div class="form-group">
-        <label>Catégorie 50/30/20</label>
+      <div class="form-group" id="groupCategory">
+        <label>Catégorie (50/30/20 ou Enveloppe)</label>
         <select class="form-control" id="txCat">
-          <option value="besoins">Besoins (50%)</option>
-          <option value="envies">Envies (30%)</option>
-          <option value="epargne">Épargne & Projets (20%)</option>
+          <option value="Courses">Courses (Besoins)</option>
+          <option value="Carburant">Carburant / Transport (Besoins)</option>
+          <option value="Sorties">Sorties / Loisirs (Envies)</option>
+          <option value="Autre">Autre</option>
         </select>
+      </div>
+      <div class="form-group" id="groupDay" style="display:none;">
+        <label>Jour de prélèvement dans le mois (1-31)</label>
+        <input type="number" min="1" max="31" class="form-control" id="txDay" value="5">
       </div>
       <button class="btn" id="btnSaveTx">Enregistrer</button>
       <button class="btn btn-tonal" id="btnCloseModal" style="margin-top:8px;">Annuler</button>
     </div>
   </div>
 
-  <!-- Barre de navigation inférieure -->
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-screen="screen-home">
-      <span class="material-symbols-rounded">dashboard</span><span>Accueil</span>
-    </button>
-    <button class="nav-item" data-screen="screen-incomes">
-      <span class="material-symbols-rounded">trending_up</span><span>Revenus</span>
-    </button>
-    <button class="fab-btn" id="openAddModal">
-      <span class="material-symbols-rounded">add</span>
-    </button>
-    <button class="nav-item" data-screen="screen-expenses">
-      <span class="material-symbols-rounded">trending_down</span><span>Dépenses</span>
-    </button>
-    <button class="nav-item" data-screen="screen-profile">
-      <span class="material-symbols-rounded">account_circle</span><span>Profil</span>
-    </button>
-  </nav>
+  <!-- Modale Crédit -->
+  <div class="modal" id="modalCredit">
+    <div class="modal-content">
+      <h3 style="margin-bottom: 16px;">Ajouter un crédit</h3>
+      <div class="form-group">
+        <label>Nom du crédit</label>
+        <input type="text" class="form-control" id="creditName" placeholder="Ex. Prêt Auto, Prêt Travaux">
+      </div>
+      <div class="form-group">
+        <label>Capital restant dû (€)</label>
+        <input type="number" step="0.01" class="form-control" id="creditCapital" placeholder="8500">
+      </div>
+      <div class="form-group">
+        <label>Taux d'intérêt annuel TAEG (%)</label>
+        <input type="number" step="0.01" class="form-control" id="creditRate" placeholder="4.9">
+      </div>
+      <div class="form-group">
+        <label>Mensualité actuelle (€)</label>
+        <input type="number" step="0.01" class="form-control" id="creditMonthly" placeholder="210">
+      </div>
+      <button class="btn" id="btnSaveCredit">Enregistrer le crédit</button>
+      <button class="btn btn-tonal" id="btnCloseCreditModal" style="margin-top:8px;">Annuler</button>
+    </div>
+  </div>
+
+  <!-- Modale Projet -->
+  <div class="modal" id="modalProject">
+    <div class="modal-content">
+      <h3 style="margin-bottom: 16px;">Nouveau projet d'épargne</h3>
+      <div class="form-group">
+        <label>Nom du projet</label>
+        <input type="text" class="form-control" id="projectName" placeholder="Ex. Vacances d'été, Mariage">
+      </div>
+      <div class="form-group">
+        <label>Objectif financier (€)</label>
+        <input type="number" step="0.01" class="form-control" id="projectTarget" placeholder="3000">
+      </div>
+      <div class="form-group">
+        <label>Montant déjà acquis (€)</label>
+        <input type="number" step="0.01" class="form-control" id="projectCurrent" placeholder="500">
+      </div>
+      <div class="form-group">
+        <label>Allocation mensuelle automatique (€/mois)</label>
+        <input type="number" step="0.01" class="form-control" id="projectMonthly" placeholder="150">
+        <small style="font-size:12px; opacity:0.75;">Ce montant est déduit directement du Reste à vivre chaque mois.</small>
+      </div>
+      <div class="form-group">
+        <label>Date cible</label>
+        <input type="date" class="form-control" id="projectDate">
+      </div>
+      <button class="btn" id="btnSaveProject">Créer le projet</button>
+      <button class="btn btn-tonal" id="btnCloseProjectModal" style="margin-top:8px;">Annuler</button>
+    </div>
+  </div>
 
   <script>
+    const STORAGE_KEY = 'm3_budget_app_v2';
     const DEFAULT_DATA = {
-      incomes: [{ id: 1, title: 'Salaire net', amount: 2450 }],
+      theme: 'auto',
+      incomes: [
+        { id: 1, title: 'Salaire net', amount: 2450 }
+      ],
       fixedCharges: [
-        { id: 1, title: 'Loyer', amount: 750, day: 5 },
+        { id: 1, title: 'Loyer & Charges', amount: 750, day: 5 },
         { id: 2, title: 'Assurances', amount: 52, day: 10 },
-        { id: 3, title: 'Électricité / Box', amount: 110, day: 20 }
+        { id: 3, title: 'Électricité & Gaz', amount: 85, day: 12 },
+        { id: 4, title: 'Abonnement Box & Mobile', amount: 39.99, day: 25 }
       ],
       expenses: [
-        { id: 1, title: 'Courses Intermarché', amount: 84.50, cat: 'besoins' },
-        { id: 2, title: 'Restaurant', amount: 45.00, cat: 'envies' }
+        { id: 1, title: 'Courses Intermarché', amount: 84.50, cat: 'Courses' },
+        { id: 2, title: 'Plein Carburant', amount: 60.00, cat: 'Carburant' },
+        { id: 3, title: 'Restaurant / Soirée', amount: 45.00, cat: 'Sorties' }
       ],
-      credit: { capital: 8500, rate: 0.049, monthly: 210 },
-      savingsMonthly: 150
+      credits: [
+        { id: 1, title: 'Prêt Auto', capital: 8500, rate: 0.049, monthly: 210 }
+      ],
+      projects: [
+        { id: 1, title: 'Vacances', target: 2500, current: 900, monthly: 150, date: '2027-07-01' }
+      ],
+      envelopes: [
+        { category: 'Courses', budget: 400 },
+        { category: 'Carburant', budget: 120 },
+        { category: 'Sorties', budget: 200 }
+      ]
     };
 
-    let state = JSON.parse(localStorage.getItem('m3_budget_data')) || DEFAULT_DATA;
-    function save() { localStorage.setItem('m3_budget_data', JSON.stringify(state)); render(); }
+    let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_DATA;
 
-    function formatEuro(val) {
-      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(val);
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      render();
+    }
+
+    function formatEuro(v) {
+      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v);
     }
 
     function render() {
+      document.documentElement.setAttribute('data-theme', state.theme || 'auto');
+      document.getElementById('themeSelect').value = state.theme || 'auto';
+
       const totalIncomes = state.incomes.reduce((acc, x) => acc + x.amount, 0);
       const totalFixed = state.fixedCharges.reduce((acc, x) => acc + x.amount, 0);
       const totalExpenses = state.expenses.reduce((acc, x) => acc + x.amount, 0);
-      const creditMonthly = state.credit.monthly;
-      const savingsMonthly = state.savingsMonthly;
+      const totalCredits = state.credits.reduce((acc, x) => acc + x.monthly, 0);
+      const totalProjectsMonthly = state.projects.reduce((acc, x) => acc + x.monthly, 0);
 
-      const resteAVivre = totalIncomes - totalFixed - creditMonthly - savingsMonthly - totalExpenses;
-      const daysInMonth = 30;
-      const today = new Date().getDate();
-      const daysLeft = Math.max(1, daysInMonth - today);
-      const parJour = Math.max(0, resteAVivre / daysLeft);
+      const resteAVivre = totalIncomes - totalFixed - totalCredits - totalProjectsMonthly - totalExpenses;
+      
+      const today = new Date();
+      const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      const daysLeft = Math.max(1, lastDayOfMonth - today.getDate());
+      const resteParJour = Math.max(0, resteAVivre / daysLeft);
 
       document.getElementById('resteAVivreVal').textContent = formatEuro(resteAVivre);
-      document.getElementById('resteParJourVal').textContent = formatEuro(parJour);
+      document.getElementById('resteParJourVal').textContent = formatEuro(resteParJour);
+      document.getElementById('synthIncomes').textContent = formatEuro(totalIncomes);
+      document.getElementById('synthExpenses').textContent = formatEuro(totalExpenses + totalFixed + totalCredits);
       document.getElementById('totalIncomesVal').textContent = formatEuro(totalIncomes);
       document.getElementById('totalExpensesVal').textContent = formatEuro(totalExpenses);
 
-      // 50/30/20
-      const sumBesoins = totalFixed + creditMonthly + state.expenses.filter(x => x.cat === 'besoins').reduce((a, b) => a + b.amount, 0);
-      const sumEnvies = state.expenses.filter(x => x.cat === 'envies').reduce((a, b) => a + b.amount, 0);
-      const sumEpargne = savingsMonthly;
+      const totalSpent = totalExpenses + totalFixed + totalCredits;
+      const flowPercent = totalIncomes > 0 ? Math.min(100, (totalSpent / totalIncomes) * 100) : 0;
+      document.getElementById('gaugeFlow').style.width = flowPercent + '%';
+
+      const sumBesoins = totalFixed + totalCredits + state.expenses.filter(x => x.cat === 'Courses' || x.cat === 'Carburant').reduce((a, b) => a + b.amount, 0);
+      const sumEnvies = state.expenses.filter(x => x.cat === 'Sorties' || x.cat === 'Autre').reduce((a, b) => a + b.amount, 0);
+      const sumEpargne = totalProjectsMonthly;
 
       document.getElementById('valBesoins').textContent = formatEuro(sumBesoins);
       document.getElementById('valEnvies').textContent = formatEuro(sumEnvies);
@@ -365,44 +518,151 @@
         document.getElementById('gaugeEpargne').style.width = Math.min(100, (sumEpargne / (totalIncomes * 0.2)) * 100) + '%';
       }
 
-      // Charges fixes list
-      const fcList = document.getElementById('fixedChargesList');
-      fcList.innerHTML = state.fixedCharges.map(fc => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.05);">
-          <div><strong>${fc.title}</strong><div style="font-size:12px; opacity:0.7;">Le ${fc.day} du mois</div></div>
-          <div class="monetary">${formatEuro(fc.amount)}</div>
-        </div>
-      `).join('');
-
-      renderLists();
-      computeCredit();
+      renderFixedCharges(today.getDate());
+      renderDynamicLists();
+      renderCredits();
+      renderProjects();
+      renderEnvelopes();
+      computeCreditSimulation();
     }
 
-    function renderLists() {
+    function renderFixedCharges(currentDay) {
+      const el = document.getElementById('fixedChargesList');
+      if (!state.fixedCharges.length) {
+        el.innerHTML = '<div class="empty-state">Aucune charge fixe enregistrée.</div>';
+        return;
+      }
+      el.innerHTML = state.fixedCharges.map(fc => {
+        const isPaid = fc.day <= currentDay;
+        const badgeClass = isPaid ? 'badge-ok' : 'badge-pending';
+        const badgeLabel = isPaid ? 'Prélevé' : 'À venir';
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.05);">
+            <div>
+              <strong>${fc.title}</strong>
+              <div style="font-size:12px; opacity:0.7;">Le ${fc.day} du mois</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="badge ${badgeClass}">${badgeLabel}</span>
+              <span class="monetary" style="font-weight:600;">${formatEuro(fc.amount)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDynamicLists() {
       const expList = document.getElementById('expensesList');
-      expList.innerHTML = state.expenses.map(e => `
-        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-          <div><strong>${e.title}</strong><div style="font-size:12px; opacity:0.7;">Catégorie : ${e.cat}</div></div>
-          <div class="monetary" style="color:var(--md-sys-color-error); font-weight:700;">-${formatEuro(e.amount)}</div>
-        </div>
-      `).join('');
+      if (!state.expenses.length) {
+        expList.innerHTML = '<div class="empty-state">Aucune dépense enregistrée.</div>';
+      } else {
+        expList.innerHTML = state.expenses.map(e => `
+          <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong>${e.title}</strong>
+              <div style="font-size:12px; opacity:0.7;">${e.cat}</div>
+            </div>
+            <div class="monetary" style="color:var(--md-sys-color-error); font-weight:700;">-${formatEuro(e.amount)}</div>
+          </div>
+        `).join('');
+      }
 
       const incList = document.getElementById('incomesList');
-      incList.innerHTML = state.incomes.map(i => `
-        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-          <div><strong>${i.title}</strong></div>
-          <div class="monetary" style="color:var(--md-sys-color-primary); font-weight:700;">+${formatEuro(i.amount)}</div>
+      if (!state.incomes.length) {
+        incList.innerHTML = '<div class="empty-state">Aucun revenu enregistré.</div>';
+      } else {
+        incList.innerHTML = state.incomes.map(i => `
+          <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div><strong>${i.title}</strong></div>
+            <div class="monetary" style="color:var(--md-sys-color-primary); font-weight:700;">+${formatEuro(i.amount)}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderCredits() {
+      const el = document.getElementById('creditsContainer');
+      if (!state.credits.length) {
+        el.innerHTML = '<div class="empty-state">Aucun crédit en cours.</div>';
+        return;
+      }
+      el.innerHTML = state.credits.map(c => `
+        <div style="padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.06);">
+          <div style="display:flex; justify-content:space-between; font-weight:600;">
+            <span>${c.title}</span>
+            <span class="monetary">${formatEuro(c.capital)} restants</span>
+          </div>
+          <div style="font-size:12px; opacity:0.75; margin-top:2px;">
+            Mensualité : <strong class="monetary">${formatEuro(c.monthly)}</strong> | TAEG : ${(c.rate * 100).toFixed(2)}%
+          </div>
         </div>
       `).join('');
     }
 
-    function computeCredit() {
+    function renderProjects() {
+      const el = document.getElementById('projectsContainer');
+      if (!state.projects.length) {
+        el.innerHTML = '<div class="empty-state">Aucun projet en cours.</div>';
+        return;
+      }
+      el.innerHTML = state.projects.map(p => {
+        const pct = Math.min(100, Math.round((p.current / p.target) * 100));
+        return `
+          <div style="margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; font-size:14px; font-weight:600;">
+              <span>${p.title}</span>
+              <span class="monetary">${formatEuro(p.current)} / ${formatEuro(p.target)}</span>
+            </div>
+            <div class="gauge-track">
+              <div class="gauge-fill" style="background:var(--md-sys-color-primary); width:${pct}%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; opacity:0.75; margin-top:4px;">
+              <span>Allocation : <strong class="monetary">${formatEuro(p.monthly)}/mois</strong></span>
+              <span>Progression : ${pct}%</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderEnvelopes() {
+      const el = document.getElementById('envelopesContainer');
+      el.innerHTML = state.envelopes.map(env => {
+        const spent = state.expenses.filter(e => e.cat === env.category).reduce((a, b) => a + b.amount, 0);
+        const pct = Math.min(100, Math.round((spent / env.budget) * 100));
+        return `
+          <div style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; font-size:13px;">
+              <span><strong>${env.category}</strong></span>
+              <span class="monetary">${formatEuro(spent)} / ${formatEuro(env.budget)}</span>
+            </div>
+            <div class="gauge-track">
+              <div class="gauge-fill" style="background:${pct >= 100 ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-secondary)'}; width:${pct}%;"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function computeCreditSimulation() {
+      const resEl = document.getElementById('creditCalcResult');
+      if (!state.credits.length) {
+        resEl.innerHTML = '<div style="opacity:0.7;">Aucun crédit enregistré pour la simulation.</div>';
+        return;
+      }
       const boost = parseFloat(document.getElementById('creditBoostRange').value);
       document.getElementById('boostDisplayVal').textContent = `+${boost} €/mois`;
-      const C = state.credit.capital;
-      const r = state.credit.rate / 12;
-      const M = state.credit.monthly;
+
+      const c = state.credits[0];
+      const C = c.capital;
+      const r = c.rate / 12;
+      const M = c.monthly;
       const M2 = M + boost;
+
+      if (r <= 0 || (r * C) >= M) {
+        resEl.innerHTML = '<div>Simulation impossible avec ces paramètres.</div>';
+        return;
+      }
 
       const n1 = -Math.log(1 - (r * C) / M) / Math.log(1 + r);
       const n2 = -Math.log(1 - (r * C) / M2) / Math.log(1 + r);
@@ -412,14 +672,19 @@
       const totalCost2 = (n2 * M2) - C;
       const savedInterest = Math.max(0, totalCost1 - totalCost2);
 
-      document.getElementById('creditCalcResult').innerHTML = `
-        <div>⚡ <strong>${savedMonths} mois</strong> d'échéances gagnés</div>
-        <div style="margin-top:4px;">💰 Économie d'intérêts : <strong>${formatEuro(savedInterest)}</strong></div>
-        <div style="margin-top:4px; font-size:12px; color:var(--md-sys-color-primary);">Arbitrage conseillé : amortissement avantageux (TAEG > Livret A).</div>
+      const isArbitrageProfitable = (c.rate * 100) > 3.0;
+
+      resEl.innerHTML = `
+        <div>⚡ <strong>${savedMonths} mois d'échéances gagnés</strong> sur ce prêt</div>
+        <div style="margin-top:4px;">💰 Économie totale d'intérêts : <strong class="monetary">${formatEuro(savedInterest)}</strong></div>
+        <div style="margin-top:6px; font-size:12px; font-weight:600; color:${isArbitrageProfitable ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-tertiary)'};">
+          ${isArbitrageProfitable 
+            ? '✅ Rentable : Le taux du crédit (' + (c.rate*100).toFixed(1) + '%) est supérieur au rendement moyen sans risque (3%). Privilégiez le remboursement.' 
+            : 'ℹ️ Arbitrage neutre/faible : Le taux du crédit est bas. Conserver une épargne liquide peut être plus avantageux.'}
+        </div>
       `;
     }
 
-    // Navigation
     document.querySelectorAll('.nav-item').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -429,51 +694,115 @@
       });
     });
 
-    // Privacy Mode
     document.getElementById('togglePrivacy').addEventListener('click', () => {
       document.body.classList.toggle('privacy-mode');
       const isMuted = document.body.classList.contains('privacy-mode');
       document.getElementById('privacyIcon').textContent = isMuted ? 'visibility_off' : 'visibility';
     });
 
-    // Modal
-    const modal = document.getElementById('modalAdd');
-    document.getElementById('openAddModal').addEventListener('click', () => modal.classList.add('active'));
-    document.getElementById('btnCloseModal').addEventListener('click', () => modal.classList.remove('active'));
+    const modalAdd = document.getElementById('modalAdd');
+    document.getElementById('openAddModal').addEventListener('click', () => modalAdd.classList.add('active'));
+    document.getElementById('btnCloseModal').addEventListener('click', () => modalAdd.classList.remove('active'));
+
+    document.getElementById('txType').addEventListener('change', (e) => {
+      const isFixed = e.target.value === 'fixed';
+      document.getElementById('groupDay').style.display = isFixed ? 'block' : 'none';
+      document.getElementById('groupCategory').style.display = isFixed ? 'none' : 'block';
+    });
 
     document.getElementById('btnSaveTx').addEventListener('click', () => {
+      const type = document.getElementById('txType').value;
       const title = document.getElementById('txTitle').value.trim();
       const amount = parseFloat(document.getElementById('txAmount').value);
-      const type = document.getElementById('txType').value;
       const cat = document.getElementById('txCat').value;
+      const day = parseInt(document.getElementById('txDay').value) || 1;
 
-      if (!title || isNaN(amount) || amount <= 0) return alert('Veuillez saisir un libellé et un montant valides.');
+      if (!title || isNaN(amount) || amount <= 0) {
+        return alert('Veuillez renseigner un libellé et un montant valides.');
+      }
 
       if (type === 'expense') {
         state.expenses.unshift({ id: Date.now(), title, amount, cat });
-      } else {
+      } else if (type === 'income') {
         state.incomes.unshift({ id: Date.now(), title, amount });
+      } else if (type === 'fixed') {
+        state.fixedCharges.push({ id: Date.now(), title, amount, day });
       }
+
       save();
-      modal.classList.remove('active');
+      modalAdd.classList.remove('active');
       document.getElementById('txTitle').value = '';
       document.getElementById('txAmount').value = '';
     });
 
-    // Credit Simulator Range
-    document.getElementById('creditBoostRange').addEventListener('input', computeCredit);
+    const modalCredit = document.getElementById('modalCredit');
+    document.getElementById('btnOpenCreditModal').addEventListener('click', () => modalCredit.classList.add('active'));
+    document.getElementById('btnCloseCreditModal').addEventListener('click', () => modalCredit.classList.remove('active'));
 
-    // Export & Reset
+    document.getElementById('btnSaveCredit').addEventListener('click', () => {
+      const title = document.getElementById('creditName').value.trim();
+      const capital = parseFloat(document.getElementById('creditCapital').value);
+      const ratePct = parseFloat(document.getElementById('creditRate').value);
+      const monthly = parseFloat(document.getElementById('creditMonthly').value);
+
+      if (!title || isNaN(capital) || isNaN(ratePct) || isNaN(monthly)) {
+        return alert('Champs invalides pour le crédit.');
+      }
+
+      state.credits.push({ id: Date.now(), title, capital, rate: ratePct / 100, monthly });
+      save();
+      modalCredit.classList.remove('active');
+    });
+
+    const modalProject = document.getElementById('modalProject');
+    document.getElementById('btnOpenProjectModal').addEventListener('click', () => modalProject.classList.add('active'));
+    document.getElementById('btnCloseProjectModal').addEventListener('click', () => modalProject.classList.remove('active'));
+
+    document.getElementById('btnSaveProject').addEventListener('click', () => {
+      const title = document.getElementById('projectName').value.trim();
+      const target = parseFloat(document.getElementById('projectTarget').value);
+      const current = parseFloat(document.getElementById('projectCurrent').value) || 0;
+      const monthly = parseFloat(document.getElementById('projectMonthly').value) || 0;
+      const date = document.getElementById('projectDate').value;
+
+      if (!title || isNaN(target) || target <= 0) {
+        return alert('Nom ou montant cible invalide.');
+      }
+
+      state.projects.push({ id: Date.now(), title, target, current, monthly, date });
+      save();
+      modalProject.classList.remove('active');
+    });
+
+    document.getElementById('creditBoostRange').addEventListener('input', computeCreditSimulation);
+
+    document.getElementById('themeSelect').addEventListener('change', (e) => {
+      state.theme = e.target.value;
+      save();
+    });
+
     document.getElementById('btnExportJSON').addEventListener('click', () => {
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = 'budget-data.json';
+      a.href = URL.createObjectURL(blob);
+      a.download = 'mon-budget.json';
+      a.click();
+    });
+
+    document.getElementById('btnExportCSV').addEventListener('click', () => {
+      let csv = 'Type;Titre;Montant;Categorie/Details\n';
+      state.incomes.forEach(i => csv += `Revenu;${i.title};${i.amount};\n`);
+      state.expenses.forEach(e => csv += `Depense;${e.title};${e.amount};${e.cat}\n`);
+      state.fixedCharges.forEach(f => csv += `Charge Fixe;${f.title};${f.amount};Jour ${f.day}\n`);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'mon-budget.csv';
       a.click();
     });
 
     document.getElementById('btnResetData').addEventListener('click', () => {
-      if (confirm('Réinitialiser toutes les données ?')) {
+      if (confirm('Supprimer toutes les données et rétablir le modèle de test ?')) {
         state = JSON.parse(JSON.stringify(DEFAULT_DATA));
         save();
       }
