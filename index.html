@@ -854,6 +854,23 @@
     @keyframes voiceBar { from { height: 7px; opacity: .45; } to { height: 28px; opacity: 1; } }
     @keyframes voicePulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 24%, transparent); } 70% { box-shadow: 0 0 0 11px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 
+  
+    /* SEARCH-BG-LOWER-PILL-V3 */
+    #screen-home > .home-search-wrap {
+      background: var(--surface) !important;
+    }
+
+    .nav-wrap {
+      bottom: max(6px, calc(var(--safe-bottom) - 22px)) !important;
+    }
+    .bottom-nav {
+      height: calc(var(--nav-height) - 4px) !important;
+      min-height: 0 !important;
+      padding: 6px 10px !important;
+      border-radius: 32px !important;
+      overflow: visible !important;
+    }
+
   </style>
 </head>
 <body>
