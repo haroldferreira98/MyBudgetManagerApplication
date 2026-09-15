@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/hard-voice-reload.yml'
+      - '.github/scripts/hard_voice_reload.py'
 
 permissions:
   contents: write
@@ -13,31 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch hard reload after voice validation
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          p = Path('index.html')
-          text = p.read_text(encoding='utf-8')
-          old = '      const reloadAfterVoiceSave = () => setTimeout(() => window.location.reload(), 180);'
-          new = '''      const reloadAfterVoiceSave = () => setTimeout(() => {
-        // JavaScript cannot invoke Safari's exact Cmd+Shift+R command. Navigating
-        // to a unique URL is the closest reliable equivalent for our PWA: it
-        // creates a completely fresh document / SpeechRecognition context and
-        // bypasses reuse of the current page instance.
-        const url = new URL(window.location.href);
-        url.searchParams.set("__voice_hard_reload", Date.now().toString());
-        window.location.replace(url.toString());
-      }, 220);'''
-          if old not in text:
-              raise SystemExit('reloadAfterVoiceSave target not found')
-          text = text.replace(old, new, 1)
-          p.write_text(text, encoding='utf-8')
-          PY
+      - name: Patch hard reload
+        run: python .github/scripts/hard_voice_reload.py
       - name: Validate and commit
-        shell: bash
         run: |
           git diff --check
           git config user.name "github-actions[bot]"
