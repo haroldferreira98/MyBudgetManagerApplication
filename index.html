@@ -522,6 +522,15 @@
     .expense-sort-option:hover,
     .expense-sort-option.active { background: var(--primary-container); color: var(--on-primary-container); }
     .expense-sort-option .material-symbols-outlined { width: 18px; font-size: 18px; }
+    .expense-category-group { display: grid; gap: 7px; }
+    .expense-category-group + .expense-category-group { margin-top: 18px; }
+    .expense-category-label {
+      margin: 0 4px 1px;
+      color: var(--on-surface-variant);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .01em;
+    }
     .list-side small { display: block; margin-top: 4px; color: var(--on-surface-variant); font-size: 11px; }
     .item-actions { display: flex; gap: 5px; margin-left: 4px; }
     .mini-btn {
@@ -1415,7 +1424,7 @@
     let currentScreen = "home";
     let expenseFilter = "Toutes";
     let expenseSearch = "";
-    let expenseSort = "date";
+    let expenseSort = "category";
     let globalSearch = "";
     let snackbarTimer = null;
     let cloud = null;
@@ -2126,20 +2135,43 @@
         .filter(item => expenseFilter === "Toutes" || item.category === expenseFilter)
         .filter(item => !normalizedSearch || `${item.label} ${item.category}`.toLowerCase().includes(normalizedSearch))
         .sort((a, b) => {
+          if (expenseSort === "category") {
+            const categoryCompare = String(a.category || "").localeCompare(String(b.category || ""), "fr", { sensitivity: "base" });
+            if (categoryCompare) return categoryCompare;
+            return String(b.date).localeCompare(String(a.date));
+          }
           if (expenseSort === "amount") return safeNumber(b.amount) - safeNumber(a.amount);
           if (expenseSort === "alpha") return String(a.label || "").localeCompare(String(b.label || ""), "fr", { sensitivity: "base" });
           return String(b.date).localeCompare(String(a.date));
         });
 
-      const listHtml = filtered.length ? filtered.map(item => `
+      const renderExpenseRow = item => `
         <div class="list-item expense-list-item" data-edit-type="expense" data-edit-id="${item.id}" role="button" tabindex="0">
           <div class="list-icon"><span class="material-symbols-outlined">${categoryIcon(item.category)}</span></div>
           <div class="list-main">
             <div class="list-title">${escapeHtml(item.label)}</div>
-            <div class="list-sub">${escapeHtml(item.category)} · ${formatDate(item.date)}</div>
           </div>
           <div class="list-side"><div class="list-amount money negative">−${formatMoney(item.amount)}</div></div>
-        </div>`).join("") : emptyState("receipt_long", "Aucune dépense", "Les dépenses correspondant à tes filtres apparaîtront ici.");
+        </div>`;
+
+      let listHtml;
+      if (!filtered.length) {
+        listHtml = emptyState("receipt_long", "Aucune dépense", "Les dépenses correspondant à tes filtres apparaîtront ici.");
+      } else if (expenseSort === "category") {
+        const groups = new Map();
+        filtered.forEach(item => {
+          const category = item.category || "Sans catégorie";
+          if (!groups.has(category)) groups.set(category, []);
+          groups.get(category).push(item);
+        });
+        listHtml = [...groups.entries()].map(([category, items]) => `
+          <div class="expense-category-group">
+            <div class="expense-category-label">${escapeHtml(category)}</div>
+            ${items.map(renderExpenseRow).join("")}
+          </div>`).join("");
+      } else {
+        listHtml = filtered.map(renderExpenseRow).join("");
+      }
 
       const chips = ["Toutes", ...EXPENSE_CATEGORIES].map(cat => `<button class="chip ${expenseFilter === cat ? "active" : ""}" data-expense-filter="${cat}">${cat}</button>`).join("");
 
@@ -2168,7 +2200,7 @@
               <div class="expense-sort">
                 <button class="btn outlined small" type="button" data-expense-sort-toggle aria-expanded="false"><span class="material-symbols-outlined">sort</span>Trier</button>
                 <div class="expense-sort-menu" data-expense-sort-menu hidden>
-                  ${[["date", "Date"], ["amount", "Montant"], ["alpha", "Ordre alphabétique"]].map(([value, label]) => `<button class="expense-sort-option ${expenseSort === value ? "active" : ""}" type="button" data-expense-sort="${value}"><span class="material-symbols-outlined">${expenseSort === value ? "check" : ""}</span>${label}</button>`).join("")}
+                  ${[["category", "Catégorie"], ["date", "Date"], ["amount", "Montant"], ["alpha", "Ordre alphabétique"]].map(([value, label]) => `<button class="expense-sort-option ${expenseSort === value ? "active" : ""}" type="button" data-expense-sort="${value}"><span class="material-symbols-outlined">${expenseSort === value ? "check" : ""}</span>${label}</button>`).join("")}
                 </div>
               </div>
               <button class="btn tonal small" data-add-type="expense"><span class="material-symbols-outlined">add</span>Ajouter</button>
