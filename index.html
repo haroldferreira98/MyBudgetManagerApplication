@@ -2043,7 +2043,15 @@
           <div class="chips">${chips}</div>
         </div>
         <div class="section">
-          <div class="section-header"><div><h2 class="section-title">Dépenses</h2><p class="section-subtitle"><span class="money">${formatMoney(sum(filtered, x => x.amount))}</div><button class="btn tonal small" data-add-type="expense"><span class="material-symbols-outlined">add</span>Ajouter</button></div>
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Dépenses</h2>
+            </div>
+            <button class="btn tonal small" data-add-type="expense">
+              <span class="material-symbols-outlined">add</span>
+              Ajouter
+            </button>
+          </div>
           <div class="list">${listHtml}</div>
         </div>`;
 
