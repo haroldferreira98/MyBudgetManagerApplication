@@ -1,0 +1,46 @@
+name: Run unified operations patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-unify-operations.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply unified operations patch
+        run: python3 .github/scripts/unify_operations.py
+
+      - name: Validate
+        run: |
+          grep -q 'id="screen-operations"' index.html
+          grep -q 'function renderOperations()' index.html
+          grep -q 'data-screen="operations"' index.html
+          grep -q 'Équilibre 50 / 30 / 20' index.html
+          grep -q 'Reste à vivre ce mois-ci' index.html
+
+      - name: Commit app
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Unify income expenses and fixed charges into Operations"
+          git push origin main
+
+      - name: Deploy Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
+          channelId: live
+          projectId: mybudgetmanagerapplication
