@@ -1571,7 +1571,6 @@
     .operation-list { gap: 7px; }
     .operation-list .list-title { font-weight: 500; }
     .operations-category-items .list-title { font-weight: 400 !important; }
-    .operations-category-items .list-sub { display: none; }
     @media (max-width: 430px) {
       .operation-type-bar { gap: 3px; }
       .operation-type-btn { font-size: 10px; padding-inline: 3px; }
@@ -1942,6 +1941,13 @@
       if (!value) return "—";
       const d = new Date(`${value}T12:00:00`);
       return Number.isNaN(d.getTime()) ? "—" : shortDate.format(d);
+    }
+
+    function formatOperationDate(value) {
+      if (!value) return "";
+      const date = new Date(`${value}T12:00:00`);
+      if (Number.isNaN(date.getTime())) return "";
+      return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" }).format(date);
     }
 
     function escapeHtml(value) {
@@ -2545,7 +2551,7 @@
         category: item.category || "Salaire",
         amount: safeNumber(item.amount),
         sortDate: String(item.date || ""),
-        meta: `${item.category || "Salaire"} · ${formatDate(item.date)}`,
+        meta: `${item.category || "Salaire"} · ${formatOperationDate(item.date)}`,
         icon: "payments"
       }));
 
@@ -2557,12 +2563,14 @@
         category: item.category || "Dépense",
         amount: -safeNumber(item.amount),
         sortDate: String(item.date || ""),
-        meta: `${item.category || "Dépense"} · ${formatDate(item.date)}`,
+        meta: `${item.category || "Dépense"} · ${formatOperationDate(item.date)}`,
         icon: categoryIcon(item.category)
       }));
 
       activeFixedCharges().forEach(item => {
         const day = clamp(Math.round(safeNumber(item.day, 1)), 1, 31);
+        const displayDay = clamp(day, 1, daysInSelectedMonth());
+        const operationDate = `${selectedMonth}-${String(displayDay).padStart(2, "0")}`;
         rows.push({
           type: "fixed",
           group: "fixed",
@@ -2571,28 +2579,36 @@
           category: item.category || "Charge fixe",
           amount: -safeNumber(item.amount),
           sortDate: `${selectedMonth}-${String(day).padStart(2, "0")}`,
-          meta: "",
+          meta: `${item.category || "Charge fixe"} · ${formatOperationDate(operationDate)}`,
           icon: "event_repeat"
         });
       });
 
-      activeCredits().forEach(item => rows.push({
-        type: "credit",
-        group: "fixed",
-        id: item.id,
-        title: item.name,
-        category: "Crédits",
-        amount: -safeNumber(item.monthlyPayment),
-        sortDate: `${selectedMonth}-00`,
-        meta: "",
-        icon: "credit_card"
-      }));
+      activeCredits().forEach(item => {
+        const creditDay = item.day === undefined || item.day === null || String(item.day).trim() === ""
+          ? null
+          : clamp(Math.round(safeNumber(item.day)), 1, daysInSelectedMonth());
+        const meta = creditDay
+          ? `Crédits · ${formatOperationDate(`${selectedMonth}-${String(creditDay).padStart(2, "0")}`)}`
+          : "Crédits";
+        rows.push({
+          type: "credit",
+          group: "fixed",
+          id: item.id,
+          title: item.name,
+          category: "Crédits",
+          amount: -safeNumber(item.monthlyPayment),
+          sortDate: `${selectedMonth}-${creditDay ? String(creditDay).padStart(2, "0") : "00"}`,
+          meta,
+          icon: "credit_card"
+        });
+      });
 
       return rows;
     }
 
     function operationRowHtml(row, grouped = false) {
-      const subtitle = (!grouped && row.meta) ? `<div class="list-sub">${escapeHtml(row.meta)}</div>` : "";
+      const subtitle = row.meta ? `<div class="list-sub">${escapeHtml(row.meta)}</div>` : "";
       return `
         <div class="list-item operation-list-item" data-edit-type="${row.type}" data-edit-id="${row.id}" role="button" tabindex="0">
           <div class="list-icon"><span class="material-symbols-outlined">${row.icon}</span></div>
