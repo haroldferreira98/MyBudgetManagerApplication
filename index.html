@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260916-single-page-operations-v2" />
+  <meta name="app-build" content="20260916-safe-overlay-dismiss-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1565,6 +1565,20 @@
     .home-operations > .section { margin-top: 0 !important; margin-bottom: 28px; }
     #screen-operations { display: none !important; }
 
+
+
+    /* SAFE-OVERLAY-DISMISS-V1 */
+    .operation-menu { z-index: 66; }
+    .operation-menu-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 65;
+      background: transparent;
+      cursor: default;
+      touch-action: manipulation;
+    }
+    .operation-menu-backdrop[hidden] { display: none !important; }
+
   </style>
 </head>
 <body>
@@ -2670,6 +2684,8 @@
             <button class="icon-btn ${operationSearch ? "" : "hidden"}" id="operationSearchClear" type="button" aria-label="Effacer"><span class="material-symbols-outlined">close</span></button>
           </div>
 
+          <div class="operation-menu-backdrop" data-operation-menu-backdrop hidden aria-hidden="true"></div>
+
           <div class="operations-toolbar">
             <div>
               <h2 class="section-title">Opérations</h2>
@@ -2702,6 +2718,26 @@
           <div class="list operation-list">${listHtml}</div>
         </div>`;
 
+      const operationBackdrop = container.querySelector("[data-operation-menu-backdrop]");
+      const toggleOperationMenu = (selector, toggle) => {
+        const menu = container.querySelector(selector);
+        const willOpen = !!menu?.hidden;
+        closeOperationMenus();
+        if (willOpen && menu) {
+          menu.hidden = false;
+          toggle?.setAttribute("aria-expanded", "true");
+          if (operationBackdrop) operationBackdrop.hidden = false;
+        }
+      };
+      operationBackdrop?.addEventListener("pointerdown", event => {
+        event.stopPropagation();
+      });
+      operationBackdrop?.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        closeOperationMenus();
+      });
+
       container.querySelectorAll("[data-operation-type]").forEach(button => {
         button.addEventListener("click", () => {
           operationTypeFilter = button.dataset.operationType || "all";
@@ -2709,12 +2745,9 @@
         });
       });
       container.querySelector("[data-operation-filter-toggle]")?.addEventListener("click", event => {
-        const menu = container.querySelector("[data-operation-filter-menu]");
-        const willOpen = !!menu?.hidden;
-        if (menu) menu.hidden = !willOpen;
-        event.currentTarget.setAttribute("aria-expanded", String(willOpen));
-        const sortMenu = container.querySelector("[data-operation-sort-menu]");
-        if (sortMenu) sortMenu.hidden = true;
+        event.preventDefault();
+        event.stopPropagation();
+        toggleOperationMenu("[data-operation-filter-menu]", event.currentTarget);
       });
 
       const searchInput = document.getElementById("operationSearchInput");
@@ -2735,14 +2768,9 @@
       });
 
       container.querySelector("[data-operation-sort-toggle]")?.addEventListener("click", event => {
-        const menu = container.querySelector("[data-operation-sort-menu]");
-        const willOpen = !!menu?.hidden;
-        if (menu) menu.hidden = !willOpen;
-        event.currentTarget.setAttribute("aria-expanded", String(willOpen));
-        const filterMenu = container.querySelector("[data-operation-filter-menu]");
-        if (filterMenu) filterMenu.hidden = true;
-        const addMenu = container.querySelector("[data-operation-add-menu]");
-        if (addMenu) addMenu.hidden = true;
+        event.preventDefault();
+        event.stopPropagation();
+        toggleOperationMenu("[data-operation-sort-menu]", event.currentTarget);
       });
       container.querySelectorAll("[data-operation-sort]").forEach(button => {
         button.addEventListener("click", () => {
@@ -2751,12 +2779,12 @@
         });
       });
       container.querySelector("[data-operation-add-toggle]")?.addEventListener("click", event => {
-        const menu = container.querySelector("[data-operation-add-menu]");
-        const willOpen = !!menu?.hidden;
-        if (menu) menu.hidden = !willOpen;
-        event.currentTarget.setAttribute("aria-expanded", String(willOpen));
-        const sortMenu = container.querySelector("[data-operation-sort-menu]");
-        if (sortMenu) sortMenu.hidden = true;
+        event.preventDefault();
+        event.stopPropagation();
+        toggleOperationMenu("[data-operation-add-menu]", event.currentTarget);
+      });
+      container.querySelectorAll("[data-operation-add-menu] [data-add-type]").forEach(button => {
+        button.addEventListener("click", () => closeOperationMenus());
       });
 
       container.querySelectorAll("details[data-operation-category]").forEach(group => {
@@ -3009,7 +3037,20 @@
       snackbarTimer = setTimeout(() => el.classList.remove("show"), 3200);
     }
 
+    function closeOperationMenus() {
+      document.querySelectorAll("[data-operation-filter-menu], [data-operation-sort-menu], [data-operation-add-menu]").forEach(menu => {
+        menu.hidden = true;
+      });
+      document.querySelectorAll("[data-operation-filter-toggle], [data-operation-sort-toggle], [data-operation-add-toggle]").forEach(toggle => {
+        toggle.setAttribute("aria-expanded", "false");
+      });
+      document.querySelectorAll("[data-operation-menu-backdrop]").forEach(backdrop => {
+        backdrop.hidden = true;
+      });
+    }
+
     function openModal(id) {
+      closeOperationMenus();
       document.getElementById(id)?.classList.add("open");
       document.body.style.overflow = "hidden";
     }
@@ -3488,11 +3529,13 @@
       if (event.target.id === "googleSignOutBtn" || event.target.closest("#googleSignOutBtn")) signOutGoogle().catch(error => { console.error(error); showSnackbar("Déconnexion Google impossible."); });
     });
 
-    document.querySelectorAll(".sheet-backdrop").forEach(backdrop => {
-      backdrop.addEventListener("click", event => {
-        if (event.target === backdrop) closeModal(backdrop.id);
-      });
-    });
+    document.addEventListener("click", event => {
+      const backdrop = event.target.closest?.(".sheet-backdrop.open");
+      if (!backdrop || event.target !== backdrop) return;
+      event.preventDefault();
+      event.stopPropagation();
+      closeModal(backdrop.id);
+    }, true);
 
     document.addEventListener("keydown", event => {
       const editableRow = event.target.closest?.('[data-edit-type][data-edit-id][role="button"]');
@@ -3501,7 +3544,13 @@
         editableRow.click();
         return;
       }
-      if (event.key === "Escape") document.querySelectorAll(".sheet-backdrop.open").forEach(el => closeModal(el.id));
+      if (event.key === "Escape") {
+        const hadOperationMenu = !!document.querySelector("[data-operation-filter-menu]:not([hidden]), [data-operation-sort-menu]:not([hidden]), [data-operation-add-menu]:not([hidden])");
+        const openSheets = [...document.querySelectorAll(".sheet-backdrop.open")];
+        closeOperationMenus();
+        openSheets.forEach(el => closeModal(el.id));
+        if (hadOperationMenu || openSheets.length) event.preventDefault();
+      }
     });
 
     document.getElementById("jsonImportInput").addEventListener("change", event => {
