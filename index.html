@@ -549,6 +549,8 @@
     .expense-category-chevron { font-size: 22px; color: var(--on-surface-variant); transition: transform .18s ease; }
     .expense-category-group[open] .expense-category-chevron { transform: rotate(180deg); }
     .expense-category-items { display: grid; gap: 7px; padding: 0 8px 8px; }
+    .expense-category-items .expense-list-item .list-title,
+    .fixed-charge-row .list-title { font-weight: 400; }
     .list-side small { display: block; margin-top: 4px; color: var(--on-surface-variant); font-size: 11px; }
     .item-actions { display: flex; gap: 5px; margin-left: 4px; }
     .mini-btn {
@@ -768,6 +770,16 @@
     .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
     .field textarea { min-height: 92px; resize: vertical; }
     .field input[type="date"] { min-width: 0; max-width: 100%; font-size: 16px; }
+    .field input[type="number"] {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      -moz-appearance: textfield;
+    }
+    .field input[type="number"]::-webkit-inner-spin-button,
+    .field input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
     .field input[type="date"]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
     .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
     .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -2062,13 +2074,11 @@
       if (!charges.length) return emptyState("calendar_month", "Aucune charge fixe", "Ajoute tes charges récurrentes pour obtenir un reste à vivre précis.");
       return charges.map(charge => {
         const pending = fixedChargeIsPending(charge);
-        const category = charge.category || "Charge fixe";
         return `
           <div class="list-item fixed-charge-row ${pending ? "pending" : ""}" data-edit-type="fixed" data-edit-id="${charge.id}" role="button" tabindex="0">
             <div class="list-icon"><span class="material-symbols-outlined">event_repeat</span></div>
             <div class="list-main">
               <div class="list-title">${escapeHtml(charge.label)}</div>
-              <div class="list-sub">${escapeHtml(category)} · Jour ${safeNumber(charge.day, 1)}</div>
             </div>
             <div class="list-side"><div class="list-amount money">${formatMoney(charge.amount)}</div></div>
           </div>`;
@@ -2525,6 +2535,34 @@
       }).join("");
     }
 
+    function enhanceNumericInputs(root) {
+      root.querySelectorAll('input[type="number"]').forEach(input => {
+        const step = String(input.getAttribute("step") || "1");
+        const integerInput = step === "1";
+        input.inputMode = integerInput ? "numeric" : "decimal";
+        input.setAttribute("enterkeyhint", "done");
+
+        input.addEventListener("focus", () => {
+          if (input.disabled || input.readOnly) return;
+          input.dataset.focusOriginalValue = input.value;
+          if (input.value !== "") {
+            input.value = "";
+            input.dataset.clearedOnFocus = "true";
+          } else {
+            delete input.dataset.clearedOnFocus;
+          }
+        });
+
+        input.addEventListener("blur", () => {
+          if (input.value === "" && input.dataset.clearedOnFocus === "true") {
+            input.value = input.dataset.focusOriginalValue || "";
+          }
+          delete input.dataset.clearedOnFocus;
+          delete input.dataset.focusOriginalValue;
+        });
+      });
+    }
+
     function openEntityModal(type = "expense", id = null, prefill = null, contextual = false) {
       const existing = id ? getEntity(type, id) : null;
       const data = existing ? { ...existing } : { ...(prefill || {}) };
@@ -2585,7 +2623,7 @@
           <div class="field"><label>Libellé</label><input name="label" required maxlength="80" value="${escapeHtml(data.label || "")}" placeholder="Ex. Loyer"></div>
           <div class="field-row">
             <div class="field"><label>Montant mensuel (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
-            <div class="field"><label>Jour de prélèvement</label><input name="day" type="number" min="1" max="31" required value="${data.day ?? new Date().getDate()}"></div>
+            <div class="field"><label>Jour de prélèvement</label><select name="day" required>${optionTags(Array.from({ length: 31 }, (_, i) => String(i + 1)), String(data.day ?? new Date().getDate()))}</select></div>
           </div>
           <div class="field"><label>Catégorie</label><select name="category">${optionTags(FIXED_CHARGE_CATEGORIES, data.category || "Abonnements")}</select></div>`;
       } else if (type === "credit") {
@@ -2624,6 +2662,7 @@
 
       const deleteButton = editing ? `<button class="btn danger" type="button" id="deleteEntityBtn"><span class="material-symbols-outlined">delete</span>Supprimer</button>` : "";
       target.innerHTML = `${fields}<div class="modal-actions">${deleteButton}<button class="btn primary" type="submit"><span class="material-symbols-outlined">save</span>${editing ? "Enregistrer" : "Ajouter"}</button></div>`;
+      enhanceNumericInputs(target);
 
       if (type === "credit") {
         const zeroInput = document.getElementById("zeroRateInput");
