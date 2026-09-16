@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260917-settings-accordion-focus-v1" />
+  <meta name="app-build" content="20260917-topbar-month-stable-search-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1740,6 +1740,10 @@
         <h1 class="brand-title" id="screenTitle">Accueil</h1>
       </div>
       <div class="top-actions">
+        <!-- TOPBAR-MONTH-STABLE-SEARCH-V1 -->
+        <button class="icon-btn" id="monthBtn" type="button" data-month-picker aria-label="Choisir un mois" title="Choisir un mois">
+          <span class="material-symbols-outlined">calendar_month</span>
+        </button>
         <button class="icon-btn" id="settingsBtn" type="button" aria-label="Paramètres" title="Paramètres">
           <span class="material-symbols-outlined">settings</span>
         </button>
@@ -2543,10 +2547,8 @@
             <input id="globalSearchInput" type="search" inputmode="search" autocomplete="off" placeholder="Rechercher catégorie, opération, montant…" value="${escapeHtml(globalSearch)}">
             <button class="icon-btn ${globalSearch ? "" : "hidden"}" id="globalSearchClear" type="button" aria-label="Effacer la recherche"><span class="material-symbols-outlined">close</span></button>
           </div>
-          ${renderGlobalSearchResults(globalSearch)}
+          <div id="globalSearchResultsHost">${renderGlobalSearchResults(globalSearch)}</div>
         </div>
-        ${renderMonthSwitcher()}
-
         <div class="section home-summary-section">
           <div class="card hero-card summary-card">
             <button class="icon-btn hero-privacy-btn" id="privacyBtn" type="button" aria-label="Masquer les montants" title="Masquer les montants"><span class="material-symbols-outlined" id="privacyIcon">visibility</span></button>
@@ -2586,18 +2588,25 @@
 `;
 
       const searchInput = document.getElementById("globalSearchInput");
-      if (searchInput) {
-        searchInput.addEventListener("input", event => {
-          globalSearch = event.target.value;
-          renderHome();
-          applyPrivacy();
-          requestAnimationFrame(() => {
-            const next = document.getElementById("globalSearchInput");
-            if (next) { next.focus(); next.setSelectionRange(next.value.length, next.value.length); }
-          });
-        });
-      }
-      document.getElementById("globalSearchClear")?.addEventListener("click", () => { globalSearch = ""; renderHome(); applyPrivacy(); });
+      const searchResultsHost = document.getElementById("globalSearchResultsHost");
+      const searchClear = document.getElementById("globalSearchClear");
+      const refreshGlobalSearch = () => {
+        if (searchResultsHost) searchResultsHost.innerHTML = renderGlobalSearchResults(globalSearch);
+        searchClear?.classList.toggle("hidden", !globalSearch);
+        applyPrivacy();
+      };
+      searchInput?.addEventListener("input", event => {
+        globalSearch = event.currentTarget.value;
+        refreshGlobalSearch();
+      });
+      searchClear?.addEventListener("click", () => {
+        globalSearch = "";
+        if (searchInput) {
+          searchInput.value = "";
+          searchInput.focus({ preventScroll: true });
+        }
+        refreshGlobalSearch();
+      });
     }
 
     function fixedChargeIsPending(charge) {
@@ -2664,7 +2673,6 @@
       }
 
       container.innerHTML = `
-        ${renderMonthSwitcher()}
         <div class="section">
           <div class="card hero-card">
             <div class="hero-label">Charges fixes du mois</div>
@@ -2853,7 +2861,6 @@
       const sortOptions = [["category", "Catégorie"], ["date", "Date"], ["amount", "Montant"]];
 
       container.innerHTML = `
-        ${renderMonthSwitcher()}
         <div class="section" style="margin-top:12px">
           <div class="search-shell">
             <span class="material-symbols-outlined">search</span>
@@ -3006,7 +3013,6 @@
         </div>`).join("") : emptyState("payments", "Aucun revenu", "Ajoute un salaire, un remboursement ou tout autre revenu.");
 
       container.innerHTML = `
-        ${renderMonthSwitcher()}
         <div class="section">
           <div class="card hero-card">
             <div class="hero-label">Revenus du mois</div>
@@ -3077,7 +3083,6 @@
       const chips = ["Toutes", ...EXPENSE_CATEGORIES].map(cat => `<button class="chip ${expenseFilter === cat ? "active" : ""}" data-expense-filter="${cat}">${cat}</button>`).join("");
 
       container.innerHTML = `
-        ${renderMonthSwitcher()}
         <div class="section">
           <div class="card hero-card">
             <div class="hero-label">Dépenses du mois</div>
