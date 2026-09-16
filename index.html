@@ -1442,6 +1442,8 @@
     let currentScreen = "home";
     let expenseFilter = "Toutes";
     let expenseSearch = "";
+    let fixedSort = "date";
+    const expandedFixedCategories = new Set();
     let expenseSort = "category";
     const expandedExpenseCategories = new Set();
     let globalSearch = "";
@@ -2076,10 +2078,46 @@
     function renderFixedCharges() {
       const container = document.getElementById("screen-fixed");
       if (!container) return;
-      const charges = [...activeFixedCharges()].sort((a,b) => safeNumber(a.day, 1) - safeNumber(b.day, 1));
+      const charges = [...activeFixedCharges()].sort((a, b) => {
+        if (fixedSort === "category") {
+          const categoryCompare = String(a.category || "Charge fixe").localeCompare(String(b.category || "Charge fixe"), "fr", { sensitivity: "base" });
+          if (categoryCompare) return categoryCompare;
+          return safeNumber(a.day, 1) - safeNumber(b.day, 1);
+        }
+        if (fixedSort === "amount") return safeNumber(b.amount) - safeNumber(a.amount);
+        if (fixedSort === "alpha") return String(a.label || "").localeCompare(String(b.label || ""), "fr", { sensitivity: "base" });
+        return safeNumber(a.day, 1) - safeNumber(b.day, 1);
+      });
       const credits = activeCredits();
       const creditTotal = sum(credits, x => x.monthlyPayment);
       const total = sum(charges, x => x.amount) + creditTotal;
+
+      let fixedListHtml;
+      if (!charges.length) {
+        fixedListHtml = renderFixedChargeRows(charges);
+      } else if (fixedSort === "category") {
+        const groups = new Map();
+        charges.forEach(charge => {
+          const category = charge.category || "Charge fixe";
+          if (!groups.has(category)) groups.set(category, []);
+          groups.get(category).push(charge);
+        });
+        fixedListHtml = [...groups.entries()].map(([category, items]) => `
+          <details class="expense-category-group" data-fixed-category="${escapeHtml(category)}" ${expandedFixedCategories.has(category) ? "open" : ""}>
+            <summary class="expense-category-summary">
+              <div>
+                <div class="expense-category-label">${escapeHtml(category)}</div>
+                <div class="expense-category-meta">${items.length} prélèvement${items.length > 1 ? "s" : ""}</div>
+              </div>
+              <div class="expense-category-total money">${formatMoney(sum(items, x => x.amount))}</div>
+              <span class="material-symbols-outlined expense-category-chevron">expand_more</span>
+          </summary>
+          <div class="expense-category-items">${renderFixedChargeRows(items)}</div>
+        </details>`).join("");
+      } else {
+        fixedListHtml = renderFixedChargeRows(charges);
+      }
+
       container.innerHTML = `
         ${renderMonthSwitcher()}
         <div class="section">
@@ -2093,9 +2131,29 @@
           </div>
         </div>
         <div class="section">
-          <div class="section-header"><div><h2 class="section-title">Charges fixes</h2><p class="section-subtitle">Les prélèvements dont la date n'est pas encore arrivée sont affichés en attente.</p></div><button class="btn tonal small" data-add-type="fixed"><span class="material-symbols-outlined">add</span>Ajouter</button></div>
-          <div class="list fixed-charge-list">${renderFixedChargeRows(charges)}</div>
+          <div class="section-header">
+            <div><h2 class="section-title">Charges fixes</h2></div>
+            <div class="button-row">
+              <div class="expense-sort">
+                <button class="btn outlined small" type="button" data-fixed-sort-toggle aria-expanded="false"><span class="material-symbols-outlined">sort</span>Trier</button>
+                <div class="expense-sort-menu" data-fixed-sort-menu hidden>
+                  ${[["category", "Catégorie"], ["date", "Date"], ["amount", "Montant"], ["alpha", "Ordre alphabétique"]].map(([value, label]) => `<button class="expense-sort-option ${fixedSort === value ? "active" : ""}" type="button" data-fixed-sort="${value}"><span class="material-symbols-outlined">${fixedSort === value ? "check" : ""}</span>${label}</button>`).join("")}
+                </div>
+              </div>
+              <button class="btn tonal small" data-add-type="fixed"><span class="material-symbols-outlined">add</span>Ajouter</button>
+            </div>
+          </div>
+          <div class="list fixed-charge-list">${fixedListHtml}</div>
         </div>`;
+
+      container.querySelectorAll("details[data-fixed-category]").forEach(group => {
+        group.addEventListener("toggle", () => {
+          const category = group.dataset.fixedCategory;
+          if (!category) return;
+          if (group.open) expandedFixedCategories.add(category);
+          else expandedFixedCategories.delete(category);
+        });
+      });
     }
 
     function renderSettings() {
@@ -2818,6 +2876,23 @@
     document.getElementById("entityForm").addEventListener("submit", handleEntitySubmit);
 
     document.addEventListener("click", event => {
+      const fixedSortToggle = event.target.closest("[data-fixed-sort-toggle]");
+      if (fixedSortToggle) {
+        const menu = fixedSortToggle.parentElement.querySelector("[data-fixed-sort-menu]");
+        const isHidden = menu?.hasAttribute("hidden");
+        document.querySelectorAll("[data-fixed-sort-menu], [data-expense-sort-menu]").forEach(item => item.hidden = true);
+        if (menu) menu.hidden = !isHidden;
+        fixedSortToggle.setAttribute("aria-expanded", String(!!isHidden));
+        return;
+      }
+
+      const fixedSortChoice = event.target.closest("[data-fixed-sort]");
+      if (fixedSortChoice) {
+        fixedSort = fixedSortChoice.dataset.fixedSort;
+        renderFixedCharges();
+        return;
+      }
+
       const sortToggle = event.target.closest("[data-expense-sort-toggle]");
       if (sortToggle) {
         const menu = sortToggle.parentElement.querySelector("[data-expense-sort-menu]");
@@ -2836,8 +2911,8 @@
       }
 
       if (!event.target.closest(".expense-sort")) {
-        document.querySelectorAll("[data-expense-sort-menu]").forEach(menu => menu.hidden = true);
-        document.querySelectorAll("[data-expense-sort-toggle]").forEach(button => button.setAttribute("aria-expanded", "false"));
+        document.querySelectorAll("[data-expense-sort-menu], [data-fixed-sort-menu]").forEach(menu => menu.hidden = true);
+        document.querySelectorAll("[data-expense-sort-toggle], [data-fixed-sort-toggle]").forEach(button => button.setAttribute("aria-expanded", "false"));
       }
 
       const privacy = event.target.closest("#privacyBtn");
