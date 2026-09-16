@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260916-minimal-redesign-v1" />
+  <meta name="app-build" content="20260916-unified-operations-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1500,6 +1500,85 @@
       .summary-mini:last-child { padding-right: 0; }
     }
 
+
+
+    /* UNIFIED-OPERATIONS-V1 */
+    .bottom-nav { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    #screen-income, #screen-fixed, #screen-expenses { display: none !important; }
+    .operations-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 14px 0 10px;
+    }
+    .operations-toolbar-actions { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+    .operation-type-bar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 5px;
+      margin: 10px 0 12px;
+      padding: 4px;
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--radius-small);
+      background: var(--surface-container-lowest);
+    }
+    .operation-type-btn {
+      min-width: 0;
+      min-height: 38px;
+      padding: 6px 5px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--on-surface-variant);
+      font-size: 11px;
+      font-weight: 650;
+      line-height: 1.15;
+      cursor: pointer;
+    }
+    .operation-type-btn.active { background: var(--primary-container); color: var(--on-primary-container); }
+    .operation-menu-wrap { position: relative; }
+    .operation-menu {
+      position: absolute;
+      z-index: 12;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 185px;
+      padding: 4px;
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--radius-small);
+      background: var(--surface-container-lowest);
+      box-shadow: 0 12px 28px color-mix(in srgb, var(--shadow) 54%, transparent);
+    }
+    .operation-menu button {
+      width: 100%;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 9px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--on-surface);
+      text-align: left;
+      cursor: pointer;
+      font-size: 12.5px;
+    }
+    .operation-menu button:hover,
+    .operation-menu button.active { background: var(--primary-container); color: var(--on-primary-container); }
+    .operation-menu .material-symbols-outlined { width: 18px; font-size: 18px; }
+    .operation-list { gap: 7px; }
+    .operation-list .list-title { font-weight: 500; }
+    .operations-category-items .list-title { font-weight: 400 !important; }
+    .operations-category-items .list-sub { display: none; }
+    @media (max-width: 430px) {
+      .operation-type-bar { gap: 3px; }
+      .operation-type-btn { font-size: 10px; padding-inline: 3px; }
+      .operations-toolbar { align-items: flex-end; }
+      .operations-toolbar-actions { gap: 5px; }
+    }
+
   </style>
 </head>
 <body>
@@ -1521,6 +1600,7 @@
 
     <main class="app-content">
       <section class="screen active" id="screen-home" data-title="Accueil"></section>
+      <section class="screen" id="screen-operations" data-title="Opérations"></section>
       <section class="screen" id="screen-income" data-title="Revenus"></section>
       <section class="screen" id="screen-fixed" data-title="Charges fixes"></section>
       <section class="screen" id="screen-expenses" data-title="Dépenses"></section>
@@ -1534,14 +1614,8 @@
       <button class="nav-btn active" data-screen="home" aria-label="Accueil">
         <span class="material-symbols-outlined">home</span><span>Accueil</span>
       </button>
-      <button class="nav-btn" data-screen="income" aria-label="Revenus">
-        <span class="material-symbols-outlined">payments</span><span>Revenus</span>
-      </button>
-      <button class="nav-btn" data-screen="fixed" aria-label="Charges fixes">
-        <span class="material-symbols-outlined">event_repeat</span><span>Charges fixes</span>
-      </button>
-      <button class="nav-btn" data-screen="expenses" aria-label="Dépenses">
-        <span class="material-symbols-outlined">receipt_long</span><span>Dépenses</span>
+      <button class="nav-btn" data-screen="operations" aria-label="Opérations">
+        <span class="material-symbols-outlined">receipt_long</span><span>Opérations</span>
       </button>
     </nav>
   </div>
@@ -1724,6 +1798,10 @@
     const expandedFixedCategories = new Set();
     let expenseSort = "category";
     const expandedExpenseCategories = new Set();
+    let operationTypeFilter = "all";
+    let operationSort = "date";
+    let operationSearch = "";
+    const expandedOperationCategories = new Set();
     let globalSearch = "";
     let snackbarTimer = null;
     let cloud = null;
@@ -2148,9 +2226,9 @@
       const income = sum(currentMonthIncomes(), x => x.amount);
       const expenses = sum(currentMonthExpenses(), x => x.amount);
       const fixed = sum(activeFixedCharges(), x => x.amount);
-      const credits = sum(state.credits, x => x.monthlyPayment);
-      const projects = sum(activeProjects(), x => x.monthlyAllocation);
-      const engaged = fixed + credits + projects + expenses;
+      const credits = sum(activeCredits(), x => x.monthlyPayment);
+      const projects = 0;
+      const engaged = fixed + credits + expenses;
       const remaining = income - engaged;
       const daily = expenses / averageDayCount();
 
@@ -2162,10 +2240,6 @@
           savings: Math.max(0, remaining)
         }
       };
-    }
-
-    function defaultBucketForCategory(category) {
-      return ["Loisirs", "Restaurant"].includes(category) ? "wants" : "needs";
     }
 
     function financialStatus(snapshot) {
@@ -2182,6 +2256,7 @@
     function renderAll() {
       applyTheme();
       renderHome();
+      renderOperations();
       renderIncome();
       renderFixedCharges();
       renderExpenses();
@@ -2448,6 +2523,244 @@
           </div>
         </div>`;
       updateSettingsUI();
+    }
+
+    function operationSignedAmount(amount) {
+      const value = safeNumber(amount);
+      const sign = value < 0 ? "−" : value > 0 ? "+" : "";
+      const klass = value < 0 ? "negative" : value > 0 ? "positive" : "";
+      return `<div class="list-amount money ${klass}">${sign}${formatMoney(Math.abs(value))}</div>`;
+    }
+
+    function operationRowsForSelectedMonth() {
+      const rows = [];
+
+      currentMonthIncomes().forEach(item => rows.push({
+        type: "income",
+        group: "income",
+        id: item.id,
+        title: item.label,
+        category: item.category || "Salaire",
+        amount: safeNumber(item.amount),
+        sortDate: String(item.date || ""),
+        meta: `${item.category || "Salaire"} · ${formatDate(item.date)}`,
+        icon: "payments"
+      }));
+
+      currentMonthExpenses().forEach(item => rows.push({
+        type: "expense",
+        group: "expense",
+        id: item.id,
+        title: item.label,
+        category: item.category || "Dépense",
+        amount: -safeNumber(item.amount),
+        sortDate: String(item.date || ""),
+        meta: `${item.category || "Dépense"} · ${formatDate(item.date)}`,
+        icon: categoryIcon(item.category)
+      }));
+
+      activeFixedCharges().forEach(item => {
+        const day = clamp(Math.round(safeNumber(item.day, 1)), 1, 31);
+        rows.push({
+          type: "fixed",
+          group: "fixed",
+          id: item.id,
+          title: item.label,
+          category: item.category || "Charge fixe",
+          amount: -safeNumber(item.amount),
+          sortDate: `${selectedMonth}-${String(day).padStart(2, "0")}`,
+          meta: "",
+          icon: "event_repeat"
+        });
+      });
+
+      activeCredits().forEach(item => rows.push({
+        type: "credit",
+        group: "fixed",
+        id: item.id,
+        title: item.name,
+        category: "Crédits",
+        amount: -safeNumber(item.monthlyPayment),
+        sortDate: `${selectedMonth}-00`,
+        meta: "",
+        icon: "credit_card"
+      }));
+
+      return rows;
+    }
+
+    function operationRowHtml(row, grouped = false) {
+      const subtitle = (!grouped && row.meta) ? `<div class="list-sub">${escapeHtml(row.meta)}</div>` : "";
+      return `
+        <div class="list-item operation-list-item" data-edit-type="${row.type}" data-edit-id="${row.id}" role="button" tabindex="0">
+          <div class="list-icon"><span class="material-symbols-outlined">${row.icon}</span></div>
+          <div class="list-main">
+            <div class="list-title">${escapeHtml(row.title)}</div>
+            ${subtitle}
+          </div>
+          <div class="list-side">${operationSignedAmount(row.amount)}</div>
+        </div>`;
+    }
+
+    function renderOperations() {
+      const container = document.getElementById("screen-operations");
+      if (!container) return;
+
+      const searchNeedle = normalizeSearch(operationSearch);
+      let rows = operationRowsForSelectedMonth().filter(row => {
+        const typeOk = operationTypeFilter === "all" || row.group === operationTypeFilter;
+        if (!typeOk) return false;
+        if (!searchNeedle) return true;
+        return normalizeSearch([row.title, row.category, row.meta, Math.abs(row.amount), formatMoney(Math.abs(row.amount))].join(" ")).includes(searchNeedle);
+      });
+
+      rows.sort((a, b) => {
+        if (operationSort === "category") {
+          const categoryCompare = String(a.category).localeCompare(String(b.category), "fr", { sensitivity: "base" });
+          if (categoryCompare) return categoryCompare;
+          return String(a.title).localeCompare(String(b.title), "fr", { sensitivity: "base" });
+        }
+        if (operationSort === "amount") {
+          const amountCompare = Math.abs(b.amount) - Math.abs(a.amount);
+          if (amountCompare) return amountCompare;
+          return String(b.sortDate).localeCompare(String(a.sortDate));
+        }
+        const dateCompare = String(b.sortDate).localeCompare(String(a.sortDate));
+        if (dateCompare) return dateCompare;
+        return String(a.title).localeCompare(String(b.title), "fr", { sensitivity: "base" });
+      });
+
+      let listHtml = "";
+      if (!rows.length) {
+        listHtml = emptyState("receipt_long", "Aucune opération", "Aucune opération ne correspond aux filtres sélectionnés.");
+      } else if (operationSort === "category") {
+        const groups = new Map();
+        rows.forEach(row => {
+          if (!groups.has(row.category)) groups.set(row.category, []);
+          groups.get(row.category).push(row);
+        });
+        listHtml = [...groups.entries()].map(([category, items]) => {
+          const total = sum(items, item => item.amount);
+          return `
+            <details class="expense-category-group" data-operation-category="${escapeHtml(category)}" ${expandedOperationCategories.has(category) ? "open" : ""}>
+              <summary class="expense-category-summary">
+                <div>
+                  <div class="expense-category-label">${escapeHtml(category)}</div>
+                  <div class="expense-category-meta">${items.length} opération${items.length > 1 ? "s" : ""}</div>
+                </div>
+                <div class="expense-category-total">${operationSignedAmount(total)}</div>
+                <span class="material-symbols-outlined expense-category-chevron">expand_more</span>
+              </summary>
+              <div class="expense-category-items operations-category-items">${items.map(item => operationRowHtml(item, true)).join("")}</div>
+            </details>`;
+        }).join("");
+      } else {
+        listHtml = rows.map(item => operationRowHtml(item, false)).join("");
+      }
+
+      const typeOptions = [
+        ["all", "Toutes"],
+        ["income", "Revenus"],
+        ["fixed", "Charges fixes"],
+        ["expense", "Dépenses"]
+      ];
+      const sortOptions = [["category", "Catégorie"], ["date", "Date"], ["amount", "Montant"]];
+
+      container.innerHTML = `
+        ${renderMonthSwitcher()}
+        <div class="section" style="margin-top:12px">
+          <div class="search-shell">
+            <span class="material-symbols-outlined">search</span>
+            <input id="operationSearchInput" type="search" inputmode="search" autocomplete="off" placeholder="Rechercher une opération…" value="${escapeHtml(operationSearch)}">
+            <button class="icon-btn ${operationSearch ? "" : "hidden"}" id="operationSearchClear" type="button" aria-label="Effacer"><span class="material-symbols-outlined">close</span></button>
+          </div>
+
+          <div class="operation-type-bar" aria-label="Filtrer les opérations">
+            ${typeOptions.map(([value, label]) => `<button class="operation-type-btn ${operationTypeFilter === value ? "active" : ""}" type="button" data-operation-type="${value}">${label}</button>`).join("")}
+          </div>
+
+          <div class="operations-toolbar">
+            <div>
+              <h2 class="section-title">Opérations</h2>
+              <p class="section-subtitle">${rows.length} opération${rows.length > 1 ? "s" : ""} affichée${rows.length > 1 ? "s" : ""}</p>
+            </div>
+            <div class="operations-toolbar-actions">
+              <div class="operation-menu-wrap">
+                <button class="btn outlined small" type="button" data-operation-sort-toggle aria-expanded="false"><span class="material-symbols-outlined">sort</span>Trier</button>
+                <div class="operation-menu" data-operation-sort-menu hidden>
+                  ${sortOptions.map(([value, label]) => `<button type="button" class="${operationSort === value ? "active" : ""}" data-operation-sort="${value}"><span class="material-symbols-outlined">${operationSort === value ? "check" : ""}</span>${label}</button>`).join("")}
+                </div>
+              </div>
+              <div class="operation-menu-wrap">
+                <button class="btn tonal small" type="button" data-operation-add-toggle aria-expanded="false"><span class="material-symbols-outlined">add</span>Ajouter</button>
+                <div class="operation-menu" data-operation-add-menu hidden>
+                  <button type="button" data-add-type="income"><span class="material-symbols-outlined">payments</span>Revenu</button>
+                  <button type="button" data-add-type="fixed"><span class="material-symbols-outlined">event_repeat</span>Charge fixe</button>
+                  <button type="button" data-add-type="credit"><span class="material-symbols-outlined">credit_card</span>Crédit</button>
+                  <button type="button" data-add-type="expense"><span class="material-symbols-outlined">receipt_long</span>Dépense</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="list operation-list">${listHtml}</div>
+        </div>`;
+
+      container.querySelectorAll("[data-operation-type]").forEach(button => {
+        button.addEventListener("click", () => {
+          operationTypeFilter = button.dataset.operationType || "all";
+          renderOperations();
+        });
+      });
+
+      const searchInput = document.getElementById("operationSearchInput");
+      searchInput?.addEventListener("input", event => {
+        operationSearch = event.target.value;
+        renderOperations();
+        requestAnimationFrame(() => {
+          const next = document.getElementById("operationSearchInput");
+          if (next) {
+            next.focus();
+            next.setSelectionRange(next.value.length, next.value.length);
+          }
+        });
+      });
+      document.getElementById("operationSearchClear")?.addEventListener("click", () => {
+        operationSearch = "";
+        renderOperations();
+      });
+
+      container.querySelector("[data-operation-sort-toggle]")?.addEventListener("click", event => {
+        const menu = container.querySelector("[data-operation-sort-menu]");
+        const willOpen = !!menu?.hidden;
+        if (menu) menu.hidden = !willOpen;
+        event.currentTarget.setAttribute("aria-expanded", String(willOpen));
+        const addMenu = container.querySelector("[data-operation-add-menu]");
+        if (addMenu) addMenu.hidden = true;
+      });
+      container.querySelectorAll("[data-operation-sort]").forEach(button => {
+        button.addEventListener("click", () => {
+          operationSort = button.dataset.operationSort || "date";
+          renderOperations();
+        });
+      });
+      container.querySelector("[data-operation-add-toggle]")?.addEventListener("click", event => {
+        const menu = container.querySelector("[data-operation-add-menu]");
+        const willOpen = !!menu?.hidden;
+        if (menu) menu.hidden = !willOpen;
+        event.currentTarget.setAttribute("aria-expanded", String(willOpen));
+        const sortMenu = container.querySelector("[data-operation-sort-menu]");
+        if (sortMenu) sortMenu.hidden = true;
+      });
+
+      container.querySelectorAll("details[data-operation-category]").forEach(group => {
+        group.addEventListener("toggle", () => {
+          const category = group.dataset.operationCategory;
+          if (!category) return;
+          if (group.open) expandedOperationCategories.add(category);
+          else expandedOperationCategories.delete(category);
+        });
+      });
     }
 
     function renderIncome() {
@@ -2717,12 +3030,6 @@
         </div>
 
         <div class="section">
-          <div class="section-header"><div><h2 class="section-title">Projets d'épargne</h2></div><button class="btn tonal small" data-add-type="project"><span class="material-symbols-outlined">add</span>Ajouter</button></div>
-          <div>${projectsHtml}</div>
-        </div>
-
-
-        <div class="section">
           <div class="section-header"><div><h2 class="section-title">Sauvegarde & données</h2><p class="section-subtitle">Firebase synchronise automatiquement le compte Google connecté.</p></div></div>
           <div class="card">
             <div class="backup-actions">
@@ -2739,7 +3046,7 @@
     }
 
     function setCurrentScreen(screen, updateNav = true) {
-      currentScreen = ["home", "income", "fixed", "expenses", "settings"].includes(screen) ? screen : "home";
+      currentScreen = ["home", "operations", "settings"].includes(screen) ? screen : "home";
       document.querySelectorAll(".screen").forEach(el => el.classList.toggle("active", el.id === `screen-${currentScreen}`));
       if (updateNav) document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.screen === currentScreen));
       else document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.screen === currentScreen));
@@ -2844,7 +3151,7 @@
           <label for="entityType">Type</label>
           <select id="entityType" name="entityType">
             ${optionTags([
-              {value:"expense",label:"Dépense"},{value:"income",label:"Revenu"},{value:"fixed",label:"Charge fixe"},{value:"credit",label:"Crédit"},{value:"project",label:"Projet d'épargne"},{value:"envelope",label:"Enveloppe budgétaire"}
+              {value:"expense",label:"Dépense"},{value:"income",label:"Revenu"},{value:"fixed",label:"Charge fixe"},{value:"credit",label:"Crédit"},{value:"envelope",label:"Enveloppe budgétaire"}
             ], type)}
           </select>
         </div>`;
