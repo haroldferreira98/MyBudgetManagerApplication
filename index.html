@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260916-0910" />
+  <meta name="app-build" content="20260916-cleanup" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -977,7 +977,47 @@
     #accountModal .sheet-body { overflow-y: auto; }
     #accountModal .account-profile-content { padding-bottom: 10px; }
 
-</style>
+
+    /* INCOME-AMOUNT-DATE-ROW-V1
+       Keep income amount and date side by side on iPhone. This belongs in the
+       main UI stylesheet; firebase-config.js must never mutate the interface. */
+    #entityModal[data-entity-type="income"] .field-row {
+      display: grid !important;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr) !important;
+      gap: 12px !important;
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+    #entityModal[data-entity-type="income"] .field-row > .field {
+      min-width: 0 !important;
+      width: auto !important;
+      max-width: 100% !important;
+      contain: inline-size;
+      overflow: hidden;
+    }
+    #entityModal[data-entity-type="income"] .field-row input {
+      display: block !important;
+      inline-size: 100% !important;
+      width: 100% !important;
+      min-inline-size: 0 !important;
+      min-width: 0 !important;
+      max-inline-size: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    #entityModal[data-entity-type="income"] input[type="date"] {
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      overflow: hidden !important;
+      white-space: nowrap;
+      padding-right: 10px !important;
+    }
+    #entityModal[data-entity-type="income"] input[type="date"]::-webkit-date-and-time-value {
+      min-width: 0 !important;
+      width: 100% !important;
+      text-align: left !important;
+    }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -1084,7 +1124,7 @@
   <input type="file" id="jsonImportInput" accept="application/json,.json" hidden>
   <div class="snackbar" id="snackbar" role="status" aria-live="polite"></div>
 
-  <script src="firebase-config.js?v=20260915-profile-repair"></script>
+  <script src="firebase-config.js?v=20260916-config-only"></script>
   <script>
     "use strict";
 
