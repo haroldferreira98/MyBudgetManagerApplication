@@ -3198,9 +3198,31 @@
       saveState(charge.paidMonths.includes(mk) ? "Charge marquée comme prélevée." : "Charge marquée comme à venir.");
     }
 
-    function exportJSON() {
+    async function exportJSON() {
+      const filename = `Budget-${todayISO()}.json`;
       const payload = { ...state, exportedAt: new Date().toISOString() };
-      downloadBlob(`budget-${todayISO()}.json`, JSON.stringify(payload, null, 2), "application/json;charset=utf-8");
+      const content = JSON.stringify(payload, null, 2);
+      let file = null;
+      if (typeof File === "function") file = new File([content], filename, { type: "application/json" });
+      const canShareFile = file && typeof navigator.share === "function"
+        && typeof navigator.canShare === "function"
+        && navigator.canShare({ files: [file] });
+
+      if (canShareFile) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: "Sauvegarde Budget",
+            text: "Sauvegarde de mes données Budget"
+          });
+          showSnackbar("Sauvegarde prête à être partagée.");
+          return;
+        } catch (error) {
+          if (error?.name === "AbortError") return;
+        }
+      }
+
+      downloadBlob(filename, content, "application/json;charset=utf-8");
       showSnackbar("Sauvegarde JSON exportée.");
     }
 
@@ -3235,10 +3257,20 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    function isValidImportPayload(value) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+      const collections = ["incomes", "expenses", "fixedCharges", "credits", "projects", "envelopes"];
+      return collections.some(key => Array.isArray(value[key]));
+    }
+
     async function importJSONFile(file) {
       try {
         const text = await file.text();
         const parsed = JSON.parse(text);
+        if (!isValidImportPayload(parsed)) {
+          showSnackbar("Ce fichier ne contient pas une sauvegarde Budget valide.");
+          return;
+        }
         const migrated = migrateState(parsed);
         if (!confirm("Importer ce fichier remplacera les données du budget actuellement synchronisées avec ce compte. Continuer ?")) return;
         state = migrated;
