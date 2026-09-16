@@ -1346,6 +1346,7 @@
     let applyingCloudState = false;
     let selectedMonth = monthKey();
     let monthPickerYear = Number(selectedMonth.slice(0, 4));
+    let preservedScrollY = null;
     const expandedProfileItems = new Set();
 
     const euro = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1523,6 +1524,15 @@
       if (!applyingCloudState) scheduleCloudSave();
       if (message) showSnackbar(message);
       renderAll();
+      const scrollY = preservedScrollY;
+      preservedScrollY = null;
+      if (scrollY !== null) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
+          });
+        });
+      }
     }
 
 
@@ -2303,6 +2313,7 @@
       const existing = id ? getEntity(type, id) : null;
       const data = existing ? { ...existing } : { ...(prefill || {}) };
       const editing = !!existing;
+      preservedScrollY = editing && ["income", "fixed", "expense"].includes(type) ? window.scrollY : null;
       const form = document.getElementById("entityForm");
       const entityModal = document.getElementById("entityModal");
       entityModal.dataset.entityType = type;
