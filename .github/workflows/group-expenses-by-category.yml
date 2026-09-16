@@ -1,0 +1,128 @@
+name: Group expenses by category
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/group-expenses-by-category.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Group expenses by category by default
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          replacements = [
+              ('    let expenseSort = "date";', '    let expenseSort = "category";'),
+              (
+                  '    .expense-sort-option .material-symbols-outlined { width: 18px; font-size: 18px; }\n',
+                  '    .expense-sort-option .material-symbols-outlined { width: 18px; font-size: 18px; }\n'
+                  '    .expense-category-group { display: grid; gap: 7px; }\n'
+                  '    .expense-category-group + .expense-category-group { margin-top: 18px; }\n'
+                  '    .expense-category-label {\n'
+                  '      margin: 0 4px 1px;\n'
+                  '      color: var(--on-surface-variant);\n'
+                  '      font-size: 12px;\n'
+                  '      font-weight: 600;\n'
+                  '      letter-spacing: .01em;\n'
+                  '    }\n'
+              ),
+              (
+                  '        .sort((a, b) => {\n'
+                  '          if (expenseSort === "amount") return safeNumber(b.amount) - safeNumber(a.amount);\n'
+                  '          if (expenseSort === "alpha") return String(a.label || "").localeCompare(String(b.label || ""), "fr", { sensitivity: "base" });\n'
+                  '          return String(b.date).localeCompare(String(a.date));\n'
+                  '        });',
+                  '        .sort((a, b) => {\n'
+                  '          if (expenseSort === "category") {\n'
+                  '            const categoryCompare = String(a.category || "").localeCompare(String(b.category || ""), "fr", { sensitivity: "base" });\n'
+                  '            if (categoryCompare) return categoryCompare;\n'
+                  '            return String(b.date).localeCompare(String(a.date));\n'
+                  '          }\n'
+                  '          if (expenseSort === "amount") return safeNumber(b.amount) - safeNumber(a.amount);\n'
+                  '          if (expenseSort === "alpha") return String(a.label || "").localeCompare(String(b.label || ""), "fr", { sensitivity: "base" });\n'
+                  '          return String(b.date).localeCompare(String(a.date));\n'
+                  '        });'
+              ),
+              (
+                  '      const listHtml = filtered.length ? filtered.map(item => `\n'
+                  '        <div class="list-item expense-list-item" data-edit-type="expense" data-edit-id="${item.id}" role="button" tabindex="0">\n'
+                  '          <div class="list-icon"><span class="material-symbols-outlined">${categoryIcon(item.category)}</span></div>\n'
+                  '          <div class="list-main">\n'
+                  '            <div class="list-title">${escapeHtml(item.label)}</div>\n'
+                  '            <div class="list-sub">${escapeHtml(item.category)} · ${formatDate(item.date)}</div>\n'
+                  '          </div>\n'
+                  '          <div class="list-side"><div class="list-amount money negative">−${formatMoney(item.amount)}</div></div>\n'
+                  '        </div>`).join("") : emptyState("receipt_long", "Aucune dépense", "Les dépenses correspondant à tes filtres apparaîtront ici.");',
+                  '      const renderExpenseRow = item => `\n'
+                  '        <div class="list-item expense-list-item" data-edit-type="expense" data-edit-id="${item.id}" role="button" tabindex="0">\n'
+                  '          <div class="list-icon"><span class="material-symbols-outlined">${categoryIcon(item.category)}</span></div>\n'
+                  '          <div class="list-main">\n'
+                  '            <div class="list-title">${escapeHtml(item.label)}</div>\n'
+                  '          </div>\n'
+                  '          <div class="list-side"><div class="list-amount money negative">−${formatMoney(item.amount)}</div></div>\n'
+                  '        </div>`;\n\n'
+                  '      let listHtml;\n'
+                  '      if (!filtered.length) {\n'
+                  '        listHtml = emptyState("receipt_long", "Aucune dépense", "Les dépenses correspondant à tes filtres apparaîtront ici.");\n'
+                  '      } else if (expenseSort === "category") {\n'
+                  '        const groups = new Map();\n'
+                  '        filtered.forEach(item => {\n'
+                  '          const category = item.category || "Sans catégorie";\n'
+                  '          if (!groups.has(category)) groups.set(category, []);\n'
+                  '          groups.get(category).push(item);\n'
+                  '        });\n'
+                  '        listHtml = [...groups.entries()].map(([category, items]) => `\n'
+                  '          <div class="expense-category-group">\n'
+                  '            <div class="expense-category-label">${escapeHtml(category)}</div>\n'
+                  '            ${items.map(renderExpenseRow).join("")}\n'
+                  '          </div>`).join("");\n'
+                  '      } else {\n'
+                  '        listHtml = filtered.map(renderExpenseRow).join("");\n'
+                  '      }'
+              ),
+              (
+                  '${[["date", "Date"], ["amount", "Montant"], ["alpha", "Ordre alphabétique"]].map(([value, label]) =>',
+                  '${[["category", "Catégorie"], ["date", "Date"], ["amount", "Montant"], ["alpha", "Ordre alphabétique"]].map(([value, label]) =>'
+              )
+          ]
+
+          for old, new in replacements:
+              if old not in text:
+                  raise SystemExit(f'Expected block not found:\n{old[:180]}')
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit change
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Group expenses by category by default"
+          git push origin main
+
+      - name: Deploy patched app to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
+          channelId: live
+          projectId: mybudgetmanagerapplication
