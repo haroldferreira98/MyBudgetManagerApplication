@@ -20,35 +20,7 @@ jobs:
 
       - name: Include credits in fixed charges summary
         shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('index.html')
-          text = path.read_text(encoding='utf-8')
-
-          old_totals = '''      const charges = [...activeFixedCharges()].sort((a,b) => safeNumber(a.day, 1) - safeNumber(b.day, 1));
-      const total = sum(charges, x => x.amount);'''
-          new_totals = '''      const charges = [...activeFixedCharges()].sort((a,b) => safeNumber(a.day, 1) - safeNumber(b.day, 1));
-      const credits = activeCredits();
-      const creditTotal = sum(credits, x => x.monthlyPayment);
-      const total = sum(charges, x => x.amount) + creditTotal;'''
-
-          old_meta = '''            <div class="hero-meta"><span class="daily-pill"><span class="material-symbols-outlined">event_repeat</span>${charges.length} prélèvement${charges.length > 1 ? "s" : ""}</span></div>'''
-          new_meta = '''            <div class="hero-meta">
-              <span class="daily-pill"><span class="material-symbols-outlined">event_repeat</span>${charges.length} prélèvement${charges.length > 1 ? "s" : ""}</span>
-              <span class="daily-pill"><span class="material-symbols-outlined">credit_card</span>${credits.length} crédit${credits.length === 1 ? "" : "s"}</span>
-            </div>'''
-
-          if old_totals not in text:
-              raise SystemExit('Expected fixed charges totals block not found')
-          if old_meta not in text:
-              raise SystemExit('Expected fixed charges hero meta block not found')
-
-          text = text.replace(old_totals, new_totals, 1)
-          text = text.replace(old_meta, new_meta, 1)
-          path.write_text(text, encoding='utf-8')
-          PY
+        run: echo 'CmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aApwYXRoID0gUGF0aCgiaW5kZXguaHRtbCIpCnRleHQgPSBwYXRoLnJlYWRfdGV4dChlbmNvZGluZz0idXRmLTgiKQpvbGRfdG90YWxzID0gIiIiICAgICAgY29uc3QgY2hhcmdlcyA9IFsuLi5hY3RpdmVGaXhlZENoYXJnZXMoKV0uc29ydCgoYSxiKSA9PiBzYWZlTnVtYmVyKGEuZGF5LCAxKSAtIHNhZmVOdW1iZXIoYi5kYXksIDEpKTsKICAgICAgY29uc3QgdG90YWwgPSBzdW0oY2hhcmdlcywgeCA9PiB4LmFtb3VudCk7IiIiCm5ld190b3RhbHMgPSAiIiIgICAgICBjb25zdCBjaGFyZ2VzID0gWy4uLmFjdGl2ZUZpeGVkQ2hhcmdlcygpXS5zb3J0KChhLGIpID0+IHNhZmVOdW1iZXIoYS5kYXksIDEpIC0gc2FmZU51bWJlcihiLmRheSwgMSkpOwogICAgICBjb25zdCBjcmVkaXRzID0gYWN0aXZlQ3JlZGl0cygpOwogICAgICBjb25zdCBjcmVkaXRUb3RhbCA9IHN1bShjcmVkaXRzLCB4ID0+IHgubW9udGhseVBheW1lbnQpOwogICAgICBjb25zdCB0b3RhbCA9IHN1bShjaGFyZ2VzLCB4ID0+IHguYW1vdW50KSArIGNyZWRpdFRvdGFsOyIiIgpvbGRfbWV0YSA9ICIiIiAgICAgICAgICAgIDxkaXYgY2xhc3M9Imhlcm8tbWV0YSI+PHNwYW4gY2xhc3M9ImRhaWx5LXBpbGwiPjxzcGFuIGNsYXNzPSJtYXRlcmlhbC1zeW1ib2xzLW91dGxpbmVkIj5ldmVudF9yZXBlYXQ8L3NwYW4+JHtjaGFyZ2VzLmxlbmd0aH0gcHLDqWzDqHZlbWVudCR7Y2hhcmdlcy5sZW5ndGggPiAxID8gInMiIDogIiJ9PC9zcGFuPjwvZGl2PiIiIgpuZXdfbWV0YSA9ICIiIiAgICAgICAgICAgIDxkaXYgY2xhc3M9Imhlcm8tbWV0YSI+CiAgICAgICAgICAgICAgPHNwYW4gY2xhc3M9ImRhaWx5LXBpbGwiPjxzcGFuIGNsYXNzPSJtYXRlcmlhbC1zeW1ib2xzLW91dGxpbmVkIj5ldmVudF9yZXBlYXQ8L3NwYW4+JHtjaGFyZ2VzLmxlbmd0aH0gcHLDqWzDqHZlbWVudCR7Y2hhcmdlcy5sZW5ndGggPiAxID8gInMiIDogIiJ9PC9zcGFuPgogICAgICAgICAgICAgIDxzcGFuIGNsYXNzPSJkYWlseS1waWxsIj48c3BhbiBjbGFzcz0ibWF0ZXJpYWwtc3ltYm9scy1vdXRsaW5lZCI+Y3JlZGl0X2NhcmQ8L3NwYW4+JHtjcmVkaXRzLmxlbmd0aH0gY3LDqWRpdCR7Y3JlZGl0cy5sZW5ndGggPT09IDEgPyAiIiA6ICJzIn08L3NwYW4+CiAgICAgICAgICAgIDwvZGl2PiIiIgppZiBvbGRfdG90YWxzIG5vdCBpbiB0ZXh0OgogICAgcmFpc2UgU3lzdGVtRXhpdCgiRXhwZWN0ZWQgZml4ZWQgY2hhcmdlcyB0b3RhbHMgYmxvY2sgbm90IGZvdW5kIikKaWYgb2xkX21ldGEgbm90IGluIHRleHQ6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCJFeHBlY3RlZCBmaXhlZCBjaGFyZ2VzIGhlcm8gbWV0YSBibG9jayBub3QgZm91bmQiKQp0ZXh0ID0gdGV4dC5yZXBsYWNlKG9sZF90b3RhbHMsIG5ld190b3RhbHMsIDEpLnJlcGxhY2Uob2xkX21ldGEsIG5ld19tZXRhLCAxKQpwYXRoLndyaXRlX3RleHQodGV4dCwgZW5jb2Rpbmc9InV0Zi04IikK' | base64 -d | python
 
       - name: Commit patch
         shell: bash
