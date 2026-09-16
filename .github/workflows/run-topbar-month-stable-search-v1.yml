@@ -1,0 +1,79 @@
+name: Apply topbar month and stable search
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-topbar-month-stable-search-v1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+
+      - name: Apply requested UI behavior
+        run: python3 .github/scripts/topbar_month_stable_search_v1.py
+
+      - name: Validate patch and JavaScript
+        shell: bash
+        run: |
+          grep -q 'TOPBAR-MONTH-STABLE-SEARCH-V1' index.html
+          grep -q '20260917-topbar-month-stable-search-v1' index.html
+          grep -q 'id="monthBtn"' index.html
+          grep -q 'id="globalSearchResultsHost"' index.html
+          grep -q 'refreshGlobalSearch' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          assert html.count('TOPBAR-MONTH-STABLE-SEARCH-V1') == 1
+          assert html.count('id="monthBtn"') == 1
+          assert html.count('id="globalSearchResultsHost"') == 1
+          assert '${renderMonthSwitcher()}' not in html
+          assert 'globalSearch = event.currentTarget.value;' in html
+          assert 'globalSearch = event.target.value;\n          renderHome();' not in html
+          assert 'searchResultsHost.innerHTML = renderGlobalSearchResults(globalSearch)' in html
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
+          if not scripts:
+              raise SystemExit('No inline script found')
+          Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/app-inline.js
+          git diff --check
+
+      - name: Ensure main did not move during patch
+        shell: bash
+        run: |
+          EXPECTED="$(git rev-parse HEAD)"
+          REMOTE="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$EXPECTED" = "$REMOTE"
+
+      - name: Commit and push final change
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/run-topbar-month-stable-search-v1.yml
+          rm .github/scripts/topbar_month_stable_search_v1.py
+          git add index.html .github/workflows/run-topbar-month-stable-search-v1.yml .github/scripts/topbar_month_stable_search_v1.py
+          git diff --cached --check
+          git commit -m "feat: move month picker to topbar and stabilize search"
+          git push origin main
+
+      - name: Deploy Firebase production
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
+          channelId: live
+          projectId: mybudgetmanagerapplication
