@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260916-compact-categories-ios-lock-v1" />
+  <meta name="app-build" content="20260917-budget-income-exclusions-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1853,6 +1853,19 @@
       "Vente",
     ];
 
+    // BUDGET-INCOME-EXCLUSIONS-V1
+    // These incoming cash flows stay visible in operations but do not increase budget income.
+    const BUDGET_INCOME_EXCLUDED_CATEGORIES = new Set([
+      "Remboursement d’un proche",
+      "Remboursement mutuelle",
+      "Remboursement sécurité sociale",
+      "Vente",
+    ]);
+
+    function isBudgetIncome(item) {
+      return !BUDGET_INCOME_EXCLUDED_CATEGORIES.has(String(item?.category || ""));
+    }
+
     const FIXED_CHARGE_CATEGORIES = [
       "Abonnements",
       "Assurances",
@@ -2369,7 +2382,7 @@
     }
 
     function financialSnapshot() {
-      const income = sum(currentMonthIncomes(), x => x.amount);
+      const income = sum(currentMonthIncomes().filter(isBudgetIncome), x => x.amount);
       const expenses = sum(currentMonthExpenses(), x => x.amount);
       const fixed = sum(activeFixedCharges(), x => x.amount);
       const projects = 0;
