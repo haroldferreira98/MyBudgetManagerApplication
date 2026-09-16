@@ -481,6 +481,9 @@
     .list-sub { margin-top: 3px; color: var(--on-surface-variant); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .list-side { text-align: right; flex: 0 0 auto; }
     .list-amount { font-weight: 700; font-size: 15px; }
+    .income-list-item { cursor: pointer; }
+    .income-list-item:active { opacity: .82; }
+    .income-list-item .list-side { margin-left: auto; }
     .list-side small { display: block; margin-top: 4px; color: var(--on-surface-variant); font-size: 11px; }
     .item-actions { display: flex; gap: 5px; margin-left: 4px; }
     .mini-btn {
@@ -1970,14 +1973,13 @@
       const items = [...currentMonthIncomes()].sort((a,b) => String(b.date).localeCompare(String(a.date)));
       const currentTotal = sum(currentMonthIncomes(), x => x.amount);
       const listHtml = items.length ? items.map(item => `
-        <div class="list-item">
+        <div class="list-item income-list-item" data-edit-type="income" data-edit-id="${item.id}" role="button" tabindex="0">
           <div class="list-icon"><span class="material-symbols-outlined">arrow_downward</span></div>
           <div class="list-main">
             <div class="list-title">${escapeHtml(item.label)}</div>
             <div class="list-sub">${escapeHtml(item.category || "Salaire")} · ${formatDate(item.date)}</div>
           </div>
           <div class="list-side"><div class="list-amount money positive">+${formatMoney(item.amount)}</div></div>
-          <div class="item-actions"><button class="mini-btn" data-edit-type="income" data-edit-id="${item.id}" aria-label="Modifier"><span class="material-symbols-outlined">edit</span></button></div>
         </div>`).join("") : emptyState("payments", "Aucun revenu", "Ajoute un salaire, un remboursement ou tout autre revenu.");
 
       container.innerHTML = `
@@ -2708,6 +2710,12 @@
     });
 
     document.addEventListener("keydown", event => {
+      const incomeRow = event.target.closest?.(".income-list-item");
+      if (incomeRow && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        incomeRow.click();
+        return;
+      }
       if (event.key === "Escape") document.querySelectorAll(".sheet-backdrop.open").forEach(el => closeModal(el.id));
     });
 
