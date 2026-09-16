@@ -1,14 +1,12 @@
 name: Collapse expense category summaries
-
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - '.github/workflows/collapse-expense-categories.yml'
-
+      - .github/workflows/collapse-expense-categories.yml
 permissions:
   contents: write
-
 jobs:
   patch_and_deploy:
     runs-on: ubuntu-latest
@@ -17,163 +15,23 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-
-      - name: Make expense category groups collapsible
-        shell: bash
+      - name: Patch expense category UI
+        env:
+          PATCH_SCRIPT_B64: ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnBhdGg9UGF0aCgnaW5kZXguaHRtbCcpCnRleHQ9cGF0aC5yZWFkX3RleHQoZW5jb2Rpbmc9J3V0Zi04JykKCm9sZF9jc3M9IiIiICAgIC5leHBlbnNlLWNhdGVnb3J5LWdyb3VwIHsgZGlzcGxheTogZ3JpZDsgZ2FwOiA3cHg7IH0KICAgIC5leHBlbnNlLWNhdGVnb3J5LWdyb3VwICsgLmV4cGVuc2UtY2F0ZWdvcnktZ3JvdXAgeyBtYXJnaW4tdG9wOiAxOHB4OyB9CiAgICAuZXhwZW5zZS1jYXRlZ29yeS1sYWJlbCB7CiAgICAgIG1hcmdpbjogMCA0cHggMXB4OwogICAgICBjb2xvcjogdmFyKC0tb24tc3VyZmFjZS12YXJpYW50KTsKICAgICAgZm9udC1zaXplOiAxMnB4OwogICAgICBmb250LXdlaWdodDogNjAwOwogICAgICBsZXR0ZXItc3BhY2luZzogLjAxZW07CiAgICB9CiIiIgpuZXdfY3NzPSIiIiAgICAuZXhwZW5zZS1jYXRlZ29yeS1ncm91cCB7CiAgICAgIGJvcmRlcjogMXB4IHNvbGlkIGNvbG9yLW1peChpbiBzcmdiLCB2YXIoLS1vdXRsaW5lLXZhcmlhbnQpIDcyJSwgdHJhbnNwYXJlbnQpOwogICAgICBib3JkZXItcmFkaXVzOiB2YXIoLS1yYWRpdXMtc21hbGwpOwogICAgICBiYWNrZ3JvdW5kOiB2YXIoLS1zdXJmYWNlLWNvbnRhaW5lci1sb3cpOwogICAgICBvdmVyZmxvdzogaGlkZGVuOwogICAgfQogICAgLmV4cGVuc2UtY2F0ZWdvcnktZ3JvdXAgKyAuZXhwZW5zZS1jYXRlZ29yeS1ncm91cCB7IG1hcmdpbi10b3A6IDEycHg7IH0KICAgIC5leHBlbnNlLWNhdGVnb3J5LXN1bW1hcnkgewogICAgICBtaW4taGVpZ2h0OiA1OHB4OwogICAgICBkaXNwbGF5OiBncmlkOwogICAgICBncmlkLXRlbXBsYXRlLWNvbHVtbnM6IG1pbm1heCgwLCAxZnIpIGF1dG8gMjRweDsKICAgICAgYWxpZ24taXRlbXM6IGNlbnRlcjsKICAgICAgZ2FwOiAxMHB4OwogICAgICBwYWRkaW5nOiAxMXB4IDEzcHg7CiAgICAgIGN1cnNvcjogcG9pbnRlcjsKICAgICAgbGlzdC1zdHlsZTogbm9uZTsKICAgICAgdXNlci1zZWxlY3Q6IG5vbmU7CiAgICAgIC13ZWJraXQtdXNlci1zZWxlY3Q6IG5vbmU7CiAgICB9CiAgICAuZXhwZW5zZS1jYXRlZ29yeS1zdW1tYXJ5Ojotd2Via2l0LWRldGFpbHMtbWFya2VyIHsgZGlzcGxheTogbm9uZTsgfQogICAgLmV4cGVuc2UtY2F0ZWdvcnktc3VtbWFyeTphY3RpdmUgeyBvcGFjaXR5OiAuODI7IH0KICAgIC5leHBlbnNlLWNhdGVnb3J5LWxhYmVsIHsgY29sb3I6IHZhcigtLW9uLXN1cmZhY2UtdmFyaWFudCk7IGZvbnQtc2l6ZTogMTJweDsgZm9udC13ZWlnaHQ6IDcwMDsgbGV0dGVyLXNwYWNpbmc6IC4wMWVtOyB9CiAgICAuZXhwZW5zZS1jYXRlZ29yeS1tZXRhIHsgbWFyZ2luLXRvcDogMnB4OyBjb2xvcjogdmFyKC0tb24tc3VyZmFjZS12YXJpYW50KTsgZm9udC1zaXplOiAxMXB4OyB9CiAgICAuZXhwZW5zZS1jYXRlZ29yeS10b3RhbCB7IGZvbnQtc2l6ZTogMTRweDsgZm9udC13ZWlnaHQ6IDcwMDsgd2hpdGUtc3BhY2U6IG5vd3JhcDsgdGV4dC1hbGlnbjogcmlnaHQ7IH0KICAgIC5leHBlbnNlLWNhdGVnb3J5LWNoZXZyb24geyBmb250LXNpemU6IDIycHg7IGNvbG9yOiB2YXIoLS1vbi1zdXJmYWNlLXZhcmlhbnQpOyB0cmFuc2l0aW9uOiB0cmFuc2Zvcm0gLjE4cyBlYXNlOyB9CiAgICAuZXhwZW5zZS1jYXRlZ29yeS1ncm91cFtvcGVuXSAuZXhwZW5zZS1jYXRlZ29yeS1jaGV2cm9uIHsgdHJhbnNmb3JtOiByb3RhdGUoMTgwZGVnKTsgfQogICAgLmV4cGVuc2UtY2F0ZWdvcnktaXRlbXMgeyBkaXNwbGF5OiBncmlkOyBnYXA6IDdweDsgcGFkZGluZzogMCA4cHggOHB4OyB9CiIiIgpvbGRfc3RhdGU9JycnICAgIGxldCBleHBlbnNlU29ydCA9ICJjYXRlZ29yeSI7CiAgICBsZXQgZ2xvYmFsU2VhcmNoID0gIiI7JycnCm5ld19zdGF0ZT0nJycgICAgbGV0IGV4cGVuc2VTb3J0ID0gImNhdGVnb3J5IjsKICAgIGNvbnN0IGV4cGFuZGVkRXhwZW5zZUNhdGVnb3JpZXMgPSBuZXcgU2V0KCk7CiAgICBsZXQgZ2xvYmFsU2VhcmNoID0gIiI7JycnCm9sZF9ncm91cHM9JycnICAgICAgICBsaXN0SHRtbCA9IFsuLi5ncm91cHMuZW50cmllcygpXS5tYXAoKFtjYXRlZ29yeSwgaXRlbXNdKSA9PiBgCiAgICAgICAgICA8ZGl2IGNsYXNzPSJleHBlbnNlLWNhdGVnb3J5LWdyb3VwIj4KICAgICAgICAgICAgPGRpdiBjbGFzcz0iZXhwZW5zZS1jYXRlZ29yeS1sYWJlbCI+JHtlc2NhcGVIdG1sKGNhdGVnb3J5KX08L2Rpdj4KICAgICAgICAgICAgJHtpdGVtcy5tYXAocmVuZGVyRXhwZW5zZVJvdykuam9pbigiIil9CiAgICAgICAgICA8L2Rpdj5gKS5qb2luKCIiKTsnJycKbmV3X2dyb3Vwcz0nJycgICAgICAgIGxpc3RIdG1sID0gWy4uLmdyb3Vwcy5lbnRyaWVzKCldLm1hcCgoW2NhdGVnb3J5LCBpdGVtc10pID0+IGAKICAgICAgICAgIDxkZXRhaWxzIGNsYXNzPSJleHBlbnNlLWNhdGVnb3J5LWdyb3VwIiBkYXRhLWV4cGVuc2UtY2F0ZWdvcnk9IiR7ZXNjYXBlSHRtbChjYXRlZ29yeSl9IiAke2V4cGFuZGVkRXhwZW5zZUNhdGVnb3JpZXMuaGFzKGNhdGVnb3J5KSA/ICJvcGVuIiA6ICIifT4KICAgICAgICAgICAgPHN1bW1hcnkgY2xhc3M9ImV4cGVuc2UtY2F0ZWdvcnktc3VtbWFyeSI+CiAgICAgICAgICAgICAgPGRpdj4KICAgICAgICAgICAgICAgIDxkaXYgY2xhc3M9ImV4cGVuc2UtY2F0ZWdvcnktbGFiZWwiPiR7ZXNjYXBlSHRtbChjYXRlZ29yeSl9PC9kaXY+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJleHBlbnNlLWNhdGVnb3J5LW1ldGEiPiR7aXRlbXMubGVuZ3RofSBvcMOpcmF0aW9uJHtpdGVtcy5sZW5ndGggPiAxID8gInMiIDogIiJ9PC9kaXY+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgPGRpdiBjbGFzcz0iZXhwZW5zZS1jYXRlZ29yeS10b3RhbCBtb25leSBuZWdhdGl2ZSI+4oiSJHtmb3JtYXRNb25leShzdW0oaXRlbXMsIHggPT4geC5hbW91bnQpKX08L2Rpdj4KICAgICAgICAgICAgICA8c3BhbiBjbGFzcz0ibWF0ZXJpYWwtc3ltYm9scy1vdXRsaW5lZCBleHBlbnNlLWNhdGVnb3J5LWNoZXZyb24iPmV4cGFuZF9tb3JlPC9zcGFuPgogICAgICAgICAgICA8L3N1bW1hcnk+CiAgICAgICAgICAgIDxkaXYgY2xhc3M9ImV4cGVuc2UtY2F0ZWdvcnktaXRlbXMiPiR7aXRlbXMubWFwKHJlbmRlckV4cGVuc2VSb3cpLmpvaW4oIiIpfTwvZGl2PgogICAgICAgICAgPC9kZXRhaWxzPmApLmpvaW4oIiIpOycnJwpvbGRfbGlzdGVuZXI9JycnICAgICAgaWYgKGlucHV0KSB7CiAgICAgICAgaW5wdXQuYWRkRXZlbnRMaXN0ZW5lcigiaW5wdXQiLCBlID0+IHsKICAgICAgICAgIGV4cGVuc2VTZWFyY2ggPSBlLnRhcmdldC52YWx1ZTsKICAgICAgICAgIHJlbmRlckV4cGVuc2VzKCk7CiAgICAgICAgICByZXF1ZXN0QW5pbWF0aW9uRnJhbWUoKCkgPT4gewogICAgICAgICAgICBjb25zdCBuZXh0ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImV4cGVuc2VTZWFyY2giKTsKICAgICAgICAgICAgaWYgKG5leHQpIHsgbmV4dC5mb2N1cygpOyBuZXh0LnNldFNlbGVjdGlvblJhbmdlKG5leHQudmFsdWUubGVuZ3RoLCBuZXh0LnZhbHVlLmxlbmd0aCk7IH0KICAgICAgICAgIH0pOwogICAgICAgIH0pOwogICAgICB9CiAgICB9CicnJwpuZXdfbGlzdGVuZXI9JycnICAgICAgaWYgKGlucHV0KSB7CiAgICAgICAgaW5wdXQuYWRkRXZlbnRMaXN0ZW5lcigiaW5wdXQiLCBlID0+IHsKICAgICAgICAgIGV4cGVuc2VTZWFyY2ggPSBlLnRhcmdldC52YWx1ZTsKICAgICAgICAgIHJlbmRlckV4cGVuc2VzKCk7CiAgICAgICAgICByZXF1ZXN0QW5pbWF0aW9uRnJhbWUoKCkgPT4gewogICAgICAgICAgICBjb25zdCBuZXh0ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImV4cGVuc2VTZWFyY2giKTsKICAgICAgICAgICAgaWYgKG5leHQpIHsgbmV4dC5mb2N1cygpOyBuZXh0LnNldFNlbGVjdGlvblJhbmdlKG5leHQudmFsdWUubGVuZ3RoLCBuZXh0LnZhbHVlLmxlbmd0aCk7IH0KICAgICAgICAgIH0pOwogICAgICAgIH0pOwogICAgICB9CgogICAgICBjb250YWluZXIucXVlcnlTZWxlY3RvckFsbCgiZGV0YWlsc1tkYXRhLWV4cGVuc2UtY2F0ZWdvcnldIikuZm9yRWFjaChncm91cCA9PiB7CiAgICAgICAgZ3JvdXAuYWRkRXZlbnRMaXN0ZW5lcigidG9nZ2xlIiwgKCkgPT4gewogICAgICAgICAgY29uc3QgY2F0ZWdvcnkgPSBncm91cC5kYXRhc2V0LmV4cGVuc2VDYXRlZ29yeTsKICAgICAgICAgIGlmICghY2F0ZWdvcnkpIHJldHVybjsKICAgICAgICAgIGlmIChncm91cC5vcGVuKSBleHBhbmRlZEV4cGVuc2VDYXRlZ29yaWVzLmFkZChjYXRlZ29yeSk7CiAgICAgICAgICBlbHNlIGV4cGFuZGVkRXhwZW5zZUNhdGVnb3JpZXMuZGVsZXRlKGNhdGVnb3J5KTsKICAgICAgICB9KTsKICAgICAgfSk7CiAgICB9CicnJwpmb3Igb2xkLG5ldyBpbiBbKG9sZF9jc3MsbmV3X2NzcyksKG9sZF9zdGF0ZSxuZXdfc3RhdGUpLChvbGRfZ3JvdXBzLG5ld19ncm91cHMpLChvbGRfbGlzdGVuZXIsbmV3X2xpc3RlbmVyKV06CiAgICBpZiBvbGQgbm90IGluIHRleHQ6CiAgICAgICAgcmFpc2UgU3lzdGVtRXhpdCgnbWlzc2luZyAnK29sZFs6ODBdLnJlcGxhY2UoJ1xuJywnIHwgJykpCiAgICB0ZXh0PXRleHQucmVwbGFjZShvbGQsbmV3LDEpCnBhdGgud3JpdGVfdGV4dCh0ZXh0LGVuY29kaW5nPSd1dGYtOCcpCg==
         run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('index.html')
-          text = path.read_text(encoding='utf-8')
-
-          old_css = '''    .expense-category-group { display: grid; gap: 7px; }
-    .expense-category-group + .expense-category-group { margin-top: 18px; }
-    .expense-category-label {
-      margin: 0 4px 1px;
-      color: var(--on-surface-variant);
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: .01em;
-    }
-'''
-          new_css = '''    .expense-category-group {
-      border: 1px solid color-mix(in srgb, var(--outline-variant) 72%, transparent);
-      border-radius: var(--radius-small);
-      background: var(--surface-container-low);
-      overflow: hidden;
-    }
-    .expense-category-group + .expense-category-group { margin-top: 12px; }
-    .expense-category-summary {
-      min-height: 58px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto 24px;
-      align-items: center;
-      gap: 10px;
-      padding: 11px 13px;
-      cursor: pointer;
-      list-style: none;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    .expense-category-summary::-webkit-details-marker { display: none; }
-    .expense-category-summary:active { opacity: .82; }
-    .expense-category-label {
-      color: var(--on-surface-variant);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .01em;
-    }
-    .expense-category-meta {
-      margin-top: 2px;
-      color: var(--on-surface-variant);
-      font-size: 11px;
-    }
-    .expense-category-total {
-      font-size: 14px;
-      font-weight: 700;
-      white-space: nowrap;
-      text-align: right;
-    }
-    .expense-category-chevron {
-      font-size: 22px;
-      color: var(--on-surface-variant);
-      transition: transform .18s ease;
-    }
-    .expense-category-group[open] .expense-category-chevron { transform: rotate(180deg); }
-    .expense-category-items {
-      display: grid;
-      gap: 7px;
-      padding: 0 8px 8px;
-    }
-'''
-
-          old_state = '''    let expenseSort = "category";
-    let globalSearch = "";'''
-          new_state = '''    let expenseSort = "category";
-    const expandedExpenseCategories = new Set();
-    let globalSearch = "";'''
-
-          old_groups = '''        listHtml = [...groups.entries()].map(([category, items]) => `
-          <div class="expense-category-group">
-            <div class="expense-category-label">${escapeHtml(category)}</div>
-            ${items.map(renderExpenseRow).join("")}
-          </div>`).join("");'''
-          new_groups = '''        listHtml = [...groups.entries()].map(([category, items]) => `
-          <details class="expense-category-group" data-expense-category="${escapeHtml(category)}" ${expandedExpenseCategories.has(category) ? "open" : ""}>
-            <summary class="expense-category-summary">
-              <div>
-                <div class="expense-category-label">${escapeHtml(category)}</div>
-                <div class="expense-category-meta">${items.length} opération${items.length > 1 ? "s" : ""}</div>
-              </div>
-              <div class="expense-category-total money negative">−${formatMoney(sum(items, x => x.amount))}</div>
-              <span class="material-symbols-outlined expense-category-chevron">expand_more</span>
-            </summary>
-            <div class="expense-category-items">${items.map(renderExpenseRow).join("")}</div>
-          </details>`).join("");'''
-
-          old_listener = '''      if (input) {
-        input.addEventListener("input", e => {
-          expenseSearch = e.target.value;
-          renderExpenses();
-          requestAnimationFrame(() => {
-            const next = document.getElementById("expenseSearch");
-            if (next) { next.focus(); next.setSelectionRange(next.value.length, next.value.length); }
-          });
-        });
-      }
-    }
-'''
-          new_listener = '''      if (input) {
-        input.addEventListener("input", e => {
-          expenseSearch = e.target.value;
-          renderExpenses();
-          requestAnimationFrame(() => {
-            const next = document.getElementById("expenseSearch");
-            if (next) { next.focus(); next.setSelectionRange(next.value.length, next.value.length); }
-          });
-        });
-      }
-
-      container.querySelectorAll("details[data-expense-category]").forEach(group => {
-        group.addEventListener("toggle", () => {
-          const category = group.dataset.expenseCategory;
-          if (!category) return;
-          if (group.open) expandedExpenseCategories.add(category);
-          else expandedExpenseCategories.delete(category);
-        });
-      });
-    }
-'''
-
-          replacements = [
-            (old_css, new_css),
-            (old_state, new_state),
-            (old_groups, new_groups),
-            (old_listener, new_listener),
-          ]
-
-          for old, new in replacements:
-            if old not in text:
-              raise SystemExit('Expected block not found: ' + old[:120].replace('\n', ' | '))
-            text = text.replace(old, new, 1)
-
-          path.write_text(text, encoding='utf-8')
-          PY
-
-      - name: Commit change
-        shell: bash
+          echo "$PATCH_SCRIPT_B64" | base64 -d > /tmp/patch.py
+          python /tmp/patch.py
+      - name: Commit app change
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           git commit -m "Collapse expense categories with summaries"
           git push origin main
-
-      - name: Deploy patched app to Firebase Hosting
+      - name: Deploy app
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}
           channelId: live
           projectId: mybudgetmanagerapplication
