@@ -16,4 +16,4 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
           channelId: live
           projectId: mybudgetmanagerapplication
-# deployment trigger after summary cleanup
+# deployment trigger fixed charges navigation v2
