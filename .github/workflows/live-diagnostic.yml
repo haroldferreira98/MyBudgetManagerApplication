@@ -1,0 +1,31 @@
+name: Diagnose live Firebase
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch live HTML
+        run: |
+          set -e
+          curl -fsSL -H 'Cache-Control: no-cache' 'https://mybudgetmanagerapplication.web.app/?diag='"$(date +%s)" -o live.html
+          echo '--- APP BUILD ---'
+          grep -o 'meta name="app-build" content="[^"]*"' live.html || true
+          echo '--- TOP SETTINGS BUTTON COUNT ---'
+          grep -o 'id="settingsBtn"' live.html | wc -l
+          echo '--- BOTTOM SETTINGS NAV COUNT ---'
+          grep -o 'data-screen="settings"' live.html | wc -l
+          echo '--- FIXED NAV COUNT ---'
+          grep -o 'data-screen="fixed"' live.html | wc -l
+          echo '--- ACCOUNT PROFILE CONTENT MARKER ---'
+          grep -o 'account-profile-content' live.html | wc -l
+          echo '--- HTML SHA256 ---'
+          sha256sum live.html
