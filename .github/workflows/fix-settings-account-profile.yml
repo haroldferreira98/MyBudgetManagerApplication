@@ -1,0 +1,57 @@
+name: Fix settings and Google account profile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-settings-account-profile.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch app
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = '      <div class="brand">\n        <p class="brand-eyebrow">Budget personnel</p>\n        <h1 class="brand-title" id="screenTitle">Accueil</h1>\n      </div>\n    </header>'
+          new = '      <div class="brand">\n        <p class="brand-eyebrow">Budget personnel</p>\n        <h1 class="brand-title" id="screenTitle">Accueil</h1>\n      </div>\n      <div class="top-actions">\n        <button class="icon-btn" id="settingsBtn" type="button" aria-label="Paramètres" title="Paramètres">\n          <span class="material-symbols-outlined">settings</span>\n        </button>\n      </div>\n    </header>'
+          if old not in s:
+              raise SystemExit('Missing header target')
+          s = s.replace(old, new, 1)
+
+          old = '      <button class="nav-btn" data-screen="settings" aria-label="Paramètres">\n        <span class="material-symbols-outlined">settings</span><span>Paramètres</span>\n      </button>\n'
+          if old not in s:
+              raise SystemExit('Missing bottom settings target')
+          s = s.replace(old, '', 1)
+
+          s = s.replace('.bottom-nav { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }', '.bottom-nav { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }', 1)
+
+          old = '      const settings = event.target.closest("#settingsBtn");\n      if (settings) { updateSettingsUI(); openModal("settingsModal"); return; }'
+          new = '      const settings = event.target.closest("#settingsBtn");\n      if (settings) { setCurrentScreen("settings"); return; }'
+          if old not in s:
+              raise SystemExit('Missing settings click target')
+          s = s.replace(old, new, 1)
+
+          old = '      const account = event.target.closest("#accountBtn");\n      if (account) { renderAccountModal(); openModal("accountModal"); return; }'
+          new = '      const account = event.target.closest("#accountBtn");\n      if (account) { renderProfile(); renderAccountModal(); openModal("accountModal"); return; }'
+          if old not in s:
+              raise SystemExit('Missing account click target')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Restore settings button and Google account profile content'
+          git push
