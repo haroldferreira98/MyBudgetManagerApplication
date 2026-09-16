@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260917-budget-income-exclusions-v1" />
+  <meta name="app-build" content="20260917-settings-accordion-focus-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1693,6 +1693,40 @@
       -webkit-touch-callout: default;
     }
 
+
+
+    /* SETTINGS-ACCORDION-FOCUS-V1 */
+    .settings-back-row {
+      display: flex;
+      align-items: center;
+      margin: 2px 0 12px;
+    }
+    .settings-back-btn {
+      min-height: 40px !important;
+      padding-inline: 10px 13px !important;
+      gap: 5px;
+    }
+    .settings-back-btn .material-symbols-outlined { font-size: 20px; }
+
+    /* Une seule catégorie ouverte ; les autres passent au même blur que le mode œil. */
+    .operation-list.has-open-category > .expense-category-group:not([open]) > .expense-category-summary > :not(.expense-category-chevron) {
+      filter: blur(8px);
+      -webkit-filter: blur(8px);
+      user-select: none;
+      -webkit-user-select: none;
+      transition: filter .14s ease;
+    }
+    .operation-list > .expense-category-group > .expense-category-summary > :not(.expense-category-chevron) {
+      transition: filter .14s ease;
+    }
+    .operation-list.has-open-category > .expense-category-group:not([open]) > .expense-category-summary > .expense-category-chevron {
+      filter: none !important;
+      -webkit-filter: none !important;
+      opacity: 1;
+      position: relative;
+      z-index: 2;
+    }
+
   </style>
 </head>
 <body>
@@ -2670,6 +2704,9 @@
       const container = document.getElementById("screen-settings");
       if (!container) return;
       container.innerHTML = `
+        <div class="settings-back-row">
+          <button class="btn outlined small settings-back-btn" type="button" data-screen="home" aria-label="Retour à l’accueil"><span class="material-symbols-outlined">arrow_back</span>Retour</button>
+        </div>
         <div class="section">
           <div class="card settings-page-card">
             <div class="section-header"><div><h2 class="section-title">Apparence</h2><p class="section-subtitle">Le mode Automatique suit le thème de l’iPhone.</p></div></div>
@@ -2929,14 +2966,29 @@
         button.addEventListener("click", () => closeOperationMenus());
       });
 
+      const operationCategoryList = container.querySelector(".operation-list");
+      const syncOperationCategoryFocus = () => {
+        const hasOpenCategory = !!container.querySelector("details[data-operation-category][open]");
+        operationCategoryList?.classList.toggle("has-open-category", hasOpenCategory);
+      };
+
       container.querySelectorAll("details[data-operation-category]").forEach(group => {
         group.addEventListener("toggle", () => {
           const category = group.dataset.operationCategory;
           if (!category) return;
-          if (group.open) expandedOperationCategories.add(category);
-          else expandedOperationCategories.delete(category);
+          if (group.open) {
+            container.querySelectorAll("details[data-operation-category][open]").forEach(other => {
+              if (other !== group) other.open = false;
+            });
+            expandedOperationCategories.clear();
+            expandedOperationCategories.add(category);
+          } else {
+            expandedOperationCategories.delete(category);
+          }
+          syncOperationCategoryFocus();
         });
       });
+      syncOperationCategoryFocus();
     }
 
     function renderIncome() {
