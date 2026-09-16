@@ -803,12 +803,6 @@
     }
     .modal-actions .btn { flex: 1; }
 
-    .range-row { display: grid; gap: 10px; margin: 16px 0; }
-    input[type="range"] { width: 100%; accent-color: var(--primary); }
-    .sim-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
-    .sim-box { padding: 13px; border-radius: 18px; background: var(--surface-container); }
-    .sim-box span { color: var(--on-surface-variant); font-size: 12px; display: block; }
-    .sim-box strong { font-size: 17px; display: block; margin-top: 5px; }
 
     .snackbar {
       position: fixed;
@@ -851,7 +845,7 @@
     }
 
     @media (max-width: 560px) {
-      .grid-2, .field-row, .sim-grid { grid-template-columns: 1fr; }
+      .grid-2, .field-row { grid-template-columns: 1fr; }
       .nav-btn { font-size: 9px; }
       .bottom-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
       .fab { width: 58px; height: 58px; }
@@ -1196,7 +1190,6 @@
     html[data-theme="dsfr"] .target-badge,
     html[data-theme="dsfr"] .list-item,
     html[data-theme="dsfr"] .list-icon,
-    html[data-theme="dsfr"] .sim-box,
     html[data-theme="dsfr"] .checkbox-row,
     html[data-theme="dsfr"] .month-switcher,
     html[data-theme="dsfr"] .search-shell,
@@ -1288,7 +1281,7 @@
     .section-title { font-size: 17px; line-height: 1.25; font-weight: 700; letter-spacing: -.015em; }
     .section-subtitle { margin-top: 3px; font-size: 12px; line-height: 1.35; }
 
-    .card, .empty-state, .profile-fold, .expense-category-group, .sim-box, .cloud-status {
+    .card, .empty-state, .profile-fold, .expense-category-group, .cloud-status {
       border-radius: var(--radius-card) !important;
       box-shadow: none !important;
     }
@@ -1634,18 +1627,6 @@
     </div>
   </div>
 
-  <div class="sheet-backdrop" id="creditSimModal" role="dialog" aria-modal="true" aria-labelledby="creditSimTitle">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-head">
-        <h2 class="sheet-title" id="creditSimTitle">Simulation de crédit</h2>
-        <button class="icon-btn" data-close-modal="creditSimModal" aria-label="Fermer"><span class="material-symbols-outlined">close</span></button>
-      </div>
-      <div class="sheet-body" id="creditSimBody"></div>
-    </div>
-  </div>
-
-
   <div class="sheet-backdrop" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -1759,6 +1740,7 @@
       "Assurances",
       "Charges de copropriété",
       "Cotisations bancaires",
+      "Crédit",
       "Eau",
       "Électricité",
       "Forfait internet",
@@ -2220,10 +2202,6 @@
       return state.fixedCharges.filter(item => item.active !== false);
     }
 
-    function activeCredits() {
-      return state.credits.filter(item => item.active !== false);
-    }
-
     function activeProjects() {
       return state.projects.filter(item => item.active !== false);
     }
@@ -2232,16 +2210,15 @@
       const income = sum(currentMonthIncomes(), x => x.amount);
       const expenses = sum(currentMonthExpenses(), x => x.amount);
       const fixed = sum(activeFixedCharges(), x => x.amount);
-      const credits = sum(activeCredits(), x => x.monthlyPayment);
       const projects = 0;
-      const engaged = fixed + credits + expenses;
+      const engaged = fixed + expenses;
       const remaining = income - engaged;
       const daily = expenses / averageDayCount();
 
       return {
-        income, expenses, fixed, credits, projects, engaged, remaining, daily,
+        income, expenses, fixed, projects, engaged, remaining, daily,
         buckets: {
-          needs: fixed + credits,
+          needs: fixed,
           wants: expenses,
           savings: Math.max(0, remaining)
         }
@@ -2306,11 +2283,6 @@
         subtitle: `Jour ${safeNumber(item.day, 1)}`, amount: -safeNumber(item.amount),
         haystack: [item.label, "charge fixe", "charges fixes", item.day, ...amountTokens(item.amount)].join(" ")
       }));
-      state.credits.forEach(item => rows.push({
-        type: "credit", id: item.id, icon: "credit_card", kind: "Crédit", title: item.name,
-        subtitle: `Mensualité ${formatMoney(item.monthlyPayment)}`, amount: -safeNumber(item.monthlyPayment),
-        haystack: [item.name, "crédit", "credit", "mensualité", "mensualite", ...amountTokens(item.monthlyPayment)].join(" ")
-      }));
       return rows.filter(row => normalizeSearch(row.haystack).includes(q)).slice(0, 50);
     }
 
@@ -2333,7 +2305,7 @@
       const charges = [...activeFixedCharges()].sort((a,b) => safeNumber(a.day, 1) - safeNumber(b.day, 1));
 
       const bucketCards = [
-        { key: "needs", label: "Charges fixes", target: 50, value: s.fixed + sum(state.credits, x => x.monthlyPayment) },
+        { key: "needs", label: "Charges fixes", target: 50, value: s.fixed },
         { key: "wants", label: "Dépenses courantes", target: 30, value: s.buckets.wants },
         { key: "savings", label: "Épargne possible", target: 20, value: s.buckets.savings }
       ].map(item => {
@@ -2383,7 +2355,7 @@
               </div>
               <div class="summary-mini">
                 <span class="summary-mini-label">Charges fixes</span>
-                <strong class="summary-mini-value money">${formatMoney(s.fixed + s.credits)}</strong>
+                <strong class="summary-mini-value money">${formatMoney(s.fixed)}</strong>
               </div>
             </div>
           </div>
@@ -2447,9 +2419,7 @@
         if (fixedSort === "alpha") return String(a.label || "").localeCompare(String(b.label || ""), "fr", { sensitivity: "base" });
         return safeNumber(a.day, 1) - safeNumber(b.day, 1);
       });
-      const credits = activeCredits();
-      const creditTotal = sum(credits, x => x.monthlyPayment);
-      const total = sum(charges, x => x.amount) + creditTotal;
+      const total = sum(charges, x => x.amount);
 
       let fixedListHtml;
       if (!charges.length) {
@@ -2485,7 +2455,6 @@
             <div class="hero-value money">${formatMoney(total)}</div>
             <div class="hero-meta">
               <span class="daily-pill"><span class="material-symbols-outlined">event_repeat</span>${charges.length} prélèvement${charges.length > 1 ? "s" : ""}</span>
-              <span class="daily-pill"><span class="material-symbols-outlined">credit_card</span>${credits.length} crédit${credits.length === 1 ? "" : "s"}</span>
             </div>
           </div>
         </div>
@@ -2581,26 +2550,6 @@
           sortDate: `${selectedMonth}-${String(day).padStart(2, "0")}`,
           meta: `${item.category || "Charge fixe"} · ${formatOperationDate(operationDate)}`,
           icon: "event_repeat"
-        });
-      });
-
-      activeCredits().forEach(item => {
-        const creditDay = item.day === undefined || item.day === null || String(item.day).trim() === ""
-          ? null
-          : clamp(Math.round(safeNumber(item.day)), 1, daysInSelectedMonth());
-        const meta = creditDay
-          ? `Crédits · ${formatOperationDate(`${selectedMonth}-${String(creditDay).padStart(2, "0")}`)}`
-          : "Crédits";
-        rows.push({
-          type: "credit",
-          group: "fixed",
-          id: item.id,
-          title: item.name,
-          category: "Crédits",
-          amount: -safeNumber(item.monthlyPayment),
-          sortDate: `${selectedMonth}-${creditDay ? String(creditDay).padStart(2, "0") : "00"}`,
-          meta,
-          icon: "credit_card"
         });
       });
 
@@ -2714,7 +2663,6 @@
                 <div class="operation-menu" data-operation-add-menu hidden>
                   <button type="button" data-add-type="income"><span class="material-symbols-outlined">payments</span>Revenu</button>
                   <button type="button" data-add-type="fixed"><span class="material-symbols-outlined">event_repeat</span>Charge fixe</button>
-                  <button type="button" data-add-type="credit"><span class="material-symbols-outlined">credit_card</span>Crédit</button>
                   <button type="button" data-add-type="expense"><span class="material-symbols-outlined">receipt_long</span>Dépense</button>
                 </div>
               </div>
@@ -2934,38 +2882,9 @@
     }
 
 
-    function estimateRemainingBalance(principal, annualRate, monthlyPayment, monthsPaid) {
-      let balance = Math.max(0, safeNumber(principal));
-      const payment = Math.max(0, safeNumber(monthlyPayment));
-      const paid = Math.max(0, Math.round(safeNumber(monthsPaid)));
-      const monthlyRate = Math.max(0, safeNumber(annualRate)) / 100 / 12;
-      if (!payment || !paid) return balance;
-      for (let i = 0; i < paid && balance > 0.005; i += 1) {
-        const interest = balance * monthlyRate;
-        const principalPaid = Math.max(0, payment - interest);
-        if (principalPaid <= 0) break;
-        balance -= Math.min(balance, principalPaid);
-      }
-      return Math.max(0, balance);
-    }
-
-    function creditProgress(credit) {
-      const durationMonths = Math.max(0, Math.round(safeNumber(credit.durationMonths)));
-      const monthsPaid = durationMonths > 0
-        ? clamp(Math.round(safeNumber(credit.monthsPaid)), 0, durationMonths)
-        : Math.max(0, Math.round(safeNumber(credit.monthsPaid)));
-      const remainingPayments = durationMonths > 0 ? Math.max(0, durationMonths - monthsPaid) : null;
-      const rate = credit.zeroRate ? 0 : safeNumber(credit.annualRate);
-      const calculatedBalance = durationMonths > 0
-        ? estimateRemainingBalance(credit.principal, rate, credit.monthlyPayment, monthsPaid)
-        : safeNumber(credit.balance);
-      return { durationMonths, monthsPaid, remainingPayments, calculatedBalance };
-    }
-
     function renderProfile() {
       const container = document.getElementById("screen-profile");
       const monthExpenses = currentMonthExpenses();
-      const totalCreditMonthlyPayment = sum(state.credits, credit => safeNumber(credit.monthlyPayment));
 
       const envelopesHtml = state.envelopes.length ? state.envelopes.map(env => {
         const spent = sum(monthExpenses.filter(x => env.category === "Toutes" || x.category === env.category), x => x.amount);
@@ -2981,33 +2900,6 @@
             <div class="tiny" style="margin-top:7px">${limit > 0 ? `${pct.toFixed(0)}% utilisé` : "Limite à définir"}</div>
           </div>`;
       }).join("") : emptyState("account_balance_wallet", "Aucune enveloppe", "Crée des plafonds mensuels par catégorie pour suivre tes dépenses.");
-
-      const creditsHtml = state.credits.length ? state.credits.map(credit => {
-        const rate = credit.zeroRate ? 0 : safeNumber(credit.annualRate);
-        const progress = creditProgress(credit);
-        const durationText = progress.durationMonths > 0 ? `${progress.monthsPaid}/${progress.durationMonths} mensualités remboursées` : "Durée à compléter";
-        const foldKey = `credit:${credit.id}`;
-        const collapsed = state.credits.length > 1 && !expandedProfileItems.has(foldKey);
-        return `
-          <div class="card profile-fold ${collapsed ? "collapsed" : ""}">
-            <div class="section-header" style="margin:0 0 8px">
-              <div class="profile-fold-heading"><h3 class="section-title" style="font-size:16px">${escapeHtml(credit.name)}</h3><p class="section-subtitle">${rate.toFixed(2)}% · ${durationText}</p></div>
-              <div class="profile-fold-actions">
-                <button class="mini-btn" data-edit-type="credit" data-edit-id="${credit.id}" aria-label="Modifier"><span class="material-symbols-outlined">edit</span></button>
-                ${state.credits.length > 1 ? `<button class="mini-btn" data-toggle-profile-fold="${foldKey}" aria-label="${collapsed ? "Déplier" : "Replier"}"><span class="material-symbols-outlined">${collapsed ? "expand_more" : "expand_less"}</span></button>` : ""}
-              </div>
-            </div>
-            <div class="profile-fold-summary grid-2">
-              <div><div class="tiny">Capital restant estimé</div><strong class="money">${formatMoney(progress.calculatedBalance)}</strong></div>
-              <div><div class="tiny">Mensualités restantes</div><strong>${progress.remainingPayments ?? "—"}</strong></div>
-            </div>
-            <div class="profile-fold-detail">
-              <div class="tiny" style="margin-top:10px">Mensualité : <span class="money">${formatMoney(credit.monthlyPayment)}</span> · Capital initial : <span class="money">${formatMoney(credit.principal)}</span></div>
-              <div class="spacer-12"></div>
-              <button class="btn outlined full" data-sim-credit="${credit.id}"><span class="material-symbols-outlined">calculate</span>Simuler un remboursement anticipé</button>
-            </div>
-          </div>`;
-      }).join("") : emptyState("credit_card", "Aucun crédit", "Ajoute un crédit pour suivre sa mensualité et simuler un surplus de remboursement.");
 
       const projectsHtml = state.projects.length ? state.projects.map(project => {
         const target = safeNumber(project.target);
@@ -3040,11 +2932,6 @@
         <div class="section">
           <div class="section-header"><div><h2 class="section-title">Enveloppes mensuelles</h2></div><button class="btn tonal small" data-add-type="envelope"><span class="material-symbols-outlined">add</span>Ajouter</button></div>
           <div>${envelopesHtml}</div>
-        </div>
-
-        <div class="section">
-          <div class="section-header"><div><h2 class="section-title">Mes crédits</h2><p class="section-subtitle">Total des mensualités : <strong class="money">${formatMoney(totalCreditMonthlyPayment)}</strong>/mois</p></div><button class="btn tonal small" data-add-type="credit"><span class="material-symbols-outlined">add</span>Ajouter</button></div>
-          <div>${creditsHtml}</div>
         </div>
 
         <div class="section">
@@ -3096,7 +2983,6 @@
         expense: "Dépense",
         income: "Revenu",
         fixed: "Charge fixe",
-        credit: "Crédit",
         project: "Projet d'épargne",
         envelope: "Enveloppe budgétaire"
       }[type] || "Élément";
@@ -3107,7 +2993,6 @@
         expense: "expenses",
         income: "incomes",
         fixed: "fixedCharges",
-        credit: "credits",
         project: "projects",
         envelope: "envelopes"
       }[type];
@@ -3169,7 +3054,7 @@
           <label for="entityType">Type</label>
           <select id="entityType" name="entityType">
             ${optionTags([
-              {value:"expense",label:"Dépense"},{value:"income",label:"Revenu"},{value:"fixed",label:"Charge fixe"},{value:"credit",label:"Crédit"},{value:"envelope",label:"Enveloppe budgétaire"}
+              {value:"expense",label:"Dépense"},{value:"income",label:"Revenu"},{value:"fixed",label:"Charge fixe"},{value:"envelope",label:"Enveloppe budgétaire"}
             ], type)}
           </select>
         </div>`;
@@ -3217,22 +3102,6 @@
             <div class="field"><label>Jour de prélèvement</label><select name="day" required>${optionTags(Array.from({ length: 31 }, (_, i) => String(i + 1)), String(data.day ?? new Date().getDate()))}</select></div>
           </div>
           <div class="field"><label>Catégorie</label><select name="category">${optionTags(FIXED_CHARGE_CATEGORIES, data.category || "Abonnements")}</select></div>`;
-      } else if (type === "credit") {
-        const zero = !!data.zeroRate;
-        fields = `
-          <div class="field"><label>Nom du crédit</label><input name="name" required maxlength="80" value="${escapeHtml(data.name || "")}" placeholder="Ex. Crédit auto"></div>
-          <div class="field-row">
-            <div class="field"><label>Capital initial (€)</label><input name="principal" type="number" min="0" step="0.01" required value="${data.principal ?? ""}"></div>
-            <div class="field"><label>Mensualité (€)</label><input name="monthlyPayment" type="number" min="0" step="0.01" required value="${data.monthlyPayment ?? ""}"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>Durée totale (mois)</label><input name="durationMonths" type="number" min="1" max="600" step="1" required value="${data.durationMonths ?? ""}"></div>
-            <div class="field"><label>Mois déjà remboursés</label><input name="monthsPaid" type="number" min="0" max="600" step="1" required value="${data.monthsPaid ?? 0}"></div>
-          </div>
-          <label class="checkbox-row"><input id="zeroRateInput" name="zeroRate" type="checkbox" ${zero ? "checked" : ""}><span>Prêt à taux zéro (0%)</span></label>
-          <div class="field"><label>Taux annuel (%)</label><input id="annualRateInput" name="annualRate" type="number" min="0" step="0.01" value="${zero ? 0 : (data.annualRate ?? "")}" ${zero ? "disabled" : ""}></div>
-          <div class="tiny" style="margin:6px 4px 14px">Le capital restant et le nombre de mensualités restantes sont calculés automatiquement à partir de ces informations.</div>
-          <label class="checkbox-row"><input name="active" type="checkbox" ${data.active !== false ? "checked" : ""}><span>Crédit actif</span></label>`;
       } else if (type === "project") {
         fields = `
           <div class="field"><label>Nom du projet</label><input name="name" required maxlength="80" value="${escapeHtml(data.name || "")}" placeholder="Ex. Voyage"></div>
@@ -3254,15 +3123,6 @@
       const deleteButton = editing ? `<button class="btn danger" type="button" id="deleteEntityBtn"><span class="material-symbols-outlined">delete</span>Supprimer</button>` : "";
       target.innerHTML = `${fields}<div class="modal-actions">${deleteButton}<button class="btn primary" type="submit"><span class="material-symbols-outlined">save</span>${editing ? "Enregistrer" : "Ajouter"}</button></div>`;
       enhanceNumericInputs(target);
-
-      if (type === "credit") {
-        const zeroInput = document.getElementById("zeroRateInput");
-        const rateInput = document.getElementById("annualRateInput");
-        zeroInput?.addEventListener("change", () => {
-          if (zeroInput.checked) { rateInput.value = 0; rateInput.disabled = true; }
-          else rateInput.disabled = false;
-        });
-      }
 
       if (editing) {
         document.getElementById("deleteEntityBtn")?.addEventListener("click", () => {
@@ -3295,18 +3155,6 @@
           id: id || uid("fix"), label: String(fd.get("label") || "").trim(), amount: safeNumber(fd.get("amount")),
           day: clamp(Math.round(safeNumber(fd.get("day"), 1)), 1, 31), category: String(fd.get("category") || current?.category || "Abonnements"), bucket: "needs", active: true,
           paidMonths: current?.paidMonths || []
-        };
-      } else if (type === "credit") {
-        const zeroRate = fd.get("zeroRate") === "on";
-        const principal = safeNumber(fd.get("principal"));
-        const monthlyPayment = safeNumber(fd.get("monthlyPayment"));
-        const durationMonths = clamp(Math.round(safeNumber(fd.get("durationMonths"), 1)), 1, 600);
-        const monthsPaid = clamp(Math.round(safeNumber(fd.get("monthsPaid"), 0)), 0, durationMonths);
-        const annualRate = zeroRate ? 0 : safeNumber(fd.get("annualRate"));
-        const balance = estimateRemainingBalance(principal, annualRate, monthlyPayment, monthsPaid);
-        item = {
-          id: id || uid("crd"), name: String(fd.get("name") || "").trim(), principal, balance,
-          durationMonths, monthsPaid, zeroRate, annualRate, monthlyPayment, active: fd.get("active") === "on"
         };
       } else if (type === "project") {
         item = {
@@ -3348,78 +3196,6 @@
       if (charge.paidMonths.includes(mk)) charge.paidMonths = charge.paidMonths.filter(x => x !== mk);
       else charge.paidMonths.push(mk);
       saveState(charge.paidMonths.includes(mk) ? "Charge marquée comme prélevée." : "Charge marquée comme à venir.");
-    }
-
-    function amortization(balance, annualRate, monthlyPayment, extra = 0) {
-      let principal = Math.max(0, safeNumber(balance));
-      const rate = Math.max(0, safeNumber(annualRate)) / 100 / 12;
-      const payment = Math.max(0, safeNumber(monthlyPayment) + safeNumber(extra));
-      if (principal <= 0) return { valid: true, months: 0, interest: 0, totalPaid: 0 };
-      if (payment <= 0) return { valid: false, reason: "Mensualité insuffisante" };
-
-      if (rate === 0) {
-        const months = Math.ceil(principal / payment);
-        return { valid: true, months, interest: 0, totalPaid: principal };
-      }
-
-      if (payment <= principal * rate) return { valid: false, reason: "La mensualité ne couvre pas les intérêts mensuels." };
-
-      let months = 0;
-      let interestTotal = 0;
-      let guard = 0;
-      while (principal > 0.005 && guard < 2400) {
-        const interest = principal * rate;
-        interestTotal += interest;
-        const capitalPaid = Math.max(0, payment - interest);
-        if (capitalPaid <= 0) return { valid: false, reason: "Amortissement impossible avec cette mensualité." };
-        principal -= Math.min(principal, capitalPaid);
-        months += 1;
-        guard += 1;
-      }
-      if (guard >= 2400) return { valid: false, reason: "Durée supérieure à 200 ans." };
-      return { valid: true, months, interest: interestTotal, totalPaid: safeNumber(balance) + interestTotal };
-    }
-
-    function openCreditSimulator(id) {
-      const credit = state.credits.find(x => x.id === id);
-      if (!credit) return;
-      const body = document.getElementById("creditSimBody");
-      body.dataset.creditId = id;
-      body.innerHTML = `
-        <div class="card">
-          <div class="section-header" style="margin:0 0 6px"><div><h3 class="section-title">${escapeHtml(credit.name)}</h3><p class="section-subtitle">Capital restant : <span class="money">${formatMoney(credit.balance)}</span></p></div></div>
-          <div class="range-row">
-            <div class="balance-head"><strong>Surplus mensuel</strong><span class="money" id="extraPaymentLabel">${formatMoney(0)}</span></div>
-            <input id="extraPaymentRange" type="range" min="0" max="${Math.max(100, Math.ceil(Math.max(safeNumber(credit.monthlyPayment) * 3, safeNumber(credit.balance) / 12, 100) / 50) * 50)}" step="10" value="0">
-          </div>
-          <div id="simResults"></div>
-        </div>
-        <div class="tiny" style="margin-top:12px">Simulation indicative basée sur le capital restant, le taux annuel et la mensualité saisis. Aucun frais, assurance ou pénalité contractuelle n'est ajouté.</div>`;
-      const range = document.getElementById("extraPaymentRange");
-      range.addEventListener("input", () => updateCreditSimulation(credit, safeNumber(range.value)));
-      updateCreditSimulation(credit, 0);
-      openModal("creditSimModal");
-    }
-
-    function updateCreditSimulation(credit, extra) {
-      document.getElementById("extraPaymentLabel").textContent = formatMoney(extra);
-      const rate = credit.zeroRate ? 0 : safeNumber(credit.annualRate);
-      const base = amortization(credit.balance, rate, credit.monthlyPayment, 0);
-      const boosted = amortization(credit.balance, rate, credit.monthlyPayment, extra);
-      const box = document.getElementById("simResults");
-      if (!base.valid || !boosted.valid) {
-        box.innerHTML = `<div class="card danger-zone"><strong>Simulation impossible</strong><div class="tiny" style="margin-top:6px">${escapeHtml(boosted.reason || base.reason || "Vérifie les informations du crédit.")}</div></div>`;
-        return;
-      }
-      const monthsSaved = Math.max(0, base.months - boosted.months);
-      const interestSaved = Math.max(0, base.interest - boosted.interest);
-      box.innerHTML = `
-        <div class="sim-grid">
-          <div class="sim-box"><span>Durée avec surplus</span><strong>${boosted.months} mois</strong></div>
-          <div class="sim-box"><span>Mois gagnés</span><strong>${monthsSaved}</strong></div>
-          <div class="sim-box"><span>Intérêts estimés</span><strong class="money">${formatMoney(boosted.interest)}</strong></div>
-          <div class="sim-box"><span>Intérêts économisés</span><strong class="money positive">${formatMoney(interestSaved)}</strong></div>
-        </div>`;
     }
 
     function exportJSON() {
@@ -3622,9 +3398,6 @@
         state.settings.theme = theme.dataset.themeChoice;
         saveState("Apparence mise à jour.");
       }
-
-      const simulator = event.target.closest("[data-sim-credit]");
-      if (simulator) openCreditSimulator(simulator.dataset.simCredit);
 
       if (event.target.id === "exportJsonBtn" || event.target.closest("#exportJsonBtn")) exportJSON();
       if (event.target.id === "exportCsvBtn" || event.target.closest("#exportCsvBtn")) exportCSV();
