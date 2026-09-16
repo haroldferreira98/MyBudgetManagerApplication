@@ -556,7 +556,8 @@
     .expense-category-total { font-size: 14px; font-weight: 700; white-space: nowrap; text-align: right; }
     .expense-category-chevron { font-size: 22px; color: var(--on-surface-variant); transition: transform .18s ease; }
     .expense-category-group[open] .expense-category-chevron { transform: rotate(180deg); }
-    .expense-category-items { display: grid; gap: 7px; padding: 0 8px 8px; }
+    .expense-category-items { display: grid; gap: 3px; padding: 0 8px 6px; }
+    .operations-category-items { gap: 2px; padding-bottom: 5px; }
     .expense-category-items .expense-list-item .list-title,
     .fixed-charge-row .list-title { font-weight: 400; }
     .list-side small { display: block; margin-top: 4px; color: var(--on-surface-variant); font-size: 11px; }
@@ -1514,30 +1515,6 @@
       margin: 14px 0 10px;
     }
     .operations-toolbar-actions { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
-    .operation-type-bar {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 5px;
-      margin: 10px 0 12px;
-      padding: 4px;
-      border: 1px solid var(--outline-variant);
-      border-radius: var(--radius-small);
-      background: var(--surface-container-lowest);
-    }
-    .operation-type-btn {
-      min-width: 0;
-      min-height: 38px;
-      padding: 6px 5px;
-      border: 0;
-      border-radius: 4px;
-      background: transparent;
-      color: var(--on-surface-variant);
-      font-size: 11px;
-      font-weight: 650;
-      line-height: 1.15;
-      cursor: pointer;
-    }
-    .operation-type-btn.active { background: var(--primary-container); color: var(--on-primary-container); }
     .operation-menu-wrap { position: relative; }
     .operation-menu {
       position: absolute;
@@ -1569,12 +1546,11 @@
     .operation-menu button:hover,
     .operation-menu button.active { background: var(--primary-container); color: var(--on-primary-container); }
     .operation-menu .material-symbols-outlined { width: 18px; font-size: 18px; }
+    .operation-filter-menu { min-width: 160px; }
     .operation-list { gap: 7px; }
     .operation-list .list-title { font-weight: 500; }
     .operations-category-items .list-title { font-weight: 400 !important; }
     @media (max-width: 430px) {
-      .operation-type-bar { gap: 3px; }
-      .operation-type-btn { font-size: 10px; padding-inline: 3px; }
       .operations-toolbar { align-items: flex-end; }
       .operations-toolbar-actions { gap: 5px; }
     }
@@ -2694,19 +2670,20 @@
             <button class="icon-btn ${operationSearch ? "" : "hidden"}" id="operationSearchClear" type="button" aria-label="Effacer"><span class="material-symbols-outlined">close</span></button>
           </div>
 
-          <div class="operation-type-bar" aria-label="Filtrer les opérations">
-            ${typeOptions.map(([value, label]) => `<button class="operation-type-btn ${operationTypeFilter === value ? "active" : ""}" type="button" data-operation-type="${value}">${label}</button>`).join("")}
-          </div>
-
           <div class="operations-toolbar">
             <div>
               <h2 class="section-title">Opérations</h2>
               <p class="section-subtitle">${rows.length} opération${rows.length > 1 ? "s" : ""} affichée${rows.length > 1 ? "s" : ""}</p>
             </div>
             <div class="operations-toolbar-actions">
-              <button class="btn outlined small operation-filter-toggle" type="button" data-operation-filter-toggle aria-label="Filtrer" title="Filtrer"><span class="material-symbols-outlined">filter_list</span></button>
               <div class="operation-menu-wrap">
-                <button class="btn outlined small operation-sort-toggle" type="button" data-operation-sort-toggle aria-label="Trier" title="Trier" aria-expanded="false"><span class="material-symbols-outlined">sort</span></button>
+                <button class="btn outlined small operation-filter-toggle" type="button" data-operation-filter-toggle aria-label="Filtrer" title="Filtrer" aria-expanded="false"><span class="material-symbols-outlined">filter_alt</span></button>
+                <div class="operation-menu operation-filter-menu" data-operation-filter-menu hidden>
+                  ${typeOptions.map(([value, label]) => `<button type="button" class="${operationTypeFilter === value ? "active" : ""}" data-operation-type="${value}"><span class="material-symbols-outlined">${operationTypeFilter === value ? "check" : ""}</span>${label}</button>`).join("")}
+                </div>
+              </div>
+              <div class="operation-menu-wrap">
+                <button class="btn outlined small operation-sort-toggle" type="button" data-operation-sort-toggle aria-label="Trier" title="Trier" aria-expanded="false"><span class="material-symbols-outlined">swap_vert</span></button>
                 <div class="operation-menu" data-operation-sort-menu hidden>
                   ${sortOptions.map(([value, label]) => `<button type="button" class="${operationSort === value ? "active" : ""}" data-operation-sort="${value}"><span class="material-symbols-outlined">${operationSort === value ? "check" : ""}</span>${label}</button>`).join("")}
                 </div>
@@ -2731,8 +2708,13 @@
           renderOperations();
         });
       });
-      container.querySelector("[data-operation-filter-toggle]")?.addEventListener("click", () => {
-        container.querySelector("[data-operation-type]")?.focus();
+      container.querySelector("[data-operation-filter-toggle]")?.addEventListener("click", event => {
+        const menu = container.querySelector("[data-operation-filter-menu]");
+        const willOpen = !!menu?.hidden;
+        if (menu) menu.hidden = !willOpen;
+        event.currentTarget.setAttribute("aria-expanded", String(willOpen));
+        const sortMenu = container.querySelector("[data-operation-sort-menu]");
+        if (sortMenu) sortMenu.hidden = true;
       });
 
       const searchInput = document.getElementById("operationSearchInput");
@@ -2757,6 +2739,8 @@
         const willOpen = !!menu?.hidden;
         if (menu) menu.hidden = !willOpen;
         event.currentTarget.setAttribute("aria-expanded", String(willOpen));
+        const filterMenu = container.querySelector("[data-operation-filter-menu]");
+        if (filterMenu) filterMenu.hidden = true;
         const addMenu = container.querySelector("[data-operation-add-menu]");
         if (addMenu) addMenu.hidden = true;
       });
