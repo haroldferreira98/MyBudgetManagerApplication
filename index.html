@@ -91,6 +91,46 @@
       --scrim: rgba(0,0,0,.62);
     }
 
+    html[data-theme="dsfr"] {
+      --surface: #f6f6fe;
+      --surface-dim: #eeeeee;
+      --surface-bright: #ffffff;
+      --surface-container-lowest: #ffffff;
+      --surface-container-low: #f6f6fe;
+      --surface-container: #eeeeee;
+      --surface-container-high: #e3e3e3;
+      --surface-container-highest: #dddddd;
+      --on-surface: #161616;
+      --on-surface-variant: #666666;
+      --primary: #000091;
+      --on-primary: #ffffff;
+      --primary-container: #ececfe;
+      --on-primary-container: #000091;
+      --secondary: #666666;
+      --on-secondary: #ffffff;
+      --secondary-container: #e3e3fd;
+      --on-secondary-container: #000091;
+      --tertiary: #666666;
+      --tertiary-container: #e3e3e3;
+      --on-tertiary-container: #161616;
+      --outline: #929292;
+      --outline-variant: #dddddd;
+      --error: #ce0500;
+      --on-error: #ffffff;
+      --error-container: #fce5e3;
+      --on-error-container: #ce0500;
+      --success: #18753c;
+      --success-container: #b7f5ca;
+      --warning: #b34000;
+      --warning-container: #fee7d6;
+      --shadow: rgba(0,0,0,.12);
+      --scrim: rgba(0,0,0,.48);
+      --radius-card: 8px;
+      --radius-sheet: 8px;
+      --radius-small: 4px;
+      --pill: 4px;
+    }
+
     * { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; background: var(--surface); }
     body {
@@ -1024,6 +1064,90 @@
     .balance-card .balance-row:first-child { margin-top: 2px; }
     .balance-card .balance-row:last-child { margin-bottom: 2px; }
     .balance-card .balance-head { margin-bottom: 6px; }
+
+    html[data-theme="dsfr"] body {
+      background: var(--surface);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+    html[data-theme="dsfr"] .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--outline-variant);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    html[data-theme="dsfr"] .brand-title,
+    html[data-theme="dsfr"] .section-title,
+    html[data-theme="dsfr"] .sheet-title { color: var(--on-surface); font-weight: 750; letter-spacing: 0; }
+    html[data-theme="dsfr"] .card,
+    html[data-theme="dsfr"] .empty-state {
+      background: var(--surface-container-lowest);
+      border-color: var(--outline-variant);
+      box-shadow: none;
+    }
+    html[data-theme="dsfr"] .hero-card,
+    html[data-theme="dsfr"] .summary-card {
+      background: var(--surface-container-lowest);
+      border: 1px solid var(--primary);
+    }
+    html[data-theme="dsfr"] .hero-card::after { display: none; }
+    html[data-theme="dsfr"] .hero-label,
+    html[data-theme="dsfr"] .hero-value,
+    html[data-theme="dsfr"] .summary-mini-value { color: var(--primary); }
+    html[data-theme="dsfr"] .hero-privacy-btn,
+    html[data-theme="dsfr"] .daily-pill,
+    html[data-theme="dsfr"] .summary-mini { background: var(--primary-container); color: var(--primary); }
+    html[data-theme="dsfr"] .summary-bottom { border-color: var(--outline-variant); }
+    html[data-theme="dsfr"] .segmented {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border: 1px solid var(--outline-variant);
+      border-radius: 4px;
+      background: var(--surface-container-lowest);
+    }
+    html[data-theme="dsfr"] .segmented button { border-radius: 4px; color: var(--on-surface); }
+    html[data-theme="dsfr"] .segmented button.active { background: var(--primary-container); color: var(--primary); }
+    html[data-theme="dsfr"] .btn,
+    html[data-theme="dsfr"] .chip,
+    html[data-theme="dsfr"] .target-badge,
+    html[data-theme="dsfr"] .list-item,
+    html[data-theme="dsfr"] .list-icon,
+    html[data-theme="dsfr"] .sim-box,
+    html[data-theme="dsfr"] .checkbox-row,
+    html[data-theme="dsfr"] .month-switcher,
+    html[data-theme="dsfr"] .search-shell,
+    html[data-theme="dsfr"] .field input,
+    html[data-theme="dsfr"] .field select,
+    html[data-theme="dsfr"] .field textarea { border-radius: 4px; }
+    html[data-theme="dsfr"] .list-item { background: var(--surface-container-lowest); }
+    html[data-theme="dsfr"] .list-icon { background: var(--secondary-container); }
+    html[data-theme="dsfr"] .progress-track { border-radius: 0; background: var(--surface-container-high); }
+    html[data-theme="dsfr"] .progress-fill { border-radius: 0; background: var(--primary); }
+    html[data-theme="dsfr"] .bottom-nav {
+      border: 1px solid var(--outline-variant);
+      border-radius: 4px !important;
+      background: var(--surface-container-lowest);
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    html[data-theme="dsfr"] .nav-btn { border-radius: 4px; }
+    html[data-theme="dsfr"] .nav-btn.active .material-symbols-outlined {
+      border-radius: 4px;
+      background: var(--primary-container);
+      color: var(--primary);
+    }
+    html[data-theme="dsfr"] .fab { border-radius: 4px; box-shadow: none; background: var(--primary); color: var(--on-primary); }
+    html[data-theme="dsfr"] .sheet {
+      background: var(--surface-container-lowest);
+      border: 1px solid var(--outline-variant);
+      box-shadow: 0 -8px 20px var(--shadow);
+    }
+    html[data-theme="dsfr"] .sheet-handle { border-radius: 0; }
+    html[data-theme="dsfr"] .field input,
+    html[data-theme="dsfr"] .field select,
+    html[data-theme="dsfr"] .field textarea { background: var(--surface-container-low); border-color: var(--outline); }
+    html[data-theme="dsfr"] .modal-actions { background: var(--surface-container-lowest); }
+    html[data-theme="dsfr"] .icon-btn,
+    html[data-theme="dsfr"] .mini-btn { border-radius: 4px; box-shadow: none; }
   </style>
 </head>
 <body>
@@ -1111,6 +1235,7 @@
             <button data-theme-choice="light">Clair</button>
             <button data-theme-choice="dark">Sombre</button>
             <button data-theme-choice="auto">Automatique</button>
+              <button data-theme-choice="dsfr">Service public</button>
           </div>
         </div>
       </div>
@@ -1500,9 +1625,9 @@
     function applyTheme() {
       const chosen = state.settings.theme || "auto";
       const systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const effective = chosen === "auto" ? (systemDark ? "dark" : "light") : chosen;
+      const effective = chosen === "auto" ? (systemDark ? "dark" : "light") : chosen === "dsfr" ? "dsfr" : chosen;
       document.documentElement.dataset.theme = effective;
-      document.querySelector('meta[name="theme-color"]').setAttribute("content", effective === "dark" ? "#111318" : "#f8fafd");
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", effective === "dark" ? "#111318" : effective === "dsfr" ? "#f6f6fe" : "#f8fafd");
     }
 
     function applyPrivacy() {
@@ -1550,7 +1675,6 @@
             <div class="account-modal-avatar">${photo}</div>
             <div><div class="account-modal-name">${name}</div><div class="account-modal-email">${email}</div></div>
           </div>
-          <div class="cloud-status"><span class="material-symbols-outlined">cloud_done</span><span>Synchronisation Firebase active. Les données du cloud sont chargées automatiquement.</span></div>
           <button class="btn outlined full" id="accountSignOutBtn"><span class="material-symbols-outlined">logout</span>Se déconnecter</button>`;
       } else {
         body.innerHTML = `
@@ -1834,6 +1958,7 @@
               <button data-theme-choice="light">Clair</button>
               <button data-theme-choice="dark">Sombre</button>
               <button data-theme-choice="auto">Automatique</button>
+              <button data-theme-choice="dsfr">Service public</button>
             </div>
           </div>
         </div>`;
