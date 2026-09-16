@@ -550,25 +550,31 @@
     .chip.active { background: var(--secondary-container); color: var(--on-secondary-container); border-color: transparent; }
 
     .segmented {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      padding: 4px;
-      gap: 4px;
-      border-radius: var(--pill);
-      background: var(--surface-container-high);
-    }
-    .segmented button {
-      min-height: 42px;
-      border: 0;
-      border-radius: var(--pill);
-      background: transparent;
-      color: var(--on-surface-variant);
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .segmented button.active { background: var(--primary-container); color: var(--on-primary-container); }
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
 
+.segmented button {
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.segmented button.active {
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border-color: var(--primary);
+}
     .btn {
       min-height: 48px;
       padding: 0 18px;
@@ -2037,7 +2043,7 @@
           <div class="chips">${chips}</div>
         </div>
         <div class="section">
-          <div class="section-header"><div><h2 class="section-title">Dépenses</h2><p class="section-subtitle"><span class="money">${formatMoney(sum(filtered, x => x.amount))}</span> dans la sélection</p></div><button class="btn tonal small" data-add-type="expense"><span class="material-symbols-outlined">add</span>Ajouter</button></div>
+          <div class="section-header"><div><h2 class="section-title">Dépenses</h2><p class="section-subtitle"><span class="money">${formatMoney(sum(filtered, x => x.amount))}</div><button class="btn tonal small" data-add-type="expense"><span class="material-symbols-outlined">add</span>Ajouter</button></div>
           <div class="list">${listHtml}</div>
         </div>`;
 
