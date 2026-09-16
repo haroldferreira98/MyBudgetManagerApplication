@@ -522,15 +522,33 @@
     .expense-sort-option:hover,
     .expense-sort-option.active { background: var(--primary-container); color: var(--on-primary-container); }
     .expense-sort-option .material-symbols-outlined { width: 18px; font-size: 18px; }
-    .expense-category-group { display: grid; gap: 7px; }
-    .expense-category-group + .expense-category-group { margin-top: 18px; }
-    .expense-category-label {
-      margin: 0 4px 1px;
-      color: var(--on-surface-variant);
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: .01em;
+    .expense-category-group {
+      border: 1px solid color-mix(in srgb, var(--outline-variant) 72%, transparent);
+      border-radius: var(--radius-small);
+      background: var(--surface-container-low);
+      overflow: hidden;
     }
+    .expense-category-group + .expense-category-group { margin-top: 12px; }
+    .expense-category-summary {
+      min-height: 58px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto 24px;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 13px;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .expense-category-summary::-webkit-details-marker { display: none; }
+    .expense-category-summary:active { opacity: .82; }
+    .expense-category-label { color: var(--on-surface-variant); font-size: 12px; font-weight: 700; letter-spacing: .01em; }
+    .expense-category-meta { margin-top: 2px; color: var(--on-surface-variant); font-size: 11px; }
+    .expense-category-total { font-size: 14px; font-weight: 700; white-space: nowrap; text-align: right; }
+    .expense-category-chevron { font-size: 22px; color: var(--on-surface-variant); transition: transform .18s ease; }
+    .expense-category-group[open] .expense-category-chevron { transform: rotate(180deg); }
+    .expense-category-items { display: grid; gap: 7px; padding: 0 8px 8px; }
     .list-side small { display: block; margin-top: 4px; color: var(--on-surface-variant); font-size: 11px; }
     .item-actions { display: flex; gap: 5px; margin-left: 4px; }
     .mini-btn {
@@ -1425,6 +1443,7 @@
     let expenseFilter = "Toutes";
     let expenseSearch = "";
     let expenseSort = "category";
+    const expandedExpenseCategories = new Set();
     let globalSearch = "";
     let snackbarTimer = null;
     let cloud = null;
@@ -2165,10 +2184,17 @@
           groups.get(category).push(item);
         });
         listHtml = [...groups.entries()].map(([category, items]) => `
-          <div class="expense-category-group">
-            <div class="expense-category-label">${escapeHtml(category)}</div>
-            ${items.map(renderExpenseRow).join("")}
-          </div>`).join("");
+          <details class="expense-category-group" data-expense-category="${escapeHtml(category)}" ${expandedExpenseCategories.has(category) ? "open" : ""}>
+            <summary class="expense-category-summary">
+              <div>
+                <div class="expense-category-label">${escapeHtml(category)}</div>
+                <div class="expense-category-meta">${items.length} opération${items.length > 1 ? "s" : ""}</div>
+              </div>
+              <div class="expense-category-total money negative">−${formatMoney(sum(items, x => x.amount))}</div>
+              <span class="material-symbols-outlined expense-category-chevron">expand_more</span>
+            </summary>
+            <div class="expense-category-items">${items.map(renderExpenseRow).join("")}</div>
+          </details>`).join("");
       } else {
         listHtml = filtered.map(renderExpenseRow).join("");
       }
@@ -2220,6 +2246,15 @@
           });
         });
       }
+
+      container.querySelectorAll("details[data-expense-category]").forEach(group => {
+        group.addEventListener("toggle", () => {
+          const category = group.dataset.expenseCategory;
+          if (!category) return;
+          if (group.open) expandedExpenseCategories.add(category);
+          else expandedExpenseCategories.delete(category);
+        });
+      });
     }
 
     function categoryIcon(category) {
