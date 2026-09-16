@@ -936,7 +936,7 @@
 
 
     /* FIXED-NAV-ACCOUNT-V2 */
-    .bottom-nav { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+    .bottom-nav { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
     .nav-btn { min-width: 0; }
     .nav-btn > span:last-child { white-space: nowrap; font-size: 8.5px; }
     .fixed-charge-list { gap: 7px; }
@@ -983,6 +983,11 @@
         <p class="brand-eyebrow">Budget personnel</p>
         <h1 class="brand-title" id="screenTitle">Accueil</h1>
       </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="settingsBtn" type="button" aria-label="Paramètres" title="Paramètres">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+      </div>
     </header>
 
     <main>
@@ -1008,9 +1013,6 @@
       </button>
       <button class="nav-btn" data-screen="expenses" aria-label="Dépenses">
         <span class="material-symbols-outlined">receipt_long</span><span>Dépenses</span>
-      </button>
-      <button class="nav-btn" data-screen="settings" aria-label="Paramètres">
-        <span class="material-symbols-outlined">settings</span><span>Paramètres</span>
       </button>
     </nav>
   </div>
@@ -2431,10 +2433,10 @@
       }
 
       const settings = event.target.closest("#settingsBtn");
-      if (settings) { updateSettingsUI(); openModal("settingsModal"); return; }
+      if (settings) { setCurrentScreen("settings"); return; }
 
       const account = event.target.closest("#accountBtn");
-      if (account) { renderAccountModal(); openModal("accountModal"); return; }
+      if (account) { renderProfile(); renderAccountModal(); openModal("accountModal"); return; }
 
       const accountSignIn = event.target.closest("#accountSignInBtn");
       if (accountSignIn) {
