@@ -483,7 +483,45 @@
     .list-amount { font-weight: 700; font-size: 15px; }
     .income-list-item { cursor: pointer; }
     .income-list-item:active { opacity: .82; }
-    .income-list-item .list-side { margin-left: auto; }
+    .expense-list-item,
+    .fixed-charge-row { cursor: pointer; }
+    .income-list-item:active,
+    .expense-list-item:active,
+    .fixed-charge-row:active { opacity: .82; }
+    .income-list-item .list-side,
+    .expense-list-item .list-side,
+    .fixed-charge-row .list-side { margin-left: auto; }
+    .expense-sort { position: relative; flex: 0 0 auto; }
+    .expense-sort-menu {
+      position: absolute;
+      z-index: 5;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 178px;
+      padding: 5px;
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--radius-small);
+      background: var(--surface-container-lowest);
+      box-shadow: 0 8px 22px var(--shadow);
+    }
+    .expense-sort-option {
+      width: 100%;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: var(--radius-small);
+      background: transparent;
+      color: var(--on-surface);
+      text-align: left;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .expense-sort-option:hover,
+    .expense-sort-option.active { background: var(--primary-container); color: var(--on-primary-container); }
+    .expense-sort-option .material-symbols-outlined { width: 18px; font-size: 18px; }
     .list-side small { display: block; margin-top: 4px; color: var(--on-surface-variant); font-size: 11px; }
     .item-actions { display: flex; gap: 5px; margin-left: 4px; }
     .mini-btn {
@@ -1377,6 +1415,7 @@
     let currentScreen = "home";
     let expenseFilter = "Toutes";
     let expenseSearch = "";
+    let expenseSort = "date";
     let globalSearch = "";
     let snackbarTimer = null;
     let cloud = null;
@@ -1995,14 +2034,13 @@
         const pending = fixedChargeIsPending(charge);
         const category = charge.category || "Charge fixe";
         return `
-          <div class="list-item fixed-charge-row ${pending ? "pending" : ""}">
+          <div class="list-item fixed-charge-row ${pending ? "pending" : ""}" data-edit-type="fixed" data-edit-id="${charge.id}" role="button" tabindex="0">
             <div class="list-icon"><span class="material-symbols-outlined">event_repeat</span></div>
             <div class="list-main">
               <div class="list-title">${escapeHtml(charge.label)}</div>
               <div class="list-sub">${escapeHtml(category)} · Jour ${safeNumber(charge.day, 1)}</div>
             </div>
             <div class="list-side"><div class="list-amount money">${formatMoney(charge.amount)}</div></div>
-            <div class="item-actions"><button class="mini-btn" data-edit-type="fixed" data-edit-id="${charge.id}" aria-label="Modifier"><span class="material-symbols-outlined">edit</span></button></div>
           </div>`;
       }).join("");
     }
@@ -2082,17 +2120,20 @@
       const filtered = monthItems
         .filter(item => expenseFilter === "Toutes" || item.category === expenseFilter)
         .filter(item => !normalizedSearch || `${item.label} ${item.category}`.toLowerCase().includes(normalizedSearch))
-        .sort((a,b) => String(b.date).localeCompare(String(a.date)));
+        .sort((a, b) => {
+          if (expenseSort === "amount") return safeNumber(b.amount) - safeNumber(a.amount);
+          if (expenseSort === "alpha") return String(a.label || "").localeCompare(String(b.label || ""), "fr", { sensitivity: "base" });
+          return String(b.date).localeCompare(String(a.date));
+        });
 
       const listHtml = filtered.length ? filtered.map(item => `
-        <div class="list-item">
+        <div class="list-item expense-list-item" data-edit-type="expense" data-edit-id="${item.id}" role="button" tabindex="0">
           <div class="list-icon"><span class="material-symbols-outlined">${categoryIcon(item.category)}</span></div>
           <div class="list-main">
             <div class="list-title">${escapeHtml(item.label)}</div>
             <div class="list-sub">${escapeHtml(item.category)} · ${formatDate(item.date)}</div>
           </div>
           <div class="list-side"><div class="list-amount money negative">−${formatMoney(item.amount)}</div></div>
-          <div class="item-actions"><button class="mini-btn" data-edit-type="expense" data-edit-id="${item.id}" aria-label="Modifier"><span class="material-symbols-outlined">edit</span></button></div>
         </div>`).join("") : emptyState("receipt_long", "Aucune dépense", "Les dépenses correspondant à tes filtres apparaîtront ici.");
 
       const chips = ["Toutes", ...EXPENSE_CATEGORIES].map(cat => `<button class="chip ${expenseFilter === cat ? "active" : ""}" data-expense-filter="${cat}">${cat}</button>`).join("");
@@ -2118,10 +2159,15 @@
             <div>
               <h2 class="section-title">Dépenses</h2>
             </div>
-            <button class="btn tonal small" data-add-type="expense">
-              <span class="material-symbols-outlined">add</span>
-              Ajouter
-            </button>
+            <div class="button-row">
+              <div class="expense-sort">
+                <button class="btn outlined small" type="button" data-expense-sort-toggle aria-expanded="false"><span class="material-symbols-outlined">sort</span>Trier</button>
+                <div class="expense-sort-menu" data-expense-sort-menu hidden>
+                  ${[["date", "Date"], ["amount", "Montant"], ["alpha", "Ordre alphabétique"]].map(([value, label]) => `<button class="expense-sort-option ${expenseSort === value ? "active" : ""}" type="button" data-expense-sort="${value}"><span class="material-symbols-outlined">${expenseSort === value ? "check" : ""}</span>${label}</button>`).join("")}
+                </div>
+              </div>
+              <button class="btn tonal small" data-add-type="expense"><span class="material-symbols-outlined">add</span>Ajouter</button>
+            </div>
           </div>
           <div class="list">${listHtml}</div>
         </div>`;
@@ -2700,6 +2746,28 @@
     document.getElementById("entityForm").addEventListener("submit", handleEntitySubmit);
 
     document.addEventListener("click", event => {
+      const sortToggle = event.target.closest("[data-expense-sort-toggle]");
+      if (sortToggle) {
+        const menu = sortToggle.parentElement.querySelector("[data-expense-sort-menu]");
+        const isHidden = menu?.hasAttribute("hidden");
+        document.querySelectorAll("[data-expense-sort-menu]").forEach(item => item.hidden = true);
+        if (menu) menu.hidden = !isHidden;
+        sortToggle.setAttribute("aria-expanded", String(!!isHidden));
+        return;
+      }
+
+      const sortChoice = event.target.closest("[data-expense-sort]");
+      if (sortChoice) {
+        expenseSort = sortChoice.dataset.expenseSort;
+        renderExpenses();
+        return;
+      }
+
+      if (!event.target.closest(".expense-sort")) {
+        document.querySelectorAll("[data-expense-sort-menu]").forEach(menu => menu.hidden = true);
+        document.querySelectorAll("[data-expense-sort-toggle]").forEach(button => button.setAttribute("aria-expanded", "false"));
+      }
+
       const privacy = event.target.closest("#privacyBtn");
       if (privacy) {
         state.settings.privacy = !state.settings.privacy;
@@ -2796,10 +2864,10 @@
     });
 
     document.addEventListener("keydown", event => {
-      const incomeRow = event.target.closest?.(".income-list-item");
-      if (incomeRow && (event.key === "Enter" || event.key === " ")) {
+      const editableRow = event.target.closest?.('[data-edit-type][data-edit-id][role="button"]');
+      if (editableRow && (event.key === "Enter" || event.key === " ")) {
         event.preventDefault();
-        incomeRow.click();
+        editableRow.click();
         return;
       }
       if (event.key === "Escape") document.querySelectorAll(".sheet-backdrop.open").forEach(el => closeModal(el.id));
