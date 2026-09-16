@@ -492,6 +492,14 @@
     .expense-list-item .list-side,
     .fixed-charge-row .list-side { margin-left: auto; }
     .expense-sort { position: relative; flex: 0 0 auto; }
+    .expense-filter-button,
+    .expense-sort-toggle { width: 42px; height: 42px; padding: 0 !important; }
+    .expense-filter-button .material-symbols-outlined,
+    .expense-sort-toggle .material-symbols-outlined { font-size: 21px; }
+    .operation-filter-toggle,
+    .operation-sort-toggle { width: 42px; height: 42px; padding: 0 !important; }
+    .operation-filter-toggle .material-symbols-outlined,
+    .operation-sort-toggle .material-symbols-outlined { font-size: 21px; }
     .expense-sort-menu {
       position: absolute;
       z-index: 5;
@@ -1919,6 +1927,50 @@
       return euro.format(safeNumber(value));
     }
 
+    function moneyInputMarkup(name, value, attributes = "") {
+      return `<input name="${name}" type="text" data-money-input data-money-initial="${safeNumber(value)}" inputmode="numeric" autocomplete="off" value="${escapeHtml(formatMoney(value))}" ${attributes}>`;
+    }
+
+    function moneyInputValue(form, name) {
+      const input = form.querySelector(`[name="${name}"][data-money-input]`);
+      if (input) return Number(input.dataset.moneyDigits || 0) / 100;
+      return safeNumber(new FormData(form).get(name));
+    }
+
+    function setMoneyInputDigits(input, digits) {
+      const normalized = String(digits || "").replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+      input.dataset.moneyDigits = normalized;
+      input.value = formatMoney(Number(normalized || 0) / 100);
+    }
+
+    function enhanceMoneyInputs(root) {
+      root.querySelectorAll("[data-money-input]").forEach(input => {
+        const initialCents = Math.max(0, Math.round(safeNumber(input.dataset.moneyInitial) * 100));
+        setMoneyInputDigits(input, initialCents ? String(initialCents) : "");
+
+        input.addEventListener("focus", () => {
+          input.select();
+        });
+        input.addEventListener("keydown", event => {
+          const digitMatch = /^(Digit|Numpad)([0-9])$/.exec(event.code || "");
+          if (digitMatch) {
+            event.preventDefault();
+            setMoneyInputDigits(input, `${input.dataset.moneyDigits || ""}${digitMatch[2]}`);
+          } else if (event.key === "Backspace") {
+            event.preventDefault();
+            setMoneyInputDigits(input, (input.dataset.moneyDigits || "").slice(0, -1));
+          } else if (event.key === "Delete") {
+            event.preventDefault();
+            setMoneyInputDigits(input, "");
+          }
+        });
+        input.addEventListener("input", () => {
+          const digits = input.value.replace(/\D/g, "");
+          setMoneyInputDigits(input, digits);
+        });
+      });
+    }
+
     function formatDate(value) {
       if (!value) return "—";
       const d = new Date(`${value}T12:00:00`);
@@ -2652,8 +2704,9 @@
               <p class="section-subtitle">${rows.length} opération${rows.length > 1 ? "s" : ""} affichée${rows.length > 1 ? "s" : ""}</p>
             </div>
             <div class="operations-toolbar-actions">
+              <button class="btn outlined small operation-filter-toggle" type="button" data-operation-filter-toggle aria-label="Filtrer" title="Filtrer"><span class="material-symbols-outlined">filter_list</span></button>
               <div class="operation-menu-wrap">
-                <button class="btn outlined small" type="button" data-operation-sort-toggle aria-expanded="false"><span class="material-symbols-outlined">sort</span>Trier</button>
+                <button class="btn outlined small operation-sort-toggle" type="button" data-operation-sort-toggle aria-label="Trier" title="Trier" aria-expanded="false"><span class="material-symbols-outlined">sort</span></button>
                 <div class="operation-menu" data-operation-sort-menu hidden>
                   ${sortOptions.map(([value, label]) => `<button type="button" class="${operationSort === value ? "active" : ""}" data-operation-sort="${value}"><span class="material-symbols-outlined">${operationSort === value ? "check" : ""}</span>${label}</button>`).join("")}
                 </div>
@@ -2677,6 +2730,9 @@
           operationTypeFilter = button.dataset.operationType || "all";
           renderOperations();
         });
+      });
+      container.querySelector("[data-operation-filter-toggle]")?.addEventListener("click", () => {
+        container.querySelector("[data-operation-type]")?.focus();
       });
 
       const searchInput = document.getElementById("operationSearchInput");
@@ -2828,7 +2884,7 @@
             <span class="material-symbols-outlined">search</span>
             <input id="expenseSearch" type="search" placeholder="Rechercher un libellé ou une catégorie" autocomplete="off" value="${escapeHtml(expenseSearch)}">
           </div>
-          <div class="chips">${chips}</div>
+          <div class="chips" id="expenseFilters">${chips}</div>
         </div>
         <div class="section">
           <div class="section-header">
@@ -2836,8 +2892,9 @@
               <h2 class="section-title">Dépenses</h2>
             </div>
             <div class="button-row">
+              <button class="btn outlined small expense-filter-button" type="button" data-expense-filter-toggle aria-label="Filtrer" aria-controls="expenseFilters" title="Filtrer"><span class="material-symbols-outlined">filter_list</span></button>
               <div class="expense-sort">
-                <button class="btn outlined small" type="button" data-expense-sort-toggle aria-expanded="false"><span class="material-symbols-outlined">sort</span>Trier</button>
+                <button class="btn outlined small expense-sort-toggle" type="button" data-expense-sort-toggle aria-label="Trier" title="Trier" aria-expanded="false"><span class="material-symbols-outlined">sort</span></button>
                 <div class="expense-sort-menu" data-expense-sort-menu hidden>
                   ${[["category", "Catégorie"], ["date", "Date"], ["amount", "Montant"], ["alpha", "Ordre alphabétique"]].map(([value, label]) => `<button class="expense-sort-option ${expenseSort === value ? "active" : ""}" type="button" data-expense-sort="${value}"><span class="material-symbols-outlined">${expenseSort === value ? "check" : ""}</span>${label}</button>`).join("")}
                 </div>
@@ -3082,7 +3139,7 @@
         fields = `
           <div class="field"><label>Libellé</label><input name="label" required maxlength="80" value="${escapeHtml(data.label || "")}" placeholder="Ex. Auchan"></div>
           <div class="field-row">
-            <div class="field"><label>Montant (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
+            <div class="field"><label>Montant (€)</label>${moneyInputMarkup("amount", data.amount, "required")}</div>
             <div class="field"><label>Date</label><input name="date" type="date" required value="${escapeHtml(data.date || today)}"></div>
           </div>
           <div class="field"><label>Catégorie</label><select name="category">${optionTags(EXPENSE_CATEGORIES, data.category || "Autre")}</select></div>`;
@@ -3090,7 +3147,7 @@
         fields = `
           <div class="field"><label>Libellé</label><input name="label" required maxlength="80" value="${escapeHtml(data.label || "")}" placeholder="Ex. Salaire"></div>
           <div class="field-row">
-            <div class="field"><label>Montant (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
+            <div class="field"><label>Montant (€)</label>${moneyInputMarkup("amount", data.amount, "required")}</div>
             <div class="field"><label>Date</label><input name="date" type="date" required value="${escapeHtml(data.date || today)}"></div>
           </div>
           <div class="field"><label>Catégorie</label><select name="category">${optionTags(INCOME_CATEGORIES, data.category || "Salaire")}</select></div>`;
@@ -3098,7 +3155,7 @@
         fields = `
           <div class="field"><label>Libellé</label><input name="label" required maxlength="80" value="${escapeHtml(data.label || "")}" placeholder="Ex. Loyer"></div>
           <div class="field-row">
-            <div class="field"><label>Montant mensuel (€)</label><input name="amount" type="number" min="0" step="0.01" inputmode="decimal" required value="${data.amount ?? ""}"></div>
+            <div class="field"><label>Montant mensuel (€)</label>${moneyInputMarkup("amount", data.amount, "required")}</div>
             <div class="field"><label>Jour de prélèvement</label><select name="day" required>${optionTags(Array.from({ length: 31 }, (_, i) => String(i + 1)), String(data.day ?? new Date().getDate()))}</select></div>
           </div>
           <div class="field"><label>Catégorie</label><select name="category">${optionTags(FIXED_CHARGE_CATEGORIES, data.category || "Abonnements")}</select></div>`;
@@ -3106,23 +3163,25 @@
         fields = `
           <div class="field"><label>Nom du projet</label><input name="name" required maxlength="80" value="${escapeHtml(data.name || "")}" placeholder="Ex. Voyage"></div>
           <div class="field-row">
-            <div class="field"><label>Objectif (€)</label><input name="target" type="number" min="0" step="0.01" required value="${data.target ?? ""}"></div>
-            <div class="field"><label>Déjà épargné (€)</label><input name="current" type="number" min="0" step="0.01" value="${data.current ?? 0}"></div>
+            <div class="field"><label>Objectif (€)</label>${moneyInputMarkup("target", data.target, "required")}</div>
+            <div class="field"><label>Déjà épargné (€)</label>${moneyInputMarkup("current", data.current ?? 0)}</div>
           </div>
-          <div class="field"><label>Allocation mensuelle automatique (€)</label><input name="monthlyAllocation" type="number" min="0" step="0.01" required value="${data.monthlyAllocation ?? ""}"></div>
+          <div class="field"><label>Allocation mensuelle automatique (€)</label>${moneyInputMarkup("monthlyAllocation", data.monthlyAllocation, "required")}</div>
           <label class="checkbox-row"><input name="active" type="checkbox" ${data.active !== false ? "checked" : ""}><span>Projet actif</span></label>`;
       } else if (type === "envelope") {
         fields = `
           <div class="field"><label>Nom de l'enveloppe</label><input name="name" required maxlength="80" value="${escapeHtml(data.name || "")}" placeholder="Ex. Courses du mois"></div>
           <div class="field-row">
             <div class="field"><label>Catégorie suivie</label><select name="category">${optionTags(["Toutes", ...EXPENSE_CATEGORIES], data.category || "Toutes")}</select></div>
-            <div class="field"><label>Plafond mensuel (€)</label><input name="limit" type="number" min="0" step="0.01" required value="${data.limit ?? ""}"></div>
+            <div class="field"><label>Plafond mensuel (€)</label>${moneyInputMarkup("limit", data.limit, "required")}</div>
           </div>`;
       }
 
       const deleteButton = editing ? `<button class="btn danger" type="button" id="deleteEntityBtn"><span class="material-symbols-outlined">delete</span>Supprimer</button>` : "";
       target.innerHTML = `${fields}<div class="modal-actions">${deleteButton}<button class="btn primary" type="submit"><span class="material-symbols-outlined">save</span>${editing ? "Enregistrer" : "Ajouter"}</button></div>`;
       enhanceNumericInputs(target);
+      enhanceMoneyInputs(target);
+      if (type === "expense") requestAnimationFrame(() => target.querySelector('[name="amount"]')?.focus());
 
       if (editing) {
         document.getElementById("deleteEntityBtn")?.addEventListener("click", () => {
@@ -3145,24 +3204,24 @@
 
       if (type === "expense") {
         item = {
-          id: id || uid("exp"), label: String(fd.get("label") || "").trim(), amount: safeNumber(fd.get("amount")),
+          id: id || uid("exp"), label: String(fd.get("label") || "").trim(), amount: moneyInputValue(form, "amount"),
           date: fd.get("date") || todayISO(), category: fd.get("category") || "Autre", bucket: "wants"
         };
       } else if (type === "income") {
-        item = { id: id || uid("inc"), label: String(fd.get("label") || "").trim(), amount: safeNumber(fd.get("amount")), date: fd.get("date") || todayISO(), category: fd.get("category") || "Salaire" };
+        item = { id: id || uid("inc"), label: String(fd.get("label") || "").trim(), amount: moneyInputValue(form, "amount"), date: fd.get("date") || todayISO(), category: fd.get("category") || "Salaire" };
       } else if (type === "fixed") {
         item = {
-          id: id || uid("fix"), label: String(fd.get("label") || "").trim(), amount: safeNumber(fd.get("amount")),
+          id: id || uid("fix"), label: String(fd.get("label") || "").trim(), amount: moneyInputValue(form, "amount"),
           day: clamp(Math.round(safeNumber(fd.get("day"), 1)), 1, 31), category: String(fd.get("category") || current?.category || "Abonnements"), bucket: "needs", active: true,
           paidMonths: current?.paidMonths || []
         };
       } else if (type === "project") {
         item = {
-          id: id || uid("prj"), name: String(fd.get("name") || "").trim(), target: safeNumber(fd.get("target")), current: safeNumber(fd.get("current")),
-          monthlyAllocation: safeNumber(fd.get("monthlyAllocation")), active: fd.get("active") === "on"
+          id: id || uid("prj"), name: String(fd.get("name") || "").trim(), target: moneyInputValue(form, "target"), current: moneyInputValue(form, "current"),
+          monthlyAllocation: moneyInputValue(form, "monthlyAllocation"), active: fd.get("active") === "on"
         };
       } else if (type === "envelope") {
-        item = { id: id || uid("env"), name: String(fd.get("name") || "").trim(), category: fd.get("category") || "Toutes", limit: safeNumber(fd.get("limit")) };
+        item = { id: id || uid("env"), name: String(fd.get("name") || "").trim(), category: fd.get("category") || "Toutes", limit: moneyInputValue(form, "limit") };
       } else return;
 
       const collection = collectionForType(type);
@@ -3345,6 +3404,12 @@
       if (sortChoice) {
         expenseSort = sortChoice.dataset.expenseSort;
         renderExpenses();
+        return;
+      }
+
+      const filterToggle = event.target.closest("[data-expense-filter-toggle]");
+      if (filterToggle) {
+        document.getElementById("expenseFilters")?.querySelector("[data-expense-filter]")?.focus();
         return;
       }
 
