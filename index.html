@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260916-unified-operations-v1" />
+  <meta name="app-build" content="20260916-single-page-operations-v2" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1579,6 +1579,16 @@
       .operations-toolbar-actions { gap: 5px; }
     }
 
+
+
+    /* SINGLE-PAGE-HOME-OPERATIONS-V2 */
+    .app-shell { padding-bottom: calc(28px + var(--safe-bottom)) !important; }
+    .home-operations { margin-top: 24px; }
+    .home-operations > .month-switcher { display: none !important; }
+    .home-operations .search-shell { display: none !important; }
+    .home-operations > .section { margin-top: 0 !important; margin-bottom: 28px; }
+    #screen-operations { display: none !important; }
+
   </style>
 </head>
 <body>
@@ -1609,16 +1619,6 @@
     </main>
   </div>
 
-  <div class="nav-wrap">
-    <nav class="bottom-nav" aria-label="Navigation principale">
-      <button class="nav-btn active" data-screen="home" aria-label="Accueil">
-        <span class="material-symbols-outlined">home</span><span>Accueil</span>
-      </button>
-      <button class="nav-btn" data-screen="operations" aria-label="Opérations">
-        <span class="material-symbols-outlined">receipt_long</span><span>Opérations</span>
-      </button>
-    </nav>
-  </div>
 
 
 
@@ -2387,6 +2387,8 @@
           <div class="section-header"><div><h2 class="section-title">Équilibre 50 / 30 / 20</h2><p class="section-subtitle balance-section-subtitle">50% fixes · 30% quotidien · 20% disponible</p></div></div>
           <div class="card balance-card">${bucketCards}</div>
         </div>
+
+        <div id="homeOperations" class="home-operations"></div>
 `;
 
       const searchInput = document.getElementById("globalSearchInput");
@@ -2603,7 +2605,7 @@
     }
 
     function renderOperations() {
-      const container = document.getElementById("screen-operations");
+      const container = document.getElementById("homeOperations") || document.getElementById("screen-operations");
       if (!container) return;
 
       const searchNeedle = normalizeSearch(operationSearch);
@@ -3046,7 +3048,7 @@
     }
 
     function setCurrentScreen(screen, updateNav = true) {
-      currentScreen = ["home", "operations", "settings"].includes(screen) ? screen : "home";
+      currentScreen = ["home", "settings"].includes(screen) ? screen : "home";
       document.querySelectorAll(".screen").forEach(el => el.classList.toggle("active", el.id === `screen-${currentScreen}`));
       if (updateNav) document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.screen === currentScreen));
       else document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.screen === currentScreen));
@@ -3535,7 +3537,7 @@
       }
 
       const settings = event.target.closest("#settingsBtn");
-      if (settings) { setCurrentScreen("settings"); return; }
+      if (settings) { setCurrentScreen(currentScreen === "settings" ? "home" : "settings"); return; }
 
       const account = event.target.closest("#accountBtn");
       if (account) { renderProfile(); renderAccountModal(); openModal("accountModal"); return; }
