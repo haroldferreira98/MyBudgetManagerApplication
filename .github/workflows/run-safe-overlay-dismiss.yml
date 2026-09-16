@@ -1,0 +1,244 @@
+name: Run safe overlay dismissal patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-safe-overlay-dismiss.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+
+      - name: Apply safe overlay dismissal patch
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("index.html")
+          text = path.read_text(encoding="utf-8")
+
+          marker = "SAFE-OVERLAY-DISMISS-V1"
+          if marker in text:
+              raise SystemExit("Safe overlay dismissal patch already applied")
+
+          if "function closeOperationMenus()" in text:
+              raise SystemExit("Unexpected existing closeOperationMenus implementation")
+
+          text, count = re.subn(
+              r'<meta name="app-build" content="[^"]+"\s*/>',
+              '<meta name="app-build" content="20260916-safe-overlay-dismiss-v1" />',
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit("App build marker not found")
+
+          style_marker = '  </style>\n</head>'
+          if style_marker not in text:
+              raise SystemExit("Style marker not found")
+          css = r'''
+
+              /* SAFE-OVERLAY-DISMISS-V1 */
+              .operation-menu { z-index: 66; }
+              .operation-menu-backdrop {
+                position: fixed;
+                inset: 0;
+                z-index: 65;
+                background: transparent;
+                cursor: default;
+                touch-action: manipulation;
+              }
+              .operation-menu-backdrop[hidden] { display: none !important; }
+          '''
+          text = text.replace(style_marker, css + "\n" + style_marker, 1)
+
+          toolbar_anchor = '          <div class="operations-toolbar">'
+          if text.count(toolbar_anchor) != 1:
+              raise SystemExit(f"Expected one operations toolbar, found {text.count(toolbar_anchor)}")
+          text = text.replace(
+              toolbar_anchor,
+              '          <div class="operation-menu-backdrop" data-operation-menu-backdrop hidden aria-hidden="true"></div>\n\n' + toolbar_anchor,
+              1,
+          )
+
+          listeners_anchor = '''          <div class="list operation-list">${listHtml}</div>
+                </div>`;
+
+              container.querySelectorAll("[data-operation-type]").forEach(button => {'''
+          listeners_replacement = '''          <div class="list operation-list">${listHtml}</div>
+                </div>`;
+
+              const operationBackdrop = container.querySelector("[data-operation-menu-backdrop]");
+              const toggleOperationMenu = (selector, toggle) => {
+                const menu = container.querySelector(selector);
+                const willOpen = !!menu?.hidden;
+                closeOperationMenus();
+                if (willOpen && menu) {
+                  menu.hidden = false;
+                  toggle?.setAttribute("aria-expanded", "true");
+                  if (operationBackdrop) operationBackdrop.hidden = false;
+                }
+              };
+              operationBackdrop?.addEventListener("pointerdown", event => {
+                event.stopPropagation();
+              });
+              operationBackdrop?.addEventListener("click", event => {
+                event.preventDefault();
+                event.stopPropagation();
+                closeOperationMenus();
+              });
+
+              container.querySelectorAll("[data-operation-type]").forEach(button => {'''
+          if listeners_anchor not in text:
+              raise SystemExit("Operations listeners anchor not found")
+          text = text.replace(listeners_anchor, listeners_replacement, 1)
+
+          old_filter = '''      container.querySelector("[data-operation-filter-toggle]")?.addEventListener("click", event => {
+                const menu = container.querySelector("[data-operation-filter-menu]");
+                const willOpen = !!menu?.hidden;
+                if (menu) menu.hidden = !willOpen;
+                event.currentTarget.setAttribute("aria-expanded", String(willOpen));
+                const sortMenu = container.querySelector("[data-operation-sort-menu]");
+                if (sortMenu) sortMenu.hidden = true;
+              });'''
+          new_filter = '''      container.querySelector("[data-operation-filter-toggle]")?.addEventListener("click", event => {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleOperationMenu("[data-operation-filter-menu]", event.currentTarget);
+              });'''
+          if old_filter not in text:
+              raise SystemExit("Filter toggle handler not found")
+          text = text.replace(old_filter, new_filter, 1)
+
+          old_sort = '''      container.querySelector("[data-operation-sort-toggle]")?.addEventListener("click", event => {
+                const menu = container.querySelector("[data-operation-sort-menu]");
+                const willOpen = !!menu?.hidden;
+                if (menu) menu.hidden = !willOpen;
+                event.currentTarget.setAttribute("aria-expanded", String(willOpen));
+                const filterMenu = container.querySelector("[data-operation-filter-menu]");
+                if (filterMenu) filterMenu.hidden = true;
+                const addMenu = container.querySelector("[data-operation-add-menu]");
+                if (addMenu) addMenu.hidden = true;
+              });'''
+          new_sort = '''      container.querySelector("[data-operation-sort-toggle]")?.addEventListener("click", event => {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleOperationMenu("[data-operation-sort-menu]", event.currentTarget);
+              });'''
+          if old_sort not in text:
+              raise SystemExit("Sort toggle handler not found")
+          text = text.replace(old_sort, new_sort, 1)
+
+          old_add = '''      container.querySelector("[data-operation-add-toggle]")?.addEventListener("click", event => {
+                const menu = container.querySelector("[data-operation-add-menu]");
+                const willOpen = !!menu?.hidden;
+                if (menu) menu.hidden = !willOpen;
+                event.currentTarget.setAttribute("aria-expanded", String(willOpen));
+                const sortMenu = container.querySelector("[data-operation-sort-menu]");
+                if (sortMenu) sortMenu.hidden = true;
+              });'''
+          new_add = '''      container.querySelector("[data-operation-add-toggle]")?.addEventListener("click", event => {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleOperationMenu("[data-operation-add-menu]", event.currentTarget);
+              });
+              container.querySelectorAll("[data-operation-add-menu] [data-add-type]").forEach(button => {
+                button.addEventListener("click", () => closeOperationMenus());
+              });'''
+          if old_add not in text:
+              raise SystemExit("Add toggle handler not found")
+          text = text.replace(old_add, new_add, 1)
+
+          modal_anchor = '''    function openModal(id) {
+              document.getElementById(id)?.classList.add("open");'''
+          modal_replacement = '''    function closeOperationMenus() {
+              document.querySelectorAll("[data-operation-filter-menu], [data-operation-sort-menu], [data-operation-add-menu]").forEach(menu => {
+                menu.hidden = true;
+              });
+              document.querySelectorAll("[data-operation-filter-toggle], [data-operation-sort-toggle], [data-operation-add-toggle]").forEach(toggle => {
+                toggle.setAttribute("aria-expanded", "false");
+              });
+              document.querySelectorAll("[data-operation-menu-backdrop]").forEach(backdrop => {
+                backdrop.hidden = true;
+              });
+            }
+
+            function openModal(id) {
+              closeOperationMenus();
+              document.getElementById(id)?.classList.add("open");'''
+          if modal_anchor not in text:
+              raise SystemExit("openModal anchor not found")
+          text = text.replace(modal_anchor, modal_replacement, 1)
+
+          old_sheet_listener = '''    document.querySelectorAll(".sheet-backdrop").forEach(backdrop => {
+              backdrop.addEventListener("click", event => {
+                if (event.target === backdrop) closeModal(backdrop.id);
+              });
+            });'''
+          new_sheet_listener = '''    document.addEventListener("click", event => {
+              const backdrop = event.target.closest?.(".sheet-backdrop.open");
+              if (!backdrop || event.target !== backdrop) return;
+              event.preventDefault();
+              event.stopPropagation();
+              closeModal(backdrop.id);
+            }, true);'''
+          if old_sheet_listener not in text:
+              raise SystemExit("Sheet backdrop listener not found")
+          text = text.replace(old_sheet_listener, new_sheet_listener, 1)
+
+          old_escape = '      if (event.key === "Escape") document.querySelectorAll(".sheet-backdrop.open").forEach(el => closeModal(el.id));'
+          new_escape = '''      if (event.key === "Escape") {
+                const hadOperationMenu = !!document.querySelector("[data-operation-filter-menu]:not([hidden]), [data-operation-sort-menu]:not([hidden]), [data-operation-add-menu]:not([hidden])");
+                const openSheets = [...document.querySelectorAll(".sheet-backdrop.open")];
+                closeOperationMenus();
+                openSheets.forEach(el => closeModal(el.id));
+                if (hadOperationMenu || openSheets.length) event.preventDefault();
+              }'''
+          if old_escape not in text:
+              raise SystemExit("Escape handler not found")
+          text = text.replace(old_escape, new_escape, 1)
+
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Validate patch and JavaScript syntax
+        shell: bash
+        run: |
+          grep -q 'SAFE-OVERLAY-DISMISS-V1' index.html
+          grep -q 'data-operation-menu-backdrop' index.html
+          grep -q 'function closeOperationMenus()' index.html
+          grep -q '20260916-safe-overlay-dismiss-v1' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
+          if not scripts:
+              raise SystemExit('No inline script found')
+          Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/app-inline.js
+
+      - name: Commit app
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --check
+          git commit -m "fix: close overlays safely on outside interaction"
+          git push origin main
