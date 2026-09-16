@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="app-build" content="20260916-0910" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -970,6 +971,11 @@
     #accountModal .sheet { max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 12px); }
     #screen-profile { display: none !important; }
     #screen-settings .settings-page-card { padding: 16px; }
+
+    /* APP-UPDATE-SHELL-V1 */
+    .topbar .top-actions { margin-left: auto; flex: 0 0 auto; }
+    #accountModal .sheet-body { overflow-y: auto; }
+    #accountModal .account-profile-content { padding-bottom: 10px; }
 
 </style>
 </head>
@@ -2536,8 +2542,29 @@
       else if (media.addListener) media.addListener(onSystemThemeChange);
     }
 
+    // APP-AUTO-REFRESH-V1
+    const APP_BUILD = document.querySelector('meta[name="app-build"]')?.content || "";
+    let appUpdateCheckInFlight = false;
+    async function checkForAppUpdate() {
+      if (appUpdateCheckInFlight || !navigator.onLine) return;
+      appUpdateCheckInFlight = true;
+      try {
+        const response = await fetch(`/index.html?app-update=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } });
+        if (!response.ok) return;
+        const html = await response.text();
+        const match = html.match(/<meta name="app-build" content="([^"]+)"/);
+        if (match?.[1] && APP_BUILD && match[1] !== APP_BUILD) window.location.reload();
+      } catch (_) {
+      } finally {
+        appUpdateCheckInFlight = false;
+      }
+    }
+    window.addEventListener("focus", checkForAppUpdate);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkForAppUpdate(); });
+
     renderAll();
     initCloudSync();
+    setTimeout(checkForAppUpdate, 1200);
   </script>
 </body>
 </html>
