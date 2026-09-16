@@ -1017,6 +1017,13 @@
       width: 100% !important;
       text-align: left !important;
     }
+  
+    /* BALANCE-CARD-COMPACT-V1 */
+    .balance-card { padding-top: 12px; padding-bottom: 12px; }
+    .balance-card .balance-row { margin: 10px 0; }
+    .balance-card .balance-row:first-child { margin-top: 2px; }
+    .balance-card .balance-row:last-child { margin-bottom: 2px; }
+    .balance-card .balance-head { margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -1752,7 +1759,7 @@
 
         <div class="section">
           <div class="section-header"><div><h2 class="section-title">Équilibre 50 / 30 / 20</h2><p class="section-subtitle balance-section-subtitle">50% fixes · 30% quotidien · 20% disponible</p></div></div>
-          <div class="card">${bucketCards}</div>
+          <div class="card balance-card">${bucketCards}</div>
         </div>
 `;
 
