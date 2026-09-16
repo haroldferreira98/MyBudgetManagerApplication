@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260916-safe-overlay-dismiss-v1" />
+  <meta name="app-build" content="20260916-operation-menu-labels-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1546,6 +1546,17 @@
     .operation-menu button:hover,
     .operation-menu button.active { background: var(--primary-container); color: var(--on-primary-container); }
     .operation-menu .material-symbols-outlined { width: 18px; font-size: 18px; }
+    /* OPERATION-MENU-LABELS-V1 */
+    .operation-menu-title {
+      padding: 8px 12px 6px;
+      color: var(--on-surface-variant);
+      font-size: 11.5px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: .025em;
+      pointer-events: none;
+      user-select: none;
+    }
     .operation-filter-menu { min-width: 160px; }
     .operation-list { gap: 7px; }
     .operation-list .list-title { font-weight: 500; }
@@ -2695,12 +2706,14 @@
               <div class="operation-menu-wrap">
                 <button class="btn outlined small operation-filter-toggle" type="button" data-operation-filter-toggle aria-label="Filtrer" title="Filtrer" aria-expanded="false"><span class="material-symbols-outlined">filter_alt</span></button>
                 <div class="operation-menu operation-filter-menu" data-operation-filter-menu hidden>
+                  <div class="operation-menu-title">Filtrer par</div>
                   ${typeOptions.map(([value, label]) => `<button type="button" class="${operationTypeFilter === value ? "active" : ""}" data-operation-type="${value}"><span class="material-symbols-outlined">${operationTypeFilter === value ? "check" : ""}</span>${label}</button>`).join("")}
                 </div>
               </div>
               <div class="operation-menu-wrap">
                 <button class="btn outlined small operation-sort-toggle" type="button" data-operation-sort-toggle aria-label="Trier" title="Trier" aria-expanded="false"><span class="material-symbols-outlined">swap_vert</span></button>
                 <div class="operation-menu" data-operation-sort-menu hidden>
+                  <div class="operation-menu-title">Trier par</div>
                   ${sortOptions.map(([value, label]) => `<button type="button" class="${operationSort === value ? "active" : ""}" data-operation-sort="${value}"><span class="material-symbols-outlined">${operationSort === value ? "check" : ""}</span>${label}</button>`).join("")}
                 </div>
               </div>
