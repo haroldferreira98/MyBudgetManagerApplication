@@ -1,0 +1,86 @@
+name: Add app auto refresh
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/app-auto-refresh.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch app shell refresh
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          marker = '<meta name="app-build" content="20260916-0910" />'
+          if marker not in s:
+              target = '  <meta name="color-scheme" content="light dark" />\n'
+              if target not in s:
+                  raise SystemExit('Missing head marker target')
+              s = s.replace(target, target + '  ' + marker + '\n', 1)
+
+          css_marker = '    /* APP-UPDATE-SHELL-V1 */\n'
+          if css_marker not in s:
+              target = '</style>\n</head>'
+              if target not in s:
+                  raise SystemExit('Missing style end target')
+              css = '''    /* APP-UPDATE-SHELL-V1 */
+    .topbar .top-actions { margin-left: auto; flex: 0 0 auto; }
+    #accountModal .sheet-body { overflow-y: auto; }
+    #accountModal .account-profile-content { padding-bottom: 10px; }
+'''
+              s = s.replace(target, css + '\n' + target, 1)
+
+          js_marker = '    // APP-AUTO-REFRESH-V1\n'
+          if js_marker not in s:
+              target = '    renderAll();\n    initCloudSync();\n'
+              if target not in s:
+                  raise SystemExit('Missing app init target')
+              js = '''    // APP-AUTO-REFRESH-V1
+    const APP_BUILD = document.querySelector('meta[name="app-build"]')?.content || "";
+    let appUpdateCheckInFlight = false;
+    async function checkForAppUpdate() {
+      if (appUpdateCheckInFlight || !navigator.onLine) return;
+      appUpdateCheckInFlight = true;
+      try {
+        const response = await fetch(`/index.html?app-update=${Date.now()}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" }
+        });
+        if (!response.ok) return;
+        const html = await response.text();
+        const match = html.match(/<meta name="app-build" content="([^"]+)"/);
+        if (match?.[1] && APP_BUILD && match[1] !== APP_BUILD) {
+          window.location.reload();
+        }
+      } catch (_) {
+      } finally {
+        appUpdateCheckInFlight = false;
+      }
+    }
+    window.addEventListener("focus", checkForAppUpdate);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") checkForAppUpdate();
+    });
+
+'''
+              s = s.replace(target, js + target + '    setTimeout(checkForAppUpdate, 1200);\n', 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Keep iPhone app shell automatically up to date'
+          git push
