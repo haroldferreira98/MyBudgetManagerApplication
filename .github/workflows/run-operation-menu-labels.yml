@@ -1,0 +1,100 @@
+name: Run operation menu labels update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-operation-menu-labels.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+
+      - name: Add contextual labels to operation menus
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          if 'OPERATION-MENU-LABELS-V1' in text:
+              raise SystemExit('Operation menu labels already applied')
+
+          text, count = re.subn(
+              r'<meta name="app-build" content="[^"]+"\s*/>',
+              '<meta name="app-build" content="20260916-operation-menu-labels-v1" />',
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit('App build marker not found')
+
+          style_anchor = '    .operation-menu .material-symbols-outlined { width: 18px; font-size: 18px; }\n'
+          style_block = '''    .operation-menu .material-symbols-outlined { width: 18px; font-size: 18px; }\n    /* OPERATION-MENU-LABELS-V1 */\n    .operation-menu-title {\n      padding: 8px 12px 6px;\n      color: var(--on-surface-variant);\n      font-size: 11.5px;\n      line-height: 1.2;\n      font-weight: 700;\n      letter-spacing: .025em;\n      pointer-events: none;\n      user-select: none;\n    }\n'''
+          if text.count(style_anchor) != 1:
+              raise SystemExit(f'Expected one operation menu style anchor, found {text.count(style_anchor)}')
+          text = text.replace(style_anchor, style_block, 1)
+
+          filter_anchor = '''                <div class="operation-menu operation-filter-menu" data-operation-filter-menu hidden>\n                  ${typeOptions.map(([value, label]) => `<button type="button" class="${operationTypeFilter === value ? "active" : ""}" data-operation-type="${value}"><span class="material-symbols-outlined">${operationTypeFilter === value ? "check" : ""}</span>${label}</button>`).join("")}\n                </div>'''
+          filter_replacement = '''                <div class="operation-menu operation-filter-menu" data-operation-filter-menu hidden>\n                  <div class="operation-menu-title">Filtrer par</div>\n                  ${typeOptions.map(([value, label]) => `<button type="button" class="${operationTypeFilter === value ? "active" : ""}" data-operation-type="${value}"><span class="material-symbols-outlined">${operationTypeFilter === value ? "check" : ""}</span>${label}</button>`).join("")}\n                </div>'''
+          if text.count(filter_anchor) != 1:
+              raise SystemExit(f'Expected one filter menu anchor, found {text.count(filter_anchor)}')
+          text = text.replace(filter_anchor, filter_replacement, 1)
+
+          sort_anchor = '''                <div class="operation-menu" data-operation-sort-menu hidden>\n                  ${sortOptions.map(([value, label]) => `<button type="button" class="${operationSort === value ? "active" : ""}" data-operation-sort="${value}"><span class="material-symbols-outlined">${operationSort === value ? "check" : ""}</span>${label}</button>`).join("")}\n                </div>'''
+          sort_replacement = '''                <div class="operation-menu" data-operation-sort-menu hidden>\n                  <div class="operation-menu-title">Trier par</div>\n                  ${sortOptions.map(([value, label]) => `<button type="button" class="${operationSort === value ? "active" : ""}" data-operation-sort="${value}"><span class="material-symbols-outlined">${operationSort === value ? "check" : ""}</span>${label}</button>`).join("")}\n                </div>'''
+          if text.count(sort_anchor) != 1:
+              raise SystemExit(f'Expected one sort menu anchor, found {text.count(sort_anchor)}')
+          text = text.replace(sort_anchor, sort_replacement, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Validate change and JavaScript syntax
+        shell: bash
+        run: |
+          grep -q '20260916-operation-menu-labels-v1' index.html
+          grep -q 'class="operation-menu-title">Filtrer par<' index.html
+          grep -q 'class="operation-menu-title">Trier par<' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
+          if not scripts:
+              raise SystemExit('No inline script found')
+          Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/app-inline.js
+
+      - name: Ensure main did not move during patch
+        shell: bash
+        run: |
+          EXPECTED="$(git rev-parse HEAD)"
+          REMOTE="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$EXPECTED" = "$REMOTE"
+
+      - name: Commit and push final change
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/run-operation-menu-labels.yml
+          git add index.html .github/workflows/run-operation-menu-labels.yml
+          git diff --cached --check
+          git commit -m "ui: label filter and sort menus"
+          git push origin main
