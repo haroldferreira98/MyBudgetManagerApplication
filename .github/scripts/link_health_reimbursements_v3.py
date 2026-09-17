@@ -50,7 +50,7 @@ replacement = r'''    function operationRowHtml(row, grouped = false) {
     }
 
     function operationCategoryItemsHtml'''
-text, count = pattern.subn(replacement, text, count=1)
+text, count = pattern.subn(lambda _match: replacement, text, count=1)
 if count != 1:
     raise SystemExit(f'operationRowHtml replacement count={count}')
 
