@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260917-default-expense-category-view-v1" />
+  <meta name="app-build" content="20260917-fixed-category-sort-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1951,7 +1951,7 @@
     let expenseSort = "category";
     const expandedExpenseCategories = new Set();
     let operationTypeFilter = "expense";
-    let operationSort = "category";
+    const operationSort = "category";
     let operationSearch = "";
     const expandedOperationCategories = new Set();
     let globalSearch = "";
@@ -2860,7 +2860,6 @@
         ["fixed", "Charges fixes"],
         ["expense", "Dépenses"]
       ];
-      const sortOptions = [["category", "Catégorie"], ["date", "Date"], ["amount", "Montant"]];
 
       container.innerHTML = `
         <div class="section" style="margin-top:12px">
@@ -2883,13 +2882,6 @@
                 <div class="operation-menu operation-filter-menu" data-operation-filter-menu hidden>
                   <div class="operation-menu-title">Filtrer par</div>
                   ${typeOptions.map(([value, label]) => `<button type="button" class="${operationTypeFilter === value ? "active" : ""}" data-operation-type="${value}"><span class="material-symbols-outlined">${operationTypeFilter === value ? "check" : ""}</span>${label}</button>`).join("")}
-                </div>
-              </div>
-              <div class="operation-menu-wrap">
-                <button class="btn outlined small operation-sort-toggle" type="button" data-operation-sort-toggle aria-label="Trier" title="Trier" aria-expanded="false"><span class="material-symbols-outlined">swap_vert</span></button>
-                <div class="operation-menu" data-operation-sort-menu hidden>
-                  <div class="operation-menu-title">Trier par</div>
-                  ${sortOptions.map(([value, label]) => `<button type="button" class="${operationSort === value ? "active" : ""}" data-operation-sort="${value}"><span class="material-symbols-outlined">${operationSort === value ? "check" : ""}</span>${label}</button>`).join("")}
                 </div>
               </div>
               <div class="operation-menu-wrap">
@@ -2955,17 +2947,6 @@
         renderOperations();
       });
 
-      container.querySelector("[data-operation-sort-toggle]")?.addEventListener("click", event => {
-        event.preventDefault();
-        event.stopPropagation();
-        toggleOperationMenu("[data-operation-sort-menu]", event.currentTarget);
-      });
-      container.querySelectorAll("[data-operation-sort]").forEach(button => {
-        button.addEventListener("click", () => {
-          operationSort = button.dataset.operationSort || "date";
-          renderOperations();
-        });
-      });
       container.querySelector("[data-operation-add-toggle]")?.addEventListener("click", event => {
         event.preventDefault();
         event.stopPropagation();
