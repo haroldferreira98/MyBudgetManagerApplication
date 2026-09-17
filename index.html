@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260917-fixed-category-sort-v1" />
+  <meta name="app-build" content="20260917-category-date-separators-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1627,6 +1627,48 @@
     .operations-category-items .list-item:last-child {
       border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 50%, transparent) !important;
     }
+    .operations-category-items {
+      display: block;
+      gap: 0;
+      padding: 0 10px 8px;
+    }
+    .operation-date-group + .operation-date-group { margin-top: 8px; }
+    .operation-date-heading {
+      padding: 12px 12px 6px;
+      color: var(--on-surface-variant);
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: .01em;
+    }
+    .operations-category-items .operation-date-items .list-item,
+    html[data-theme="dsfr"] .operations-category-items .operation-date-items .list-item {
+      position: relative;
+      min-height: 56px !important;
+      margin: 0 !important;
+      padding: 9px 12px !important;
+      gap: 10px;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+    .operations-category-items .operation-date-items .list-item:last-child {
+      border-bottom: 0 !important;
+    }
+    .operations-category-items .operation-date-items .list-item::after {
+      content: none;
+    }
+    .operations-category-items .operation-date-items .list-item:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 0;
+      height: 1px;
+      background: color-mix(in srgb, var(--outline-variant) 62%, transparent);
+      pointer-events: none;
+    }
 
     .balance-card .progress-track,
     html[data-theme="dsfr"] .balance-card .progress-track {
@@ -2145,6 +2187,13 @@
       const date = new Date(`${value}T12:00:00`);
       if (Number.isNaN(date.getTime())) return "";
       return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" }).format(date);
+    }
+
+    function formatOperationGroupDate(value) {
+      if (!value) return "";
+      const date = new Date(`${value}T12:00:00`);
+      if (Number.isNaN(date.getTime())) return "";
+      return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(date);
     }
 
     function escapeHtml(value) {
@@ -2786,7 +2835,7 @@
     }
 
     function operationRowHtml(row, grouped = false) {
-      const subtitle = row.meta ? `<div class="list-sub">${escapeHtml(row.meta)}</div>` : "";
+      const subtitle = !grouped && row.meta ? `<div class="list-sub">${escapeHtml(row.meta)}</div>` : "";
       return `
         <div class="list-item operation-list-item" data-edit-type="${row.type}" data-edit-id="${row.id}" role="button" tabindex="0">
           <div class="list-icon"><span class="material-symbols-outlined">${row.icon}</span></div>
@@ -2796,6 +2845,25 @@
           </div>
           <div class="list-side">${operationSignedAmount(row.amount)}</div>
         </div>`;
+    }
+
+    function operationCategoryItemsHtml(items) {
+      const sortedItems = [...items].sort((a, b) => {
+        const dateCompare = String(b.sortDate).localeCompare(String(a.sortDate));
+        if (dateCompare) return dateCompare;
+        return String(a.title).localeCompare(String(b.title), "fr", { sensitivity: "base" });
+      });
+      const groups = new Map();
+      sortedItems.forEach(item => {
+        const dateKey = String(item.sortDate || "");
+        if (!groups.has(dateKey)) groups.set(dateKey, []);
+        groups.get(dateKey).push(item);
+      });
+      return [...groups.entries()].map(([dateKey, dateItems]) => `
+        <div class="operation-date-group">
+          <div class="operation-date-heading">${escapeHtml(formatOperationGroupDate(dateKey))}</div>
+          <div class="operation-date-items">${dateItems.map(item => operationRowHtml(item, true)).join("")}</div>
+        </div>`).join("");
     }
 
     function renderOperations() {
@@ -2814,6 +2882,8 @@
         if (operationSort === "category") {
           const categoryCompare = String(a.category).localeCompare(String(b.category), "fr", { sensitivity: "base" });
           if (categoryCompare) return categoryCompare;
+          const dateCompare = String(b.sortDate).localeCompare(String(a.sortDate));
+          if (dateCompare) return dateCompare;
           return String(a.title).localeCompare(String(b.title), "fr", { sensitivity: "base" });
         }
         if (operationSort === "amount") {
@@ -2847,7 +2917,7 @@
                 <div class="expense-category-total">${operationSignedAmount(total)}</div>
                 <span class="material-symbols-outlined expense-category-chevron">expand_more</span>
               </summary>
-              <div class="expense-category-items operations-category-items">${items.map(item => operationRowHtml(item, true)).join("")}</div>
+              <div class="expense-category-items operations-category-items">${operationCategoryItemsHtml(items)}</div>
             </details>`;
         }).join("");
       } else {
