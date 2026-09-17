@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260917-personal-care-home-care-v1" />
+  <meta name="app-build" content="20260917-health-reimbursement-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1771,6 +1771,9 @@
       z-index: 2;
     }
 
+
+    /* HEALTH-REIMBURSEMENT-TRACKING-V1 */
+    .health-reimbursement-section{margin-top:8px}.health-reimbursement-toggle{cursor:pointer}.health-reimbursement-toggle>span{display:grid;gap:2px;min-width:0}.health-reimbursement-toggle strong{font-size:13px}.health-reimbursement-toggle small{font-size:11px;color:var(--on-surface-variant);font-weight:400}.health-reimbursement-details[hidden],.health-reimbursement-section[hidden]{display:none!important}.health-reimbursement-details{display:grid;gap:8px;margin-top:8px}.health-refund-source{padding:10px 11px 5px;border:1px solid color-mix(in srgb,var(--outline-variant) 72%,transparent);border-radius:var(--radius-small);background:var(--surface-container-low)}.health-refund-source-title{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700}.health-refund-source-title .material-symbols-outlined{font-size:18px;color:var(--primary)}.health-refund-source .field{margin-top:7px!important;margin-bottom:5px!important}.health-reimbursement-preview{padding:11px;border-radius:var(--radius-small);background:color-mix(in srgb,var(--success-container) 30%,var(--surface-container-lowest));border:1px solid color-mix(in srgb,var(--success) 24%,var(--outline-variant))}.health-reimbursement-preview-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:12px}.health-reimbursement-preview-head span{font-weight:750;color:var(--success)}.health-reimbursement-preview-grid,.health-category-reimbursement-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:9px}.health-reimbursement-preview-grid span,.health-category-reimbursement-grid span{min-width:0;display:grid;gap:2px}.health-reimbursement-preview-grid small,.health-category-reimbursement-grid small{color:var(--on-surface-variant);font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.health-reimbursement-preview-grid strong,.health-category-reimbursement-grid strong{font-size:11.5px;white-space:nowrap}#entityModal.health-reimbursement-open .sheet{max-height:min(86dvh,760px)!important}.health-reimbursement-row-meta{color:var(--success)}.health-reimbursement-operation .list-icon{color:var(--success);background:color-mix(in srgb,var(--success-container) 45%,var(--surface-container-low))}.health-category-reimbursement-summary{margin:8px 10px 2px;padding:10px 11px;border-radius:var(--radius-small);background:color-mix(in srgb,var(--success-container) 24%,var(--surface-container-lowest));border:1px solid color-mix(in srgb,var(--success) 22%,var(--outline-variant))}.health-category-reimbursement-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px}.health-category-reimbursement-head>span{display:flex;align-items:center;gap:6px;font-weight:650;color:var(--on-surface-variant)}.health-category-reimbursement-head .material-symbols-outlined{font-size:17px;color:var(--success)}.health-category-reimbursement-head>strong{color:var(--success);font-size:13px}
   </style>
 </head>
 <body>
@@ -1930,8 +1933,6 @@
       "Prime",
       "Prime d’activité",
       "Remboursement d’un proche",
-      "Remboursement mutuelle",
-      "Remboursement sécurité sociale",
       "Revenus freelance",
       "Revenus locatifs",
       "Salaire",
@@ -1949,6 +1950,67 @@
 
     function isBudgetIncome(item) {
       return !BUDGET_INCOME_EXCLUDED_CATEGORIES.has(String(item?.category || ""));
+    }
+
+    function incomeCategoryOptions(selected) {
+      const current = String(selected || "");
+      const options = [...INCOME_CATEGORIES];
+      if (current && !options.includes(current)) options.push({ value: current, label: `${current} (ancien)` });
+      return options;
+    }
+
+    function normalizeHealthReimbursement(value) {
+      const raw = value && typeof value === "object" ? value : {};
+      const ss = raw.socialSecurity && typeof raw.socialSecurity === "object" ? raw.socialSecurity : {};
+      const mutual = raw.mutual && typeof raw.mutual === "object" ? raw.mutual : {};
+      return {
+        tracked: raw.tracked === true,
+        socialSecurity: { amount: Math.max(0, safeNumber(ss.amount)), date: String(ss.date || "") },
+        mutual: { amount: Math.max(0, safeNumber(mutual.amount)), date: String(mutual.date || "") }
+      };
+    }
+
+    function healthReimbursementSummary(expense) {
+      if (!expense || expense.category !== "Santé") return null;
+      const reimbursement = normalizeHealthReimbursement(expense.healthReimbursement);
+      if (!reimbursement.tracked) return null;
+      const gross = Math.max(0, safeNumber(expense.amount));
+      const socialSecurityAmount = reimbursement.socialSecurity.amount;
+      const mutualAmount = reimbursement.mutual.amount;
+      const total = socialSecurityAmount + mutualAmount;
+      const percent = gross > 0 ? total / gross * 100 : 0;
+      const remaining = Math.max(0, gross - total);
+      const status = total <= .005 ? "En attente" : total + .005 < gross ? "Partiellement remboursé" : "Remboursé";
+      return { reimbursement, gross, socialSecurityAmount, mutualAmount, total, percent, remaining, status };
+    }
+
+    function healthReimbursementOperationRows(expense) {
+      const summary = healthReimbursementSummary(expense);
+      if (!summary) return [];
+      return [
+        ["socialSecurity", "Sécurité sociale", "health_and_safety"],
+        ["mutual", "Mutuelle", "verified_user"]
+      ].flatMap(([key,label,icon]) => {
+        const entry = summary.reimbursement[key];
+        if (safeNumber(entry.amount) <= 0 || !entry.date) return [];
+        return [{ type:"expense", group:"expense", id:expense.id, title:`Remboursement · ${label}`, category:"Santé", amount:safeNumber(entry.amount), sortDate:String(entry.date), meta:`Lié à ${expense.label || "dépense santé"}`, icon, isHealthReimbursement:true }];
+      });
+    }
+
+    function healthCategoryReimbursementSummaryHtml() {
+      const tracked = currentMonthExpenses().filter(item => item.category === "Santé" && healthReimbursementSummary(item));
+      if (!tracked.length) return "";
+      const gross = sum(tracked, item => safeNumber(item.amount));
+      const refunded = sum(tracked, item => healthReimbursementSummary(item)?.total || 0);
+      const remaining = sum(tracked, item => healthReimbursementSummary(item)?.remaining || 0);
+      const percent = gross > 0 ? refunded / gross * 100 : 0;
+      return `<div class="health-category-reimbursement-summary">
+        <div class="health-category-reimbursement-head"><span><span class="material-symbols-outlined">medical_information</span>Suivi des remboursements</span><strong>${percent.toFixed(0)}%</strong></div>
+        <div class="health-category-reimbursement-grid">
+          <span><small>Dépensé</small><strong class="money">${formatMoney(gross)}</strong></span>
+          <span><small>Remboursé</small><strong class="money positive">${formatMoney(refunded)}</strong></span>
+          <span><small>Reste</small><strong class="money">${formatMoney(remaining)}</strong></span>
+        </div></div>`;
     }
 
     const FIXED_CHARGE_CATEGORIES = [
@@ -2229,7 +2291,7 @@
         version: STATE_VERSION,
         settings: { ...base.settings, ...(input.settings || {}) },
         incomes: Array.isArray(input.incomes) ? input.incomes.map(item => ({ ...item, category: item.category || "Salaire" })) : [],
-        expenses: Array.isArray(input.expenses) ? input.expenses.map(item => ({ ...item, category: item.category === "Hygiène" ? "Hygiène corporelle" : item.category })) : [],
+        expenses: Array.isArray(input.expenses) ? input.expenses.map(item => ({ ...item, category: item.category === "Hygiène" ? "Hygiène corporelle" : item.category, healthReimbursement: normalizeHealthReimbursement(item.healthReimbursement) })) : [],
         fixedCharges: Array.isArray(input.fixedCharges) ? input.fixedCharges : [],
         credits: Array.isArray(input.credits) ? input.credits : [],
         projects: Array.isArray(input.projects) ? input.projects : [],
@@ -2535,11 +2597,13 @@
         return [String(n), n.toFixed(2), String(n).replace(".", ","), n.toFixed(2).replace(".", ","), formatMoney(n)];
       };
       const rows = [];
-      state.expenses.forEach(item => rows.push({
-        type: "expense", id: item.id, icon: categoryIcon(item.category), kind: "Dépense", title: item.label,
-        subtitle: `${item.category} · ${formatDate(item.date)}`, amount: -safeNumber(item.amount),
-        haystack: [item.label, item.category, item.date, "dépense", "depense", ...amountTokens(item.amount)].join(" ")
-      }));
+      state.expenses.forEach(item => {
+        const hs = healthReimbursementSummary(item);
+        rows.push({ type:"expense", id:item.id, icon:categoryIcon(item.category), kind:"Dépense", title:item.label,
+          subtitle: hs ? `${item.category} · ${formatDate(item.date)} · ${hs.status} ${hs.percent.toFixed(0)}%` : `${item.category} · ${formatDate(item.date)}`, amount:-safeNumber(item.amount),
+          haystack:[item.label,item.category,item.date,"dépense","depense",hs?.status||"",hs?`${hs.percent.toFixed(0)}%`:"",...amountTokens(item.amount)].join(" ") });
+        healthReimbursementOperationRows(item).forEach(r => rows.push({ type:"expense", id:item.id, icon:r.icon, kind:"Remboursement santé", title:r.title, subtitle:`${r.meta} · ${formatDate(r.sortDate)}`, amount:r.amount, haystack:[r.title,r.meta,r.sortDate,"remboursement","santé","sante",...amountTokens(r.amount)].join(" ") }));
+      });
       state.incomes.forEach(item => rows.push({
         type: "income", id: item.id, icon: "payments", kind: "Revenu", title: item.label,
         subtitle: `${item.category || "Salaire"} · ${formatDate(item.date)}`, amount: safeNumber(item.amount),
@@ -2805,17 +2869,11 @@
         icon: "payments"
       }));
 
-      currentMonthExpenses().forEach(item => rows.push({
-        type: "expense",
-        group: "expense",
-        id: item.id,
-        title: item.label,
-        category: item.category || "Dépense",
-        amount: -safeNumber(item.amount),
-        sortDate: String(item.date || ""),
-        meta: `${item.category || "Dépense"} · ${formatOperationDate(item.date)}`,
-        icon: categoryIcon(item.category)
-      }));
+      currentMonthExpenses().forEach(item => {
+        const hs = healthReimbursementSummary(item);
+        rows.push({ type:"expense", group:"expense", id:item.id, title:item.label, category:item.category||"Dépense", amount:-safeNumber(item.amount), sortDate:String(item.date||""), meta:`${item.category || "Dépense"} · ${formatOperationDate(item.date)}`, icon:categoryIcon(item.category), healthMeta:hs ? `${hs.status} · ${hs.percent.toFixed(0)}% remboursé` : "" });
+        healthReimbursementOperationRows(item).filter(r => isCurrentMonth(r.sortDate)).forEach(r => rows.push(r));
+      });
 
       activeFixedCharges().forEach(item => {
         const day = clamp(Math.round(safeNumber(item.day, 1)), 1, 31);
@@ -2838,14 +2896,13 @@
     }
 
     function operationRowHtml(row, grouped = false) {
-      const subtitle = !grouped && row.meta ? `<div class="list-sub">${escapeHtml(row.meta)}</div>` : "";
+      const subtitle = row.healthMeta ? `<div class="list-sub health-reimbursement-row-meta">${escapeHtml(row.healthMeta)}</div>`
+        : row.isHealthReimbursement ? `<div class="list-sub health-reimbursement-row-meta">${escapeHtml(row.meta || "Remboursement lié")}</div>`
+        : !grouped && row.meta ? `<div class="list-sub">${escapeHtml(row.meta)}</div>` : "";
       return `
-        <div class="list-item operation-list-item" data-edit-type="${row.type}" data-edit-id="${row.id}" role="button" tabindex="0">
+        <div class="list-item operation-list-item ${row.isHealthReimbursement ? "health-reimbursement-operation" : ""}" data-edit-type="${row.type}" data-edit-id="${row.id}" role="button" tabindex="0">
           <div class="list-icon"><span class="material-symbols-outlined">${row.icon}</span></div>
-          <div class="list-main">
-            <div class="list-title">${escapeHtml(row.title)}</div>
-            ${subtitle}
-          </div>
+          <div class="list-main"><div class="list-title">${escapeHtml(row.title)}</div>${subtitle}</div>
           <div class="list-side">${operationSignedAmount(row.amount)}</div>
         </div>`;
     }
@@ -2909,17 +2966,21 @@
           groups.get(row.category).push(row);
         });
         listHtml = [...groups.entries()].map(([category, items]) => {
-          const total = sum(items, item => item.amount);
+          const sourceItems = category === "Santé" ? items.filter(item => !item.isHealthReimbursement) : items;
+          const total = sum(sourceItems, item => item.amount);
+          const operationCount = sourceItems.length;
+          const healthSummaryHtml = category === "Santé" ? healthCategoryReimbursementSummaryHtml() : "";
           return `
             <details class="expense-category-group" data-operation-category="${escapeHtml(category)}" ${expandedOperationCategories.has(category) ? "open" : ""}>
               <summary class="expense-category-summary">
                 <div>
                   <div class="expense-category-label">${escapeHtml(category)}</div>
-                  <div class="expense-category-meta">${items.length} opération${items.length > 1 ? "s" : ""}</div>
+                  <div class="expense-category-meta">${operationCount} opération${operationCount > 1 ? "s" : ""}</div>
                 </div>
                 <div class="expense-category-total">${operationSignedAmount(total)}</div>
                 <span class="material-symbols-outlined expense-category-chevron">expand_more</span>
               </summary>
+              ${healthSummaryHtml}
               <div class="expense-category-items operations-category-items">${operationCategoryItemsHtml(items)}</div>
             </details>`;
         }).join("");
@@ -3057,7 +3118,7 @@
     function renderIncome() {
       const container = document.getElementById("screen-income");
       const items = [...currentMonthIncomes()].sort((a,b) => String(b.date).localeCompare(String(a.date)));
-      const currentTotal = sum(currentMonthIncomes(), x => x.amount);
+      const currentTotal = sum(currentMonthIncomes().filter(isBudgetIncome), x => x.amount);
       const listHtml = items.length ? items.map(item => `
         <div class="list-item income-list-item" data-edit-type="income" data-edit-id="${item.id}" role="button" tabindex="0">
           <div class="list-icon"><span class="material-symbols-outlined">arrow_downward</span></div>
@@ -3437,6 +3498,23 @@
       openModal("entityModal");
     }
 
+    function updateHealthReimbursementPreview(target) {
+      const form=target.closest("form"), preview=target.querySelector("[data-health-reimbursement-preview]"), tracking=target.querySelector('[name="healthReimbursementTracked"]');
+      if (!form || !preview || !tracking?.checked) return;
+      const gross=moneyInputValue(form,"amount"), ss=moneyInputValue(form,"healthSocialSecurityAmount"), mutual=moneyInputValue(form,"healthMutualAmount"), total=ss+mutual;
+      const pct=gross>0?total/gross*100:0, remaining=Math.max(0,gross-total), status=total<=.005?"En attente":total+.005<gross?"Partiellement remboursé":"Remboursé";
+      preview.innerHTML=`<div class="health-reimbursement-preview-head"><strong>${escapeHtml(status)}</strong><span>${pct.toFixed(0)}%</span></div><div class="progress-track"><div class="progress-fill success" style="width:${clamp(pct,0,100)}%"></div></div><div class="health-reimbursement-preview-grid"><span><small>Sécurité sociale</small><strong class="money">${formatMoney(ss)}</strong></span><span><small>Mutuelle</small><strong class="money">${formatMoney(mutual)}</strong></span><span><small>Reste à charge</small><strong class="money">${formatMoney(remaining)}</strong></span></div>`;
+    }
+
+    function setupHealthReimbursementFields(target) {
+      const category=target.querySelector('[name="category"]'), section=target.querySelector("[data-health-reimbursement-section]"), tracking=target.querySelector('[name="healthReimbursementTracked"]'), details=target.querySelector("[data-health-reimbursement-details]");
+      if (!category || !section || !tracking || !details) return;
+      const sync=()=>{ const on=category.value==="Santé"; section.hidden=!on; details.hidden=!on||!tracking.checked; document.getElementById("entityModal")?.classList.toggle("health-reimbursement-open",on&&tracking.checked); if(on&&tracking.checked) updateHealthReimbursementPreview(target); };
+      category.addEventListener("change",sync); tracking.addEventListener("change",sync);
+      ["amount","healthSocialSecurityAmount","healthMutualAmount"].forEach(name=>target.querySelector(`[name="${name}"]`)?.addEventListener("input",()=>updateHealthReimbursementPreview(target)));
+      sync();
+    }
+
     function renderEntityFields(type, data = {}, editing = false) {
       const target = document.getElementById("dynamicFields");
       if (!target) return;
@@ -3451,7 +3529,14 @@
             <div class="field"><label>Montant (€)</label>${moneyInputMarkup("amount", data.amount, "required")}</div>
             <div class="field"><label>Date</label><input name="date" type="date" required value="${escapeHtml(data.date || today)}"></div>
           </div>
-          <div class="field"><label>Catégorie</label><select name="category">${optionTags(EXPENSE_CATEGORIES, data.category || "Autre")}</select></div>`;
+          <div class="field"><label>Catégorie</label><select name="category">${optionTags(EXPENSE_CATEGORIES, data.category || "Autre")}</select></div>
+          <div class="health-reimbursement-section" data-health-reimbursement-section hidden>
+            <label class="checkbox-row health-reimbursement-toggle"><input name="healthReimbursementTracked" type="checkbox" ${normalizeHealthReimbursement(data.healthReimbursement).tracked ? "checked" : ""}><span><strong>Suivi de remboursement</strong><small>Suivre la Sécurité sociale et la mutuelle</small></span></label>
+            <div class="health-reimbursement-details" data-health-reimbursement-details hidden>
+              ${[["socialSecurity","Sécurité sociale","health_and_safety","healthSocialSecurityAmount","healthSocialSecurityDate"],["mutual","Mutuelle","verified_user","healthMutualAmount","healthMutualDate"]].map(([key,label,icon,amountName,dateName]) => { const h=normalizeHealthReimbursement(data.healthReimbursement)[key]; return `<div class="health-refund-source"><div class="health-refund-source-title"><span class="material-symbols-outlined">${icon}</span>${label}</div><div class="field-row"><div class="field"><label>Montant remboursé (€)</label>${moneyInputMarkup(amountName,h.amount)}</div><div class="field"><label>Date du remboursement</label><input name="${dateName}" type="date" value="${escapeHtml(h.date)}"></div></div></div>`; }).join("")}
+              <div class="health-reimbursement-preview" data-health-reimbursement-preview></div>
+            </div>
+          </div>`;
       } else if (type === "income") {
         fields = `
           <div class="field"><label>Libellé</label><input name="label" required maxlength="80" value="${escapeHtml(data.label || "")}" placeholder="Ex. Salaire"></div>
@@ -3459,7 +3544,7 @@
             <div class="field"><label>Montant (€)</label>${moneyInputMarkup("amount", data.amount, "required")}</div>
             <div class="field"><label>Date</label><input name="date" type="date" required value="${escapeHtml(data.date || today)}"></div>
           </div>
-          <div class="field"><label>Catégorie</label><select name="category">${optionTags(INCOME_CATEGORIES, data.category || "Salaire")}</select></div>`;
+          <div class="field"><label>Catégorie</label><select name="category">${optionTags(incomeCategoryOptions(data.category), data.category || "Salaire")}</select></div>`;
       } else if (type === "fixed") {
         fields = `
           <div class="field"><label>Libellé</label><input name="label" required maxlength="80" value="${escapeHtml(data.label || "")}" placeholder="Ex. Loyer"></div>
@@ -3490,7 +3575,7 @@
       target.innerHTML = `${fields}<div class="modal-actions">${deleteButton}<button class="btn primary" type="submit"><span class="material-symbols-outlined">save</span>${editing ? "Enregistrer" : "Ajouter"}</button></div>`;
       enhanceNumericInputs(target);
       enhanceMoneyInputs(target);
-      if (type === "expense") requestAnimationFrame(() => target.querySelector('[name="amount"]')?.focus());
+      if (type === "expense") { setupHealthReimbursementFields(target); requestAnimationFrame(() => target.querySelector('[name="amount"]')?.focus()); }
 
       if (editing) {
         document.getElementById("deleteEntityBtn")?.addEventListener("click", () => {
@@ -3512,10 +3597,12 @@
       let item;
 
       if (type === "expense") {
-        item = {
-          id: id || uid("exp"), label: String(fd.get("label") || "").trim(), amount: moneyInputValue(form, "amount"),
-          date: fd.get("date") || todayISO(), category: fd.get("category") || "Autre", bucket: "wants"
-        };
+        const category=fd.get("category")||"Autre", tracked=category==="Santé"&&fd.get("healthReimbursementTracked")==="on";
+        const ss=tracked?moneyInputValue(form,"healthSocialSecurityAmount"):0, mutual=tracked?moneyInputValue(form,"healthMutualAmount"):0;
+        const ssDate=tracked?String(fd.get("healthSocialSecurityDate")||""):"", mutualDate=tracked?String(fd.get("healthMutualDate")||""):"";
+        if(ss>0&&!ssDate){showSnackbar("Ajoute la date du remboursement Sécurité sociale.");form.querySelector('[name="healthSocialSecurityDate"]')?.focus();return;}
+        if(mutual>0&&!mutualDate){showSnackbar("Ajoute la date du remboursement mutuelle.");form.querySelector('[name="healthMutualDate"]')?.focus();return;}
+        item={ id:id||uid("exp"), label:String(fd.get("label")||"").trim(), amount:moneyInputValue(form,"amount"), date:fd.get("date")||todayISO(), category, bucket:"wants", healthReimbursement:{ tracked, socialSecurity:{amount:ss,date:ss>0?ssDate:""}, mutual:{amount:mutual,date:mutual>0?mutualDate:""} } };
       } else if (type === "income") {
         item = { id: id || uid("inc"), label: String(fd.get("label") || "").trim(), amount: moneyInputValue(form, "amount"), date: fd.get("date") || todayISO(), category: fd.get("category") || "Salaire" };
       } else if (type === "fixed") {
