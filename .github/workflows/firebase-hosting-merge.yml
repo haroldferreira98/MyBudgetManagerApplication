@@ -16,4 +16,4 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
           channelId: live
           projectId: mybudgetmanagerapplication
-# deployment trigger grouped category date view v1
+# deployment trigger compact operation date headings v1
