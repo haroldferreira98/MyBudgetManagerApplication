@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260917-hygiene-category-v1" />
+  <meta name="app-build" content="20260917-outside-budget-envelope-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3208,8 +3208,30 @@
     function renderProfile() {
       const container = document.getElementById("screen-profile");
       const monthExpenses = currentMonthExpenses();
+      const hasAllCategoriesEnvelope = state.envelopes.some(env => env.category === "Toutes");
+      const budgetedCategories = new Set(
+        state.envelopes
+          .map(env => env.category)
+          .filter(category => category && category !== "Toutes")
+      );
+      const outsideBudgetExpenses = hasAllCategoriesEnvelope
+        ? []
+        : monthExpenses.filter(item => !budgetedCategories.has(item.category));
+      const outsideBudgetAmount = sum(outsideBudgetExpenses, item => item.amount);
+      const outsideBudgetCount = outsideBudgetExpenses.length;
+      const outsideBudgetHtml = outsideBudgetCount ? `
+        <div class="card" style="border-color:color-mix(in srgb, var(--warning) 34%, var(--outline-variant))">
+          <div class="section-header" style="margin:0">
+            <div>
+              <h3 class="section-title" style="font-size:16px">Hors budget</h3>
+              <p class="section-subtitle">${outsideBudgetCount} ${outsideBudgetCount > 1 ? "dépenses" : "dépense"} · <span class="money">${formatMoney(outsideBudgetAmount)}</span></p>
+            </div>
+            <span class="material-symbols-outlined" style="color:var(--warning)" aria-hidden="true">warning</span>
+          </div>
+          <div class="tiny" style="margin-top:7px">Dépenses dans des catégories sans enveloppe mensuelle.</div>
+        </div>` : "";
 
-      const envelopesHtml = state.envelopes.length ? state.envelopes.map(env => {
+      const regularEnvelopesHtml = state.envelopes.length ? state.envelopes.map(env => {
         const spent = sum(monthExpenses.filter(x => env.category === "Toutes" || x.category === env.category), x => x.amount);
         const limit = safeNumber(env.limit);
         const pct = limit > 0 ? (spent / limit) * 100 : 0;
@@ -3222,7 +3244,11 @@
             <div class="progress-track"><div class="progress-fill ${pct > 100 ? "error" : pct > 85 ? "warn" : ""}" style="width:${clamp(pct,0,100)}%"></div></div>
             <div class="tiny" style="margin-top:7px">${limit > 0 ? `${pct.toFixed(0)}% utilisé` : "Limite à définir"}</div>
           </div>`;
-      }).join("") : emptyState("account_balance_wallet", "Aucune enveloppe", "Crée des plafonds mensuels par catégorie pour suivre tes dépenses.");
+      }).join("") : "";
+
+      const envelopesHtml = regularEnvelopesHtml || outsideBudgetHtml
+        ? `${regularEnvelopesHtml}${outsideBudgetHtml}`
+        : emptyState("account_balance_wallet", "Aucune enveloppe", "Crée des plafonds mensuels par catégorie pour suivre tes dépenses.");
 
       const projectsHtml = state.projects.length ? state.projects.map(project => {
         const target = safeNumber(project.target);
