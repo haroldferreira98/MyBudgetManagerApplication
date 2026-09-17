@@ -1,0 +1,98 @@
+name: Fix cross-month health reimbursements
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-health-reimbursement-cross-month-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+
+      - name: Apply source patch
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          text, count = re.subn(
+              r'<meta name="app-build" content="[^"]+"\s*/>',
+              '<meta name="app-build" content="20260917-health-reimbursement-v2" />',
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit('build marker not found')
+
+          old = '''      currentMonthExpenses().forEach(item => {
+        const hs = healthReimbursementSummary(item);
+        rows.push({ type:"expense", group:"expense", id:item.id, title:item.label, category:item.category||"Dépense", amount:-safeNumber(item.amount), sortDate:String(item.date||""), meta:`${item.category || "Dépense"} · ${formatOperationDate(item.date)}`, icon:categoryIcon(item.category), healthMeta:hs ? `${hs.status} · ${hs.percent.toFixed(0)}% remboursé` : "" });
+        healthReimbursementOperationRows(item).filter(r => isCurrentMonth(r.sortDate)).forEach(r => rows.push(r));
+      });'''
+          new = '''      currentMonthExpenses().forEach(item => {
+        const hs = healthReimbursementSummary(item);
+        rows.push({ type:"expense", group:"expense", id:item.id, title:item.label, category:item.category||"Dépense", amount:-safeNumber(item.amount), sortDate:String(item.date||""), meta:`${item.category || "Dépense"} · ${formatOperationDate(item.date)}`, icon:categoryIcon(item.category), healthMeta:hs ? `${hs.status} · ${hs.percent.toFixed(0)}% remboursé` : "" });
+      });
+
+      // A reimbursement belongs to the month it actually reached the account,
+      // even when the original healthcare expense was paid in an earlier month.
+      state.expenses.forEach(item => {
+        healthReimbursementOperationRows(item)
+          .filter(row => isCurrentMonth(row.sortDate))
+          .forEach(row => rows.push(row));
+      });'''
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one reimbursement rows anchor, got {text.count(old)}')
+          text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Validate source
+        shell: bash
+        run: |
+          grep -q '20260917-health-reimbursement-v2' index.html
+          grep -q 'state.expenses.forEach(item => {' index.html
+          grep -q 'A reimbursement belongs to the month it actually reached the account' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          assert html.count('A reimbursement belongs to the month it actually reached the account') == 1
+          assert 'healthReimbursementOperationRows(item)\n          .filter(row => isCurrentMonth(row.sortDate))' in html
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
+          Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/app-inline.js
+          git diff --check
+
+      - name: Ensure main did not move
+        shell: bash
+        run: |
+          EXPECTED="$(git rev-parse HEAD)"
+          REMOTE="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$EXPECTED" = "$REMOTE"
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/run-health-reimbursement-cross-month-v2.yml
+          git add index.html .github/workflows/run-health-reimbursement-cross-month-v2.yml
+          git diff --cached --check
+          git commit -m "fix: show health reimbursements in payment month"
+          git push origin main
