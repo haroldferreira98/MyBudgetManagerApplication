@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260917-outside-budget-envelope-v1" />
+  <meta name="app-build" content="20260917-personal-care-home-care-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1894,14 +1894,16 @@
       "Achats en ligne",
       "Agios",
       "Animaux",
+      "Beauté & soins",
       "Boulangerie",
       "Cadeaux",
       "Carburant",
       "Courses",
       "En vacances",
       "Enfants",
+      "Entretien maison",
       "Impôts",
-      "Hygiène",
+      "Hygiène corporelle",
       "Livraison de repas",
       "Loisirs",
       "Mobilier de maison",
@@ -2227,11 +2229,11 @@
         version: STATE_VERSION,
         settings: { ...base.settings, ...(input.settings || {}) },
         incomes: Array.isArray(input.incomes) ? input.incomes.map(item => ({ ...item, category: item.category || "Salaire" })) : [],
-        expenses: Array.isArray(input.expenses) ? input.expenses : [],
+        expenses: Array.isArray(input.expenses) ? input.expenses.map(item => ({ ...item, category: item.category === "Hygiène" ? "Hygiène corporelle" : item.category })) : [],
         fixedCharges: Array.isArray(input.fixedCharges) ? input.fixedCharges : [],
         credits: Array.isArray(input.credits) ? input.credits : [],
         projects: Array.isArray(input.projects) ? input.projects : [],
-        envelopes: Array.isArray(input.envelopes) ? input.envelopes : []
+        envelopes: Array.isArray(input.envelopes) ? input.envelopes.map(item => ({ ...item, category: item.category === "Hygiène" ? "Hygiène corporelle" : item.category })) : []
       };
       output.fixedCharges = output.fixedCharges.map(item => ({ ...item, paidMonths: Array.isArray(item.paidMonths) ? item.paidMonths : [] }));
       return output;
@@ -3196,7 +3198,9 @@
       return {
         "Courses": "shopping_cart",
         "Carburant": "local_gas_station",
-        "Hygiène": "soap",
+        "Beauté & soins": "spa",
+        "Entretien maison": "cleaning_services",
+        "Hygiène corporelle": "soap",
         "Loisirs": "sports_esports",
         "Restaurant": "restaurant",
         "Santé": "medical_services",
