@@ -1,0 +1,66 @@
+name: Group category operations by date
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-group-category-operations-by-date-v1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+
+      - name: Apply source patch
+        run: python3 .github/scripts/group_category_operations_by_date_v1.py
+
+      - name: Validate source
+        shell: bash
+        run: |
+          grep -q '20260917-category-date-separators-v1' index.html
+          grep -q 'function formatOperationGroupDate' index.html
+          grep -q 'operation-date-heading' index.html
+          grep -q 'operationCategoryItemsHtml(items)' index.html
+          grep -q 'border-radius: 0 !important;' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          assert 'const subtitle = !grouped && row.meta' in html
+          assert 'const dateCompare = String(b.sortDate).localeCompare(String(a.sortDate));' in html
+          assert 'left: 12px;' in html and 'right: 12px;' in html
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
+          if scripts:
+              Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          if [ -f /tmp/app-inline.js ]; then node --check /tmp/app-inline.js; fi
+          git diff --check
+
+      - name: Ensure main did not move
+        shell: bash
+        run: |
+          EXPECTED="$(git rev-parse HEAD)"
+          REMOTE="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$EXPECTED" = "$REMOTE"
+
+      - name: Commit and push final change
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/run-group-category-operations-by-date-v1.yml
+          rm .github/scripts/group_category_operations_by_date_v1.py
+          git add index.html .github/workflows/run-group-category-operations-by-date-v1.yml .github/scripts/group_category_operations_by_date_v1.py
+          git diff --cached --check
+          git commit -m "refactor: group category operations by date"
+          git push origin main
