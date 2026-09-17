@@ -30,16 +30,13 @@ jobs:
           grep -q '20260917-health-reimbursement-linked-v3' index.html
           grep -q 'HEALTH-REIMBURSEMENT-LINKED-V3' index.html
           grep -q 'health-linked-refunds' index.html
-          if grep -q 'filter(row => isCurrentMonth(row.sortDate))' index.html; then
-            echo 'Standalone reimbursement chronology still present' >&2
-            exit 1
-          fi
           python3 - <<'PY'
           from pathlib import Path
           import re
           html = Path('index.html').read_text(encoding='utf-8')
           assert html.count('HEALTH-REIMBURSEMENT-LINKED-V3') == 1
           assert html.count('class="health-linked-refunds"') == 1
+          assert '.filter(row => isCurrentMonth(row.sortDate))' not in html
           scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
           if not scripts:
               raise SystemExit('no inline script found')
@@ -74,3 +71,5 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
           channelId: live
           projectId: mybudgetmanagerapplication
+
+# retry v2
