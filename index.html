@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260917-health-reimbursement-ui-v2" />
+  <meta name="app-build" content="20260917-health-reimbursement-linked-v3" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1976,6 +1976,56 @@
     .health-category-reimbursement-head .material-symbols-outlined { font-size: 17px; color: var(--success); }
     .health-category-reimbursement-head > strong { color: var(--success); font-size: 13px; }
 
+    /* HEALTH-REIMBURSEMENT-LINKED-V3 */
+    .health-linked-refunds {
+      display: grid;
+      gap: 5px;
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px solid color-mix(in srgb, var(--outline-variant) 58%, transparent);
+    }
+    .health-linked-refund {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--success);
+      line-height: 1.15;
+    }
+    .health-linked-refund-copy {
+      min-width: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      overflow: hidden;
+    }
+    .health-linked-refund-copy strong {
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+    .health-linked-refund-copy small {
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--on-surface-variant);
+      font-size: 9.5px;
+    }
+    .health-linked-refund-amount {
+      flex: 0 0 auto;
+      color: var(--success);
+      font-size: 10.5px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
   </style>
 </head>
 <body>
@@ -3076,11 +3126,6 @@
         rows.push({ type:"expense", group:"expense", id:item.id, title:item.label, category:item.category||"Dépense", amount:-safeNumber(item.amount), sortDate:String(item.date||""), meta:`${item.category || "Dépense"} · ${formatOperationDate(item.date)}`, icon:categoryIcon(item.category), healthMeta:hs ? `${hs.status} · ${hs.percent.toFixed(0)}% remboursé` : "" });
       });
 
-      state.expenses.forEach(item => {
-        healthReimbursementOperationRows(item)
-          .filter(row => isCurrentMonth(row.sortDate))
-          .forEach(row => rows.push(row));
-      });
 
       activeFixedCharges().forEach(item => {
         const day = clamp(Math.round(safeNumber(item.day, 1)), 1, 31);
@@ -3106,10 +3151,23 @@
       const subtitle = row.healthMeta ? `<div class="list-sub health-reimbursement-row-meta">${escapeHtml(row.healthMeta)}</div>`
         : row.isHealthReimbursement ? `<div class="list-sub health-reimbursement-row-meta">${escapeHtml(row.meta || "Remboursement lié")}</div>`
         : !grouped && row.meta ? `<div class="list-sub">${escapeHtml(row.meta)}</div>` : "";
+
+      let linkedRefunds = "";
+      if (row.type === "expense" && !row.isHealthReimbursement) {
+        const sourceExpense = state.expenses.find(item => item.id === row.id);
+        const refunds = healthReimbursementOperationRows(sourceExpense);
+        if (refunds.length) {
+          linkedRefunds = `<div class="health-linked-refunds">${refunds.map(refund => {
+            const source = String(refund.title || "").replace(/^Remboursement\s*·\s*/, "");
+            return `<div class="health-linked-refund"><span class="health-linked-refund-copy"><strong>${escapeHtml(source)}</strong><small>Reçu le ${escapeHtml(formatOperationDate(refund.sortDate))}</small></span><span class="health-linked-refund-amount money">+${formatMoney(refund.amount)}</span></div>`;
+          }).join("")}</div>`;
+        }
+      }
+
       return `
         <div class="list-item operation-list-item ${row.isHealthReimbursement ? "health-reimbursement-operation" : ""}" data-edit-type="${row.type}" data-edit-id="${row.id}" role="button" tabindex="0">
           <div class="list-icon"><span class="material-symbols-outlined">${row.icon}</span></div>
-          <div class="list-main"><div class="list-title">${escapeHtml(row.title)}</div>${subtitle}</div>
+          <div class="list-main"><div class="list-title">${escapeHtml(row.title)}</div>${subtitle}${linkedRefunds}</div>
           <div class="list-side">${operationSignedAmount(row.amount)}</div>
         </div>`;
     }
