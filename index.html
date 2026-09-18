@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260918-merchant-multichoice-v2" />
+  <meta name="app-build" content="20260918-merchant-clean-hidden-taxonomy-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3345,7 +3345,7 @@
 
     function merchantSuggestionMarkup(rule) {
       const classification = rule.category && rule.subcategory
-        ? `${rule.category} › ${rule.subcategory}${rule.choice ? " · choix ponctuel" : ""}`
+        ? `${rule.category} › ${rule.subcategory}`
         : rule.ambiguous
           ? "Choisir la catégorie manuellement"
           : "Catégorie à choisir";
@@ -3356,7 +3356,7 @@
         data-merchant-ambiguous="${rule.ambiguous ? "true" : "false"}">
         <span class="merchant-suggestion-main">
           <span class="merchant-suggestion-name">${escapeHtml(rule.name)}</span>
-          <span class="merchant-suggestion-meta">${escapeHtml(classification)}${rule.learned ? " · mémorisé" : ""}</span>
+          <span class="merchant-suggestion-meta">${escapeHtml(classification)}</span>
         </span>
         <span class="material-symbols-outlined merchant-suggestion-arrow">chevron_right</span>
       </button>`;
@@ -3379,23 +3379,23 @@
         note.classList.toggle("auto", automatic);
       };
 
-      const setTaxonomyFieldsVisible = visible => {
-        if (categoryField) categoryField.hidden = !visible;
-        if (subcategoryField) subcategoryField.hidden = !visible;
+      const setTaxonomyFieldsVisible = () => {
+        if (categoryField) categoryField.hidden = true;
+        if (subcategoryField) subcategoryField.hidden = true;
       };
 
       const customCategoryNote = () => {
         const rule = merchantDictionaryRuleForValue(input.value);
         return rule?.ambiguous
-          ? "Enseigne multi-catégories : choisis librement pour cette opération. Ce choix ne sera pas mémorisé."
-          : "Catégorie personnalisée : elle sera mémorisée pour ce libellé.";
+          ? "Enseigne multi-catégories."
+          : "Catégorie personnalisée.";
       };
 
       const applyRule = rule => {
         if (!rule) return false;
         if (!rule.category || !rule.subcategory || !EXPENSE_CATEGORY_TREE[rule.category]?.includes(rule.subcategory)) {
           setTaxonomyFieldsVisible(true);
-          setNote("Enseigne multi-catégories : choisis une proposition ci-dessus ou classe-la manuellement.", false);
+          setNote("Enseigne multi-catégories : choisis une proposition dans la liste.", false);
           return false;
         }
         if ([...category.options].some(option => option.value === rule.category)) {
@@ -3405,7 +3405,7 @@
             subcategory.value = rule.subcategory;
           }
           setTaxonomyFieldsVisible(false);
-          setNote(`${rule.category} › ${rule.subcategory}${rule.choice ? " · choix ponctuel" : rule.learned ? " · mémorisé" : ""}`, true);
+          setNote(`${rule.category} › ${rule.subcategory}`, true);
           return true;
         }
         return false;
@@ -3481,7 +3481,7 @@
         setTaxonomyFieldsVisible(true);
         const rule = findMerchantRule(input.value);
         if (rule && rule.category === category.value && rule.subcategory === subcategory.value) {
-          setNote(`${rule.category} › ${rule.subcategory}${rule.learned ? " · mémorisé" : ""}`, true);
+          setNote(`${rule.category} › ${rule.subcategory}`, true);
         } else if (input.value.trim()) {
           setNote(customCategoryNote(), false);
         }
@@ -3495,7 +3495,7 @@
       if (initialRule) applyRule(initialRule);
       else if (input.value.trim()) {
         setTaxonomyFieldsVisible(true);
-        setNote("Libellé libre : choisis la catégorie et la sous-catégorie.", false);
+        setNote("Libellé libre.", false);
       } else {
         setTaxonomyFieldsVisible(true);
         setNote("Tape librement ou choisis une enseigne dans la liste.", false);
@@ -4589,8 +4589,8 @@
             <div class="field"><label>Montant (€)</label>${moneyInputMarkup("amount", data.amount, "required")}</div>
             <div class="field"><label>Date</label><input name="date" type="date" required value="${escapeHtml(data.date || today)}"></div>
           </div>
-          <div class="field" data-spending-category-field><label>Catégorie</label><select name="category" required>${optionTags(spendingCategoryOptions(data.category), data.category || "Alimentation")}</select></div>
-          <div class="field" data-spending-subcategory-field><label>Sous-catégorie</label><select name="subcategory">${optionTags(spendingSubcategoryOptions(data.category || "Alimentation", data.subcategory), data.subcategory || "")}</select></div>
+          <div class="field" data-spending-category-field hidden><label>Catégorie</label><select name="category" required>${optionTags(spendingCategoryOptions(data.category), data.category || "Alimentation")}</select></div>
+          <div class="field" data-spending-subcategory-field hidden><label>Sous-catégorie</label><select name="subcategory">${optionTags(spendingSubcategoryOptions(data.category || "Alimentation", data.subcategory), data.subcategory || "")}</select></div>
           <div class="health-reimbursement-section" data-health-reimbursement-section hidden>
             <label class="health-track-row">
               <span class="health-track-copy"><strong>Suivi de remboursement</strong><small>Associer les remboursements à cette dépense santé</small></span>
