@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260918-reimbursement-profile-tracking-v1" />
+  <meta name="app-build" content="20260918-reimbursement-profile-tracking-v2" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -4284,7 +4284,7 @@
       if (settings) { setCurrentScreen(currentScreen === "settings" ? "home" : "settings"); return; }
 
       const account = event.target.closest("#accountBtn");
-      if (account) { renderProfile(); renderAccountModal(); openModal("accountModal"); return; }
+      if (account) { checkForAppUpdate(); renderProfile(); renderAccountModal(); openModal("accountModal"); return; }
 
       const accountSignIn = event.target.closest("#accountSignInBtn");
       if (accountSignIn) {
@@ -4405,7 +4405,7 @@
       else if (media.addListener) media.addListener(onSystemThemeChange);
     }
 
-    // APP-AUTO-REFRESH-V1
+    // APP-AUTO-REFRESH-V2
     const APP_BUILD = document.querySelector('meta[name="app-build"]')?.content || "";
     let appUpdateCheckInFlight = false;
     async function checkForAppUpdate() {
@@ -4416,18 +4416,23 @@
         if (!response.ok) return;
         const html = await response.text();
         const match = html.match(/<meta name="app-build" content="([^"]+)"/);
-        if (match?.[1] && APP_BUILD && match[1] !== APP_BUILD) window.location.reload();
+        if (match?.[1] && APP_BUILD && match[1] !== APP_BUILD) {
+          window.location.reload();
+          return;
+        }
       } catch (_) {
       } finally {
         appUpdateCheckInFlight = false;
       }
     }
     window.addEventListener("focus", checkForAppUpdate);
+    window.addEventListener("pageshow", checkForAppUpdate);
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkForAppUpdate(); });
 
     renderAll();
     initCloudSync();
     setTimeout(checkForAppUpdate, 1200);
+    setInterval(() => { if (document.visibilityState === "visible") checkForAppUpdate(); }, 30000);
   </script>
 </body>
 </html>
