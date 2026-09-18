@@ -24,6 +24,9 @@ jobs:
       - name: Apply Material You styling
         run: python3 .github/scripts/apply_material_you_pixel_2026.py
 
+      - name: Normalize generated CSS
+        run: sed -i 's/[[:space:]]\+$//' index.html
+
       - name: Validate CSS-only app change
         shell: bash
         run: |
