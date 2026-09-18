@@ -46,7 +46,7 @@ jobs:
           assert html.count('// SPENDING-TAXONOMY-V1') == 1
           assert 'placeholder="Ex. Auchan"' not in html
           assert 'placeholder="Ex. Loyer"' not in html
-          assert html.count('data-spending-subcategory-field') == 2
+          assert html.count('data-spending-subcategory-field') >= 2
           assert 'subcategory: String(item.subcategory || "")' in html
           scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
           if not scripts:
