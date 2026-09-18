@@ -1,0 +1,79 @@
+name: Move reimbursement tracking to profile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-move-reimbursement-tracking-profile-v1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+
+      - name: Apply source patch
+        run: python3 .github/scripts/move_reimbursement_tracking_to_profile_v1.py
+
+      - name: Validate source
+        shell: bash
+        run: |
+          grep -q '20260918-reimbursement-profile-tracking-v1' index.html
+          grep -q 'REIMBURSEMENT-PROFILE-TRACKING-V1' index.html
+          grep -q 'data-reimbursement-month-picker' index.html
+          grep -q '<h2 class="section-title">Suivi de remboursement</h2>' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          assert html.count('/* REIMBURSEMENT-PROFILE-TRACKING-V1 */') == 1
+          assert html.count('// REIMBURSEMENT-PROFILE-TRACKING-V1') == 1
+          assert 'let reimbursementTrackingMonth = monthKey();' in html
+          assert 'openMonthPicker("reimbursement")' in html
+          assert 'monthPickerContext === "reimbursement"' in html
+          assert 'reimbursementTrackingHtml()' in html
+          assert 'healthMeta:hs' not in html
+          assert '${healthSummaryHtml}' not in html
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
+          if not scripts:
+              raise SystemExit('no inline script found')
+          Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/app-inline.js
+          git diff --check
+
+      - name: Ensure main did not move
+        shell: bash
+        run: |
+          EXPECTED="$(git rev-parse HEAD)"
+          REMOTE="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$EXPECTED" = "$REMOTE"
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/scripts/move_reimbursement_tracking_to_profile_v1.py
+          rm .github/workflows/run-move-reimbursement-tracking-profile-v1.yml
+          git add index.html .github/scripts/move_reimbursement_tracking_to_profile_v1.py .github/workflows/run-move-reimbursement-tracking-profile-v1.yml
+          git diff --cached --check
+          git commit -m "feat: move reimbursement tracking to profile"
+          git push origin main
+
+      - name: Deploy Firebase production
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
+          channelId: live
+          projectId: mybudgetmanagerapplication
