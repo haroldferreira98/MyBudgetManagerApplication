@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260918-merchant-autocomplete-v1" />
+  <meta name="app-build" content="20260918-merchant-multicategory-free-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3228,10 +3228,16 @@
       return merchantDictionaryPromise;
     }
 
+    function merchantDictionaryRuleForValue(value) {
+      const q = normalizeSearch(value);
+      if (!q) return null;
+      return merchantDictionary.find(rule => merchantSearchValues(rule).includes(q)) || null;
+    }
+
     function merchantLearnedRules() {
       const preferences = state.merchantPreferences && typeof state.merchantPreferences === "object" ? state.merchantPreferences : {};
       return Object.values(preferences)
-        .filter(item => item && item.name)
+        .filter(item => item && item.name && !merchantDictionaryRuleForValue(item.name)?.ambiguous)
         .map(item => ({
           name: String(item.name),
           category: String(item.category || ""),
@@ -3280,6 +3286,8 @@
     function findMerchantRule(value) {
       const q = normalizeSearch(value);
       if (!q) return null;
+      const dictionaryRule = merchantDictionaryRuleForValue(value);
+      if (dictionaryRule?.ambiguous) return dictionaryRule;
       const preference = state.merchantPreferences?.[q];
       if (preference?.name && preference?.category && preference?.subcategory) {
         return {
@@ -3292,7 +3300,7 @@
           learned: true
         };
       }
-      return merchantDictionary.find(rule => merchantSearchValues(rule).includes(q)) || null;
+      return dictionaryRule;
     }
 
     function rememberMerchantPreference(label, category, subcategory) {
@@ -3300,6 +3308,11 @@
       const key = normalizeSearch(name);
       if (!key || !category || !subcategory) return;
       state.merchantPreferences = state.merchantPreferences && typeof state.merchantPreferences === "object" ? state.merchantPreferences : {};
+      const dictionaryRule = merchantDictionaryRuleForValue(name);
+      if (dictionaryRule?.ambiguous) {
+        delete state.merchantPreferences[key];
+        return;
+      }
       state.merchantPreferences[key] = {
         name,
         category: String(category),
@@ -3309,9 +3322,11 @@
     }
 
     function merchantSuggestionMarkup(rule) {
-      const classification = rule.category && rule.subcategory
-        ? `${rule.category} › ${rule.subcategory}`
-        : "Catégorie à choisir";
+      const classification = rule.ambiguous
+        ? "Catégorie libre · choix non mémorisé"
+        : rule.category && rule.subcategory
+          ? `${rule.category} › ${rule.subcategory}`
+          : "Catégorie à choisir";
       return `<button type="button" class="merchant-suggestion" data-merchant-choice="${escapeHtml(rule.name)}">
         <span class="merchant-suggestion-main">
           <span class="merchant-suggestion-name">${escapeHtml(rule.name)}</span>
@@ -3336,10 +3351,17 @@
         note.classList.toggle("auto", automatic);
       };
 
+      const customCategoryNote = () => {
+        const rule = merchantDictionaryRuleForValue(input.value);
+        return rule?.ambiguous
+          ? "Enseigne multi-catégories : choisis librement pour cette opération. Ce choix ne sera pas mémorisé."
+          : "Catégorie personnalisée : elle sera mémorisée pour ce libellé.";
+      };
+
       const applyRule = rule => {
         if (!rule) return false;
         if (!rule.category || !rule.subcategory || !EXPENSE_CATEGORY_TREE[rule.category]?.includes(rule.subcategory)) {
-          setNote("Enseigne multi-catégories : choisis la catégorie une fois, l’app la mémorisera.", false);
+          setNote("Enseigne multi-catégories : choisis librement pour cette opération. Ce choix ne sera pas mémorisé.", false);
           return false;
         }
         if ([...category.options].some(option => option.value === rule.category)) {
@@ -3411,11 +3433,11 @@
         if (rule && rule.category === category.value && rule.subcategory === subcategory.value) {
           setNote(`${rule.category} › ${rule.subcategory}${rule.learned ? " · mémorisé" : ""}`, true);
         } else if (input.value.trim()) {
-          setNote("Catégorie personnalisée : elle sera mémorisée pour ce libellé.", false);
+          setNote(customCategoryNote(), false);
         }
       });
       subcategory.addEventListener("change", () => {
-        if (input.value.trim()) setNote("Catégorie personnalisée : elle sera mémorisée pour ce libellé.", false);
+        if (input.value.trim()) setNote(customCategoryNote(), false);
       });
 
       const initialRule = findMerchantRule(input.value);
