@@ -24,6 +24,9 @@ jobs:
       - name: Apply source patch
         run: python3 .github/scripts/reimbursement_swipe_complete_v1.py
 
+      - name: Normalize generated whitespace
+        run: sed -i 's/[[:space:]]\+$//' index.html
+
       - name: Validate source
         shell: bash
         run: |
