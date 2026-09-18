@@ -2404,7 +2404,6 @@
       "Transports en commun",
       "Vêtements",
       "VTC & Taxi",
-      "Autre",
     ];
 
     const INCOME_CATEGORIES = [
@@ -4291,8 +4290,7 @@
 
     function csvEscape(value) {
       const str = String(value ?? "");
-      return /[;"\
-\r]/.test(str) ? `"${str.replaceAll('"', '""')}"` : str;
+      return /[;"\n\r]/.test(str) ? `"${str.replaceAll('"', '""')}"` : str;
     }
 
     function exportCSV() {
@@ -4304,8 +4302,7 @@
       state.credits.forEach(x => rows.push(["credit",x.id,x.name,"","","","savings","",x.active !== false,x.principal,x.balance,x.zeroRate ? 0 : x.annualRate,x.monthlyPayment,"","","",""]));
       state.projects.forEach(x => rows.push(["projet_epargne",x.id,x.name,"","","","savings","",x.active !== false,"","","","",x.target,x.current,x.monthlyAllocation,""]));
       state.envelopes.forEach(x => rows.push(["enveloppe",x.id,x.name,"","",x.category,"","","","","","","","","","",x.limit]));
-      const csv = [headers, ...rows].map(row => row.map(csvEscape).join(";")).join("\r\
-");
+      const csv = [headers, ...rows].map(row => row.map(csvEscape).join(";")).join("\r\n");
       downloadBlob(`budget-${todayISO()}.csv`, `\uFEFF${csv}`, "text/csv;charset=utf-8");
       showSnackbar("Export CSV généré.");
     }
