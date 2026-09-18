@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260918-reimbursement-profile-tracking-v2" />
+  <meta name="app-build" content="20260918-reimbursement-swipe-complete-v1" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -865,7 +865,7 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
     }
-  
+
     /* MOBILE-UX-VOICE-V2 */
     #screen-home > .home-search-wrap {
       margin: -8px -16px 10px;
@@ -928,7 +928,7 @@
       border-radius: 32px !important;
       overflow: visible !important;
     }
-  
+
 /* EXPENSE-SHEET-IOS-FIX */
 #entityModal[data-entity-type="expense"] .sheet {
   width: calc(100% - 12px) !important;
@@ -1148,7 +1148,7 @@
       width: 100% !important;
       text-align: left !important;
     }
-  
+
     /* BALANCE-CARD-COMPACT-V1 */
     .balance-card { padding-top: 12px; padding-bottom: 12px; }
     .balance-card .balance-row { margin: 10px 0; }
@@ -2148,6 +2148,116 @@
     .reimbursement-source-name small { color: var(--on-surface-variant); font-size: 9.5px; }
     .reimbursement-source-row > strong { flex: 0 0 auto; font-size: 11.5px; }
 
+
+    /* REIMBURSEMENT-SWIPE-COMPLETE-V1 */
+    .reimbursement-swipe {
+      --swipe-x: 0px;
+      position: relative;
+      height: 42px;
+      margin-top: 11px;
+      border: 1px solid color-mix(in srgb, var(--outline-variant) 78%, transparent);
+      border-radius: var(--pill);
+      overflow: hidden;
+      background: color-mix(in srgb, var(--surface-container-high) 74%, var(--surface-container-lowest));
+      touch-action: pan-y;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .reimbursement-swipe::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: calc(var(--swipe-x) + 40px);
+      background: color-mix(in srgb, var(--success) 18%, transparent);
+      pointer-events: none;
+    }
+    .reimbursement-swipe-label {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 0 48px;
+      color: var(--on-surface-variant);
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: .01em;
+      pointer-events: none;
+      transition: opacity .15s ease;
+    }
+    .reimbursement-swipe.ready .reimbursement-swipe-label { opacity: .35; }
+    .reimbursement-swipe-handle {
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--surface-container-lowest);
+      color: var(--success);
+      box-shadow: 0 1px 5px color-mix(in srgb, var(--shadow) 55%, transparent);
+      transform: translateX(var(--swipe-x));
+      transition: transform .18s cubic-bezier(.2,.8,.2,1), background .15s ease, color .15s ease;
+      touch-action: none;
+      cursor: grab;
+      z-index: 2;
+    }
+    .reimbursement-swipe.dragging .reimbursement-swipe-handle { transition: background .15s ease, color .15s ease; cursor: grabbing; }
+    .reimbursement-swipe.ready .reimbursement-swipe-handle { background: var(--success); color: var(--on-primary); }
+    .reimbursement-swipe-handle .material-symbols-outlined { font-size: 21px; }
+
+    .reimbursement-tracking-card-completed { padding: 12px 14px; }
+    .reimbursement-completed-main { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .reimbursement-completed-copy { min-width:0; flex:1; }
+    .reimbursement-completed-title-row { display:flex; align-items:center; flex-wrap:wrap; gap:7px; min-width:0; }
+    .reimbursement-completed-title-row h3 { margin:0; min-width:0; font-size:16px; line-height:1.2; }
+    .reimbursement-completed-copy p { margin:4px 0 0; color:var(--on-surface-variant); font-size:12px; }
+    .reimbursement-completed-badge {
+      display:inline-flex;
+      align-items:center;
+      gap:3px;
+      min-height:22px;
+      padding:3px 7px;
+      border-radius:var(--pill);
+      background:color-mix(in srgb, var(--success-container) 78%, var(--surface-container-lowest));
+      color:var(--success);
+      font-size:10px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .reimbursement-completed-badge .material-symbols-outlined { font-size:14px; }
+    .reimbursement-tracking-card-completed .reimbursement-percent { font-size:22px; line-height:1; }
+    .reimbursement-completed-summary {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-top:9px;
+      padding-top:9px;
+      border-top:1px solid color-mix(in srgb, var(--outline-variant) 58%, transparent);
+    }
+    .reimbursement-completed-summary span { display:grid; gap:2px; min-width:0; }
+    .reimbursement-completed-summary small { color:var(--on-surface-variant); font-size:10px; }
+    .reimbursement-completed-summary strong { font-size:13px; }
+
+    .health-completed-note {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-top:8px;
+      padding:8px 10px;
+      border-radius:14px;
+      background:color-mix(in srgb, var(--success-container) 44%, var(--surface-container-lowest));
+      color:var(--success);
+    }
+    .health-completed-note > span { display:flex; align-items:center; gap:6px; min-width:0; font-size:12px; }
+    .health-completed-note .material-symbols-outlined { font-size:18px; }
+    .health-completed-note .btn { min-height:30px; padding:5px 9px; font-size:11px; }
+
   </style>
 </head>
 <body>
@@ -2339,6 +2449,8 @@
       const mutual = raw.mutual && typeof raw.mutual === "object" ? raw.mutual : {};
       return {
         tracked: raw.tracked === true,
+        completed: raw.completed === true,
+        completedAt: String(raw.completedAt || ""),
         socialSecurity: { amount: Math.max(0, safeNumber(ss.amount)), date: String(ss.date || "") },
         mutual: { amount: Math.max(0, safeNumber(mutual.amount)), date: String(mutual.date || "") }
       };
@@ -2447,6 +2559,7 @@
     let monthPickerContext = "budget";
     let monthPickerYear = Number(selectedMonth.slice(0, 4));
     let preservedScrollY = null;
+    let reimbursementSwipeGesture = null;
     const expandedProfileItems = new Set();
 
     const euro = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -3633,6 +3746,20 @@
       }[category] || "receipt_long";
     }
 
+    // REIMBURSEMENT-SWIPE-COMPLETE-V1
+    function setHealthReimbursementCompleted(id, completed) {
+      const expense = state.expenses.find(item => item.id === id);
+      if (!expense) return;
+      const reimbursement = normalizeHealthReimbursement(expense.healthReimbursement);
+      if (!reimbursement.tracked) return;
+      expense.healthReimbursement = {
+        ...reimbursement,
+        completed: !!completed,
+        completedAt: completed ? todayISO() : ""
+      };
+      saveState(completed ? "Suivi de remboursement terminé." : "Suivi de remboursement rouvert.");
+    }
+
     // REIMBURSEMENT-PROFILE-TRACKING-V1
     function reimbursementMonthLabel(month = reimbursementTrackingMonth) {
       const [year, monthNumber] = String(month || monthKey()).split("-").map(Number);
@@ -3677,6 +3804,21 @@
       const cards = summaries.map(({ item, summary }) => {
         const reimbursement = summary.reimbursement;
         const displayStatus = summary.gross <= .005 ? "Montant à renseigner" : summary.status;
+        if (reimbursement.completed) {
+          return `<div class="card reimbursement-tracking-card reimbursement-tracking-card-completed" data-edit-type="expense" data-edit-id="${item.id}" role="button" tabindex="0">
+            <div class="reimbursement-completed-main">
+              <div class="reimbursement-completed-copy">
+                <div class="reimbursement-completed-title-row"><h3>${escapeHtml(item.label || "Dépense Santé")}</h3><span class="reimbursement-completed-badge"><span class="material-symbols-outlined">check</span>Terminé</span></div>
+                <p>${escapeHtml(formatOperationGroupDate(item.date))} · <span class="money">${formatMoney(summary.gross)}</span></p>
+              </div>
+              <span class="reimbursement-percent">${summary.percent.toFixed(0)}%</span>
+            </div>
+            <div class="reimbursement-completed-summary">
+              <span><small>Remboursé</small><strong class="money positive">${formatMoney(summary.total)}</strong></span>
+              <span><small>Reste à charge</small><strong class="money">${formatMoney(summary.remaining)}</strong></span>
+            </div>
+          </div>`;
+        }
         return `<div class="card reimbursement-tracking-card" data-edit-type="expense" data-edit-id="${item.id}" role="button" tabindex="0">
           <div class="reimbursement-card-head">
             <div><h3>${escapeHtml(item.label || "Dépense Santé")}</h3><p>${escapeHtml(formatOperationGroupDate(item.date))} · <span class="money">${formatMoney(summary.gross)}</span></p></div>
@@ -3687,6 +3829,10 @@
           <div class="reimbursement-sources">
             ${reimbursementSourceRow("Sécurité sociale", "health_and_safety", reimbursement.socialSecurity)}
             ${reimbursementSourceRow("Mutuelle", "verified_user", reimbursement.mutual)}
+          </div>
+          <div class="reimbursement-swipe" data-reimbursement-swipe="${item.id}" style="--swipe-x:0px">
+            <span class="reimbursement-swipe-label">Glisser pour terminer</span>
+            <button class="reimbursement-swipe-handle" type="button" data-reimbursement-swipe-handle aria-label="Glisser pour terminer le suivi" tabindex="-1"><span class="material-symbols-outlined">chevron_right</span></button>
           </div>
         </div>`;
       }).join("");
@@ -3985,6 +4131,7 @@
               <span class="health-track-copy"><strong>Suivi de remboursement</strong><small>Associer les remboursements à cette dépense santé</small></span>
               <span class="health-switch-control"><input name="healthReimbursementTracked" type="checkbox" ${normalizeHealthReimbursement(data.healthReimbursement).tracked ? "checked" : ""}><span class="health-switch-ui"></span></span>
             </label>
+            ${editing && normalizeHealthReimbursement(data.healthReimbursement).completed ? `<div class="health-completed-note"><span><span class="material-symbols-outlined">check_circle</span><strong>Suivi terminé</strong></span><button class="btn outlined small" type="button" data-reimbursement-reopen="${escapeHtml(data.id || "")}">Réouvrir</button></div>` : ""}
             <div class="health-reimbursement-details" data-health-reimbursement-details hidden>
               ${[["socialSecurity","Sécurité sociale","health_and_safety","healthSocialSecurityAmount","healthSocialSecurityDate"],["mutual","Mutuelle","verified_user","healthMutualAmount","healthMutualDate"]].map(([key,label,icon,amountName,dateName]) => { const h=normalizeHealthReimbursement(data.healthReimbursement)[key]; return `<div class="health-refund-source"><div class="health-refund-source-title"><span class="material-symbols-outlined">${icon}</span>${label}</div><div class="field-row health-refund-fields"><div class="field"><label>Montant (€)</label>${moneyInputMarkup(amountName,h.amount)}</div><div class="field"><label>Reçu le</label><input name="${dateName}" type="date" value="${escapeHtml(h.date)}"></div></div></div>`; }).join("")}
               <div class="health-reimbursement-preview" data-health-reimbursement-preview></div>
@@ -4061,7 +4208,8 @@
         const ssDate=tracked?String(fd.get("healthSocialSecurityDate")||""):"", mutualDate=tracked?String(fd.get("healthMutualDate")||""):"";
         if(ss>0&&!ssDate){showSnackbar("Ajoute la date du remboursement Sécurité sociale.");form.querySelector('[name="healthSocialSecurityDate"]')?.focus();return;}
         if(mutual>0&&!mutualDate){showSnackbar("Ajoute la date du remboursement mutuelle.");form.querySelector('[name="healthMutualDate"]')?.focus();return;}
-        item={ id:id||uid("exp"), label:String(fd.get("label")||"").trim(), amount:moneyInputValue(form,"amount"), date:fd.get("date")||todayISO(), category, bucket:"wants", healthReimbursement:{ tracked, socialSecurity:{amount:ss,date:ss>0?ssDate:""}, mutual:{amount:mutual,date:mutual>0?mutualDate:""} } };
+        const previousHealth=normalizeHealthReimbursement(current?.healthReimbursement);
+        item={ id:id||uid("exp"), label:String(fd.get("label")||"").trim(), amount:moneyInputValue(form,"amount"), date:fd.get("date")||todayISO(), category, bucket:"wants", healthReimbursement:{ tracked, completed:tracked?previousHealth.completed:false, completedAt:tracked?previousHealth.completedAt:"", socialSecurity:{amount:ss,date:ss>0?ssDate:""}, mutual:{amount:mutual,date:mutual>0?mutualDate:""} } };
       } else if (type === "income") {
         item = { id: id || uid("inc"), label: String(fd.get("label") || "").trim(), amount: moneyInputValue(form, "amount"), date: fd.get("date") || todayISO(), category: fd.get("category") || "Salaire" };
       } else if (type === "fixed") {
@@ -4227,7 +4375,70 @@
 
     document.getElementById("entityForm").addEventListener("submit", handleEntitySubmit);
 
+    function resetReimbursementSwipe(track) {
+      if (!track) return;
+      track.classList.remove("dragging", "ready");
+      track.style.setProperty("--swipe-x", "0px");
+    }
+
+    document.addEventListener("pointerdown", event => {
+      const handle = event.target.closest?.("[data-reimbursement-swipe-handle]");
+      if (!handle) return;
+      const track = handle.closest("[data-reimbursement-swipe]");
+      if (!track) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const trackRect = track.getBoundingClientRect();
+      const handleRect = handle.getBoundingClientRect();
+      const max = Math.max(0, trackRect.width - handleRect.width - 8);
+      reimbursementSwipeGesture = { pointerId:event.pointerId, handle, track, id:track.dataset.reimbursementSwipe, startX:event.clientX, max, x:0 };
+      track.classList.add("dragging");
+      handle.setPointerCapture?.(event.pointerId);
+    }, true);
+
+    document.addEventListener("pointermove", event => {
+      const gesture = reimbursementSwipeGesture;
+      if (!gesture || gesture.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      const x = clamp(event.clientX - gesture.startX, 0, gesture.max);
+      gesture.x = x;
+      gesture.track.style.setProperty("--swipe-x", `${x}px`);
+      gesture.track.classList.toggle("ready", gesture.max > 0 && x / gesture.max >= .82);
+    }, true);
+
+    const finishReimbursementSwipe = event => {
+      const gesture = reimbursementSwipeGesture;
+      if (!gesture || gesture.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      event.stopPropagation();
+      reimbursementSwipeGesture = null;
+      const completed = gesture.max > 0 && gesture.x / gesture.max >= .82;
+      if (completed) {
+        gesture.track.classList.add("ready");
+        gesture.track.style.setProperty("--swipe-x", `${gesture.max}px`);
+        setTimeout(() => setHealthReimbursementCompleted(gesture.id, true), 120);
+      } else {
+        resetReimbursementSwipe(gesture.track);
+      }
+    };
+    document.addEventListener("pointerup", finishReimbursementSwipe, true);
+    document.addEventListener("pointercancel", finishReimbursementSwipe, true);
+
     document.addEventListener("click", event => {
+      const reopen = event.target.closest?.("[data-reimbursement-reopen]");
+      if (reopen) {
+        event.preventDefault();
+        event.stopPropagation();
+        setHealthReimbursementCompleted(reopen.dataset.reimbursementReopen, false);
+        return;
+      }
+      const swipe = event.target.closest?.("[data-reimbursement-swipe]");
+      if (swipe) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
       const fixedSortToggle = event.target.closest("[data-fixed-sort-toggle]");
       if (fixedSortToggle) {
         const menu = fixedSortToggle.parentElement.querySelector("[data-fixed-sort-menu]");
