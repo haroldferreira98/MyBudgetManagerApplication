@@ -56,8 +56,8 @@ jobs:
           if bad_initial not in text:
               raise SystemExit('dangling initial-rule else anchor not found')
           text = text.replace(bad_initial, good_initial, 1)
-          old_click = '        input.value = rule.name;\n        applyRule(rule);\n        closeSuggestions();\n        input.focus({ preventScroll: true });\n        input.setSelectionRange(input.value.length, input.value.length);'
-          new_click = '        input.value = rule.name;\n        input.focus({ preventScroll: true });\n        applyRule(rule);\n        closeSuggestions();\n        input.setSelectionRange(input.value.length, input.value.length);'
+          old_click = '        input.value = rule.name;\n        applyRule(rule);\n        closeSuggestions();\n        input.focus();\n        input.setSelectionRange(input.value.length, input.value.length);'
+          new_click = '        input.value = rule.name;\n        input.focus();\n        applyRule(rule);\n        closeSuggestions();\n        input.setSelectionRange(input.value.length, input.value.length);'
           if old_click not in text:
               raise SystemExit('merchant click order anchor not found')
           text = text.replace(old_click, new_click, 1)
@@ -85,7 +85,7 @@ jobs:
           assert html.count('data-spending-category-field') >= 2
           assert html.count('function merchantCandidates') == 1
           assert html.count('function merchantSuggestionMarkup') == 1
-          assert 'input.focus({ preventScroll: true });\n        applyRule(rule);\n        closeSuggestions();' in html
+          assert 'input.focus();\n        applyRule(rule);\n        closeSuggestions();' in html
           scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
           assert scripts
           Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
