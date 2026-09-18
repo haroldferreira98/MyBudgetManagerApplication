@@ -16,4 +16,4 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
           channelId: live
           projectId: mybudgetmanagerapplication
-# deployment trigger spending taxonomy v1
+# deployment trigger merchant autocomplete v1
