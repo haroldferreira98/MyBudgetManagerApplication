@@ -1,0 +1,80 @@
+name: Merchant multi-choice suggestions v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-merchant-multichoice-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+
+      - name: Apply merchant multi-choice UX
+        run: python3 .github/scripts/merchant_multichoice_v2.py
+
+      - name: Validate app and dictionary
+        shell: bash
+        run: |
+          grep -q '20260918-merchant-multichoice-v2' index.html
+          grep -q 'data-spending-category-field' index.html
+          grep -q 'choix ponctuel' index.html
+          grep -q 'data-merchant-category' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, re
+          html = Path('index.html').read_text(encoding='utf-8')
+          data = json.loads(Path('merchants.json').read_text(encoding='utf-8'))
+          merchants = data.get('merchants', [])
+          amazon = next(x for x in merchants if x.get('name') == 'Amazon')
+          action = next(x for x in merchants if x.get('name') == 'Action')
+          assert amazon.get('ambiguous') is True and len(amazon.get('choices', [])) >= 5
+          assert action.get('ambiguous') is True and len(action.get('choices', [])) >= 4
+          assert any(c.get('category') == 'Maison' and c.get('subcategory') == 'Électroménager' for c in amazon['choices'])
+          assert html.count('data-spending-category-field') >= 3
+          assert html.count('function merchantCandidates') == 1
+          assert html.count('function merchantSuggestionMarkup') == 1
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
+          assert scripts
+          Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/app-inline.js
+          git diff --check
+
+      - name: Ensure main did not move
+        shell: bash
+        run: |
+          EXPECTED="$(git rev-parse HEAD)"
+          REMOTE="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$EXPECTED" = "$REMOTE"
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/scripts/merchant_multichoice_v2.py
+          rm .github/workflows/run-merchant-multichoice-v2.yml
+          git add index.html merchants.json .github/scripts/merchant_multichoice_v2.py .github/workflows/run-merchant-multichoice-v2.yml
+          git diff --cached --check
+          git commit -m "feat: add multi-choice merchant suggestions"
+          git push origin main
+
+      - name: Deploy Firebase production
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
+          channelId: live
+          projectId: mybudgetmanagerapplication
