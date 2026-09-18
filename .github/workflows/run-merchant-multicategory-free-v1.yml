@@ -1,0 +1,74 @@
+name: Merchant multi-category free choice v1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-merchant-multicategory-free-v1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+
+      - name: Apply multi-category behavior
+        run: python3 .github/scripts/merchant_multicategory_free_v1.py
+
+      - name: Validate app
+        shell: bash
+        run: |
+          grep -q '20260918-merchant-multicategory-free-v1' index.html
+          grep -q 'Catégorie libre · choix non mémorisé' index.html
+          grep -q 'Ce choix ne sera pas mémorisé' index.html
+          grep -q 'merchantDictionaryRuleForValue' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          assert html.count('function merchantDictionaryRuleForValue') == 1
+          assert html.count('function rememberMerchantPreference') == 1
+          assert html.count('function findMerchantRule') == 1
+          assert 'choisis la catégorie une fois, l’app la mémorisera' not in html
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
+          assert scripts
+          Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/app-inline.js
+          git diff --check
+
+      - name: Ensure main did not move
+        shell: bash
+        run: |
+          EXPECTED="$(git rev-parse HEAD)"
+          REMOTE="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$EXPECTED" = "$REMOTE"
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/scripts/merchant_multicategory_free_v1.py
+          rm .github/workflows/run-merchant-multicategory-free-v1.yml
+          git add index.html .github/scripts/merchant_multicategory_free_v1.py .github/workflows/run-merchant-multicategory-free-v1.yml
+          git diff --cached --check
+          git commit -m "fix: keep multi-category merchant choices temporary"
+          git push origin main
+
+      - name: Deploy Firebase production
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
+          channelId: live
+          projectId: mybudgetmanagerapplication
