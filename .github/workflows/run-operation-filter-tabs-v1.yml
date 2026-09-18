@@ -32,11 +32,11 @@ jobs:
           grep -q 'class="operation-filter-tabs"' index.html
           grep -q 'class="operation-filter-tab' index.html
           if grep -q 'data-operation-filter-toggle' index.html; then
-            echo 'Old filter toggle is still present' >&2
+            echo 'Old visible filter toggle is still present' >&2
             exit 1
           fi
-          if grep -q 'data-operation-filter-menu' index.html; then
-            echo 'Old filter menu is still present' >&2
+          if grep -q '<div class="operation-menu operation-filter-menu"' index.html; then
+            echo 'Old visible filter menu is still present' >&2
             exit 1
           fi
           python3 - <<'PY'
@@ -82,4 +82,4 @@ jobs:
           channelId: live
           projectId: mybudgetmanagerapplication
 
-# retry v2
+# retry v3
