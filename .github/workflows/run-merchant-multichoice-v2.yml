@@ -44,6 +44,59 @@ jobs:
       - name: Apply merchant multi-choice UX
         run: python3 .github/scripts/merchant_multichoice_v2.py
 
+      - name: Normalize generated autocomplete block
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          bad_initial = '''      else {
+            setTaxonomyFieldsVisible(true);
+            if (input.value.trim()) setNote("Libellé libre : choisis la catégorie et la sous-catégorie.", false);
+          }
+          else setNote("Tape librement ou choisis une enseigne dans la liste.", false);'''
+          good_initial = '''      else if (input.value.trim()) {
+            setTaxonomyFieldsVisible(true);
+            setNote("Libellé libre : choisis la catégorie et la sous-catégorie.", false);
+          } else {
+            setTaxonomyFieldsVisible(true);
+            setNote("Tape librement ou choisis une enseigne dans la liste.", false);
+          }'''
+          if bad_initial not in text:
+              # tolerate the source indentation used by the inline script
+              bad_initial = '''      else {
+        setTaxonomyFieldsVisible(true);
+        if (input.value.trim()) setNote("Libellé libre : choisis la catégorie et la sous-catégorie.", false);
+      }
+      else setNote("Tape librement ou choisis une enseigne dans la liste.", false);'''
+              good_initial = '''      else if (input.value.trim()) {
+        setTaxonomyFieldsVisible(true);
+        setNote("Libellé libre : choisis la catégorie et la sous-catégorie.", false);
+      } else {
+        setTaxonomyFieldsVisible(true);
+        setNote("Tape librement ou choisis une enseigne dans la liste.", false);
+      }'''
+          if bad_initial not in text:
+              raise SystemExit('dangling initial-rule else anchor not found')
+          text = text.replace(bad_initial, good_initial, 1)
+
+          old_click = '''        input.value = rule.name;
+        applyRule(rule);
+        closeSuggestions();
+        input.focus({ preventScroll: true });
+        input.setSelectionRange(input.value.length, input.value.length);'''
+          new_click = '''        input.value = rule.name;
+        input.focus({ preventScroll: true });
+        applyRule(rule);
+        closeSuggestions();
+        input.setSelectionRange(input.value.length, input.value.length);'''
+          if old_click not in text:
+              raise SystemExit('merchant click order anchor not found')
+          text = text.replace(old_click, new_click, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+
       - name: Validate app and dictionary
         shell: bash
         run: |
@@ -65,6 +118,7 @@ jobs:
           assert html.count('data-spending-category-field') >= 2
           assert html.count('function merchantCandidates') == 1
           assert html.count('function merchantSuggestionMarkup') == 1
+          assert 'input.focus({ preventScroll: true });\n        applyRule(rule);\n        closeSuggestions();' in html
           scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
           assert scripts
           Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
