@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#f8fafd" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="app-build" content="20260918-merchant-multicategory-free-v1" />
+  <meta name="app-build" content="20260918-merchant-multichoice-v2" />
   <title>Budget Pixel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3210,6 +3210,14 @@
               subcategory: item.subcategory ? String(item.subcategory) : "",
               aliases: Array.isArray(item.aliases) ? item.aliases.map(String) : [],
               ambiguous: item.ambiguous === true,
+              choices: Array.isArray(item.choices)
+                ? item.choices
+                    .map(choice => ({
+                      category: String(choice?.category || ""),
+                      subcategory: String(choice?.subcategory || "")
+                    }))
+                    .filter(choice => choice.category && choice.subcategory)
+                : [],
               kind: String(item.kind || "merchant"),
               learned: false
             }))
@@ -3255,32 +3263,46 @@
         .filter(Boolean);
     }
 
-    function merchantCandidates(query = "", limit = 14) {
+    function merchantCandidates(query = "", limit = 18) {
       const q = normalizeSearch(query);
       const seen = new Set();
       const combined = [...merchantLearnedRules(), ...merchantDictionary];
-      return combined
-        .map(rule => {
-          const values = merchantSearchValues(rule);
-          let rank = 3;
-          if (q) {
-            if (values.some(value => value === q)) rank = 0;
-            else if (values.some(value => value.startsWith(q))) rank = 1;
-            else if (values.some(value => value.includes(q))) rank = 2;
-            else return null;
-          }
-          return { rule, rank };
+      const matched = combined
+        .filter(rule => {
+          if (!q) return true;
+          return merchantSearchValues(rule).some(value => value.includes(q));
         })
-        .filter(Boolean)
-        .sort((a, b) => a.rank - b.rank || a.rule.name.localeCompare(b.rule.name, "fr", { sensitivity: "base" }))
-        .filter(({ rule }) => {
-          const key = normalizeSearch(rule.name);
-          if (seen.has(key)) return false;
+        .sort((a, b) => {
+          if (!q) return a.name.localeCompare(b.name, "fr", { sensitivity: "base" });
+          const aValues = merchantSearchValues(a);
+          const bValues = merchantSearchValues(b);
+          const aExact = aValues.includes(q) ? 0 : 1;
+          const bExact = bValues.includes(q) ? 0 : 1;
+          if (aExact !== bExact) return aExact - bExact;
+          const aPrefix = aValues.some(value => value.startsWith(q)) ? 0 : 1;
+          const bPrefix = bValues.some(value => value.startsWith(q)) ? 0 : 1;
+          if (aPrefix !== bPrefix) return aPrefix - bPrefix;
+          return a.name.localeCompare(b.name, "fr", { sensitivity: "base" });
+        });
+
+      const rows = [];
+      matched.forEach(rule => {
+        const choices = rule.ambiguous && Array.isArray(rule.choices) && rule.choices.length
+          ? rule.choices.map(choice => ({
+              ...rule,
+              category: choice.category,
+              subcategory: choice.subcategory,
+              choice: true
+            }))
+          : [rule];
+        choices.forEach(choice => {
+          const key = `${normalizeSearch(choice.name)}|${choice.category || ""}|${choice.subcategory || ""}`;
+          if (seen.has(key)) return;
           seen.add(key);
-          return true;
-        })
-        .slice(0, limit)
-        .map(entry => entry.rule);
+          rows.push(choice);
+        });
+      });
+      return rows.slice(0, limit);
     }
 
     function findMerchantRule(value) {
@@ -3322,12 +3344,16 @@
     }
 
     function merchantSuggestionMarkup(rule) {
-      const classification = rule.ambiguous
-        ? "Catégorie libre · choix non mémorisé"
-        : rule.category && rule.subcategory
-          ? `${rule.category} › ${rule.subcategory}`
+      const classification = rule.category && rule.subcategory
+        ? `${rule.category} › ${rule.subcategory}${rule.choice ? " · choix ponctuel" : ""}`
+        : rule.ambiguous
+          ? "Choisir la catégorie manuellement"
           : "Catégorie à choisir";
-      return `<button type="button" class="merchant-suggestion" data-merchant-choice="${escapeHtml(rule.name)}">
+      return `<button type="button" class="merchant-suggestion"
+        data-merchant-choice="${escapeHtml(rule.name)}"
+        data-merchant-category="${escapeHtml(rule.category || "")}"
+        data-merchant-subcategory="${escapeHtml(rule.subcategory || "")}"
+        data-merchant-ambiguous="${rule.ambiguous ? "true" : "false"}">
         <span class="merchant-suggestion-main">
           <span class="merchant-suggestion-name">${escapeHtml(rule.name)}</span>
           <span class="merchant-suggestion-meta">${escapeHtml(classification)}${rule.learned ? " · mémorisé" : ""}</span>
@@ -3342,6 +3368,8 @@
       const note = target.querySelector("[data-merchant-auto-note]");
       const category = target.querySelector('[name="category"]');
       const subcategory = target.querySelector('[name="subcategory"]');
+      const categoryField = target.querySelector('[data-spending-category-field]');
+      const subcategoryField = target.querySelector('[data-spending-subcategory-field]');
       const modal = document.getElementById("entityModal");
       if (!input || !suggestions || !category || !subcategory) return;
 
@@ -3349,6 +3377,11 @@
         if (!note) return;
         note.textContent = message;
         note.classList.toggle("auto", automatic);
+      };
+
+      const setTaxonomyFieldsVisible = visible => {
+        if (categoryField) categoryField.hidden = !visible;
+        if (subcategoryField) subcategoryField.hidden = !visible;
       };
 
       const customCategoryNote = () => {
@@ -3361,7 +3394,8 @@
       const applyRule = rule => {
         if (!rule) return false;
         if (!rule.category || !rule.subcategory || !EXPENSE_CATEGORY_TREE[rule.category]?.includes(rule.subcategory)) {
-          setNote("Enseigne multi-catégories : choisis librement pour cette opération. Ce choix ne sera pas mémorisé.", false);
+          setTaxonomyFieldsVisible(true);
+          setNote("Enseigne multi-catégories : choisis une proposition ci-dessus ou classe-la manuellement.", false);
           return false;
         }
         if ([...category.options].some(option => option.value === rule.category)) {
@@ -3370,7 +3404,8 @@
           if ([...subcategory.options].some(option => option.value === rule.subcategory)) {
             subcategory.value = rule.subcategory;
           }
-          setNote(`${rule.category} › ${rule.subcategory}${rule.learned ? " · mémorisé" : ""}`, true);
+          setTaxonomyFieldsVisible(false);
+          setNote(`${rule.category} › ${rule.subcategory}${rule.choice ? " · choix ponctuel" : rule.learned ? " · mémorisé" : ""}`, true);
           return true;
         }
         return false;
@@ -3403,6 +3438,7 @@
       });
 
       input.addEventListener("input", () => {
+        setTaxonomyFieldsVisible(true);
         const exact = findMerchantRule(input.value);
         if (exact) applyRule(exact);
         else setNote("Tape librement ou choisis une enseigne dans la liste.", false);
@@ -3419,16 +3455,30 @@
       suggestions.addEventListener("click", event => {
         const button = event.target.closest?.("[data-merchant-choice]");
         if (!button) return;
-        const rule = findMerchantRule(button.dataset.merchantChoice) || merchantCandidates(button.dataset.merchantChoice, 1)[0];
-        if (!rule) return;
+        const name = button.dataset.merchantChoice || "";
+        const chosenCategory = button.dataset.merchantCategory || "";
+        const chosenSubcategory = button.dataset.merchantSubcategory || "";
+        const baseRule = findMerchantRule(name) || merchantCandidates(name, 1)[0];
+        if (!baseRule) return;
+        const rule = chosenCategory && chosenSubcategory
+          ? {
+              ...baseRule,
+              name,
+              category: chosenCategory,
+              subcategory: chosenSubcategory,
+              ambiguous: button.dataset.merchantAmbiguous === "true",
+              choice: button.dataset.merchantAmbiguous === "true"
+            }
+          : baseRule;
         input.value = rule.name;
+        input.focus();
         applyRule(rule);
         closeSuggestions();
-        input.focus({ preventScroll: true });
         input.setSelectionRange(input.value.length, input.value.length);
       });
 
       category.addEventListener("change", () => {
+        setTaxonomyFieldsVisible(true);
         const rule = findMerchantRule(input.value);
         if (rule && rule.category === category.value && rule.subcategory === subcategory.value) {
           setNote(`${rule.category} › ${rule.subcategory}${rule.learned ? " · mémorisé" : ""}`, true);
@@ -3437,13 +3487,19 @@
         }
       });
       subcategory.addEventListener("change", () => {
+        setTaxonomyFieldsVisible(true);
         if (input.value.trim()) setNote(customCategoryNote(), false);
       });
 
       const initialRule = findMerchantRule(input.value);
       if (initialRule) applyRule(initialRule);
-      else if (input.value.trim()) setNote("Libellé libre : la catégorie actuelle sera mémorisée à l’enregistrement.", false);
-      else setNote("Tape librement ou choisis une enseigne dans la liste.", false);
+      else if (input.value.trim()) {
+        setTaxonomyFieldsVisible(true);
+        setNote("Libellé libre : choisis la catégorie et la sous-catégorie.", false);
+      } else {
+        setTaxonomyFieldsVisible(true);
+        setNote("Tape librement ou choisis une enseigne dans la liste.", false);
+      }
     }
 
 
@@ -4533,7 +4589,7 @@
             <div class="field"><label>Montant (€)</label>${moneyInputMarkup("amount", data.amount, "required")}</div>
             <div class="field"><label>Date</label><input name="date" type="date" required value="${escapeHtml(data.date || today)}"></div>
           </div>
-          <div class="field"><label>Catégorie</label><select name="category" required>${optionTags(spendingCategoryOptions(data.category), data.category || "Alimentation")}</select></div>
+          <div class="field" data-spending-category-field><label>Catégorie</label><select name="category" required>${optionTags(spendingCategoryOptions(data.category), data.category || "Alimentation")}</select></div>
           <div class="field" data-spending-subcategory-field><label>Sous-catégorie</label><select name="subcategory">${optionTags(spendingSubcategoryOptions(data.category || "Alimentation", data.subcategory), data.subcategory || "")}</select></div>
           <div class="health-reimbursement-section" data-health-reimbursement-section hidden>
             <label class="health-track-row">

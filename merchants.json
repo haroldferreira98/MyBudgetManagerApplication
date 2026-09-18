@@ -20,7 +20,33 @@
         "Action France"
       ],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Produits ménagers"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Cuisine & vaisselle"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Bricolage"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Hygiène corporelle"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        }
+      ]
     },
     {
       "name": "Adidas",
@@ -64,7 +90,33 @@
         "Aliexpress"
       ],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Électroménager"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Bricolage"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Vêtements"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        },
+        {
+          "category": "Animaux",
+          "subcategory": "Accessoires"
+        }
+      ]
     },
     {
       "name": "Allianz",
@@ -92,7 +144,45 @@
         "AMZN"
       ],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Électroménager"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Cuisine & vaisselle"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Produits ménagers"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Vêtements"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        },
+        {
+          "category": "Loisirs & sorties",
+          "subcategory": "Livres & presse"
+        },
+        {
+          "category": "Loisirs & sorties",
+          "subcategory": "Jeux & loisirs"
+        },
+        {
+          "category": "Animaux",
+          "subcategory": "Accessoires"
+        }
+      ]
     },
     {
       "name": "Amazon Prime",
@@ -211,7 +301,17 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Électroménager"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        }
+      ]
     },
     {
       "name": "Basic-Fit",
@@ -229,7 +329,29 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Produits ménagers"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Cuisine & vaisselle"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Bricolage"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        }
+      ]
     },
     {
       "name": "Bershka",
@@ -495,7 +617,33 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Électroménager"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Cuisine & vaisselle"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Vêtements"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        },
+        {
+          "category": "Loisirs & sorties",
+          "subcategory": "Jeux & loisirs"
+        }
+      ]
     },
     {
       "name": "Celio",
@@ -863,7 +1011,25 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Électroménager"
+        },
+        {
+          "category": "Loisirs & sorties",
+          "subcategory": "Livres & presse"
+        },
+        {
+          "category": "Loisirs & sorties",
+          "subcategory": "Jeux & loisirs"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        }
+      ]
     },
     {
       "name": "Foot Locker",
@@ -913,7 +1079,29 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Personnel",
+          "subcategory": "Vêtements"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Chaussures"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Beauté & soins"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        }
+      ]
     },
     {
       "name": "Gamm Vert",
@@ -951,7 +1139,29 @@
         "GiFi"
       ],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Produits ménagers"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Cuisine & vaisselle"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Bricolage"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        }
+      ]
     },
     {
       "name": "Google One",
@@ -991,7 +1201,21 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Alimentation",
+          "subcategory": "Supérettes & épiceries"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Hygiène corporelle"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Produits ménagers"
+        }
+      ]
     },
     {
       "name": "Gucci",
@@ -1284,7 +1508,33 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Personnel",
+          "subcategory": "Vêtements"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Chaussures"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Mobilier"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Linge de maison"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Literie"
+        }
+      ]
     },
     {
       "name": "Ladurée",
@@ -1376,7 +1626,17 @@
         "Materiel Net"
       ],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Électroménager"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        }
+      ]
     },
     {
       "name": "McDonald's",
@@ -1713,7 +1973,29 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Personnel",
+          "subcategory": "Vêtements"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Chaussures"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Beauté & soins"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        }
+      ]
     },
     {
       "name": "Proton",
@@ -1936,7 +2218,33 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Électroménager"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Cuisine & vaisselle"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Vêtements"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        },
+        {
+          "category": "Animaux",
+          "subcategory": "Accessoires"
+        }
+      ]
     },
     {
       "name": "Tesla",
@@ -2032,7 +2340,29 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Personnel",
+          "subcategory": "Vêtements"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Chaussures"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Décoration"
+        },
+        {
+          "category": "Maison",
+          "subcategory": "Électroménager"
+        }
+      ]
     },
     {
       "name": "Vélib'",
@@ -2150,7 +2480,17 @@
       "subcategory": null,
       "aliases": [],
       "ambiguous": true,
-      "kind": "merchant"
+      "kind": "merchant",
+      "choices": [
+        {
+          "category": "Maison",
+          "subcategory": "Électroménager"
+        },
+        {
+          "category": "Personnel",
+          "subcategory": "Accessoires"
+        }
+      ]
     },
     {
       "name": "YouTube Premium",
