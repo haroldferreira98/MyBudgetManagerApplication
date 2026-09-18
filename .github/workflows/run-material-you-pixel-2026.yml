@@ -1,0 +1,69 @@
+name: Material You Pixel 2026 styling
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-material-you-pixel-2026.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+
+      - name: Apply Material You styling
+        run: python3 .github/scripts/apply_material_you_pixel_2026.py
+
+      - name: Validate CSS-only app change
+        shell: bash
+        run: |
+          grep -q '20260918-material-you-pixel-2026-v1' index.html
+          grep -q 'MATERIAL-YOU-PIXEL-2026-V1' index.html
+          grep -q -- '--md-primary: #0b57d0' index.html
+          grep -q -- '--md-primary: #a8c7fa' index.html
+          grep -q 'html:not(\[data-theme="dsfr"\]) .expense-category-group' index.html
+          grep -q 'html:not(\[data-theme="dsfr"\]) .btn.primary' index.html
+          git diff --exit-code -- merchants.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
+          assert scripts
+          Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
+          assert html.count('/* MATERIAL-YOU-PIXEL-2026-V1 */') == 1
+          assert html.count('--md-font-family:') == 1
+          block = re.search(r'function merchantSuggestionMarkup\(rule\) \{.*?\n    \}', html, re.S)
+          assert block and 'choix ponctuel' not in block.group(0) and 'mémorisé' not in block.group(0)
+          PY
+          node --check /tmp/app-inline.js
+          git diff --check
+
+      - name: Ensure main did not move
+        shell: bash
+        run: |
+          EXPECTED="$(git rev-parse HEAD)"
+          REMOTE="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$EXPECTED" = "$REMOTE"
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/scripts/apply_material_you_pixel_2026.py
+          rm .github/workflows/run-material-you-pixel-2026.yml
+          git add index.html .github/scripts/apply_material_you_pixel_2026.py .github/workflows/run-material-you-pixel-2026.yml
+          git diff --cached --check
+          git commit -m "feat: apply Material You Pixel 2026 styling"
+          git push origin main
