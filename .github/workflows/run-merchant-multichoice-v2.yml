@@ -32,7 +32,13 @@ jobs:
           new = """count = text.count(old)\nif count != 1:\n    raise SystemExit(f'taxonomy field markup count={count}')\ntext = text.replace(old, new, 1)"""
           if old not in text:
               raise SystemExit('taxonomy expectation anchor not found')
-          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          text = text.replace(old, new, 1)
+          old_focus = r'input\.focus\(\);\n        input\.setSelectionRange'
+          new_focus = r'input\.focus\([^\n]*\);\n        input\.setSelectionRange'
+          if old_focus not in text:
+              raise SystemExit('suggestion focus regex anchor not found')
+          text = text.replace(old_focus, new_focus, 1)
+          path.write_text(text, encoding='utf-8')
           PY
 
       - name: Apply merchant multi-choice UX
