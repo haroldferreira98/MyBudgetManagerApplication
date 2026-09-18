@@ -24,6 +24,31 @@ jobs:
       - name: Build merchant dictionary and patch app
         run: python3 .github/scripts/merchant_autocomplete_v1.py
 
+      - name: Complete dictionary with Bolt
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, unicodedata
+          path = Path('merchants.json')
+          payload = json.loads(path.read_text(encoding='utf-8'))
+          merchants = payload.setdefault('merchants', [])
+          if not any(item.get('name') == 'Bolt' for item in merchants):
+              merchants.append({
+                  'name': 'Bolt',
+                  'category': 'VTC & Taxi',
+                  'subcategory': 'VTC',
+                  'aliases': [],
+                  'ambiguous': False,
+                  'kind': 'merchant'
+              })
+          def key(item):
+              name = str(item.get('name', ''))
+              return unicodedata.normalize('NFD', name).encode('ascii', 'ignore').decode().lower()
+          merchants.sort(key=key)
+          path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
       - name: Validate source and dictionary
         shell: bash
         run: |
