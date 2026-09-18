@@ -1,0 +1,84 @@
+name: Spending taxonomy v1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-spending-taxonomy-v1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync latest main
+        run: git pull --ff-only origin main
+
+      - name: Apply taxonomy patch
+        run: python3 .github/scripts/spending_taxonomy_v1.py
+
+      - name: Validate source
+        shell: bash
+        run: |
+          grep -q '20260918-spending-taxonomy-v1' index.html
+          grep -q 'SPENDING-TAXONOMY-V1' index.html
+          grep -q '"Supermarchés & hypermarchés"' index.html
+          grep -q '"Médecin généraliste"' index.html
+          grep -q '"Personnel"' index.html
+          grep -q '"Loisirs & sorties"' index.html
+          grep -q '"Abonnements & services numériques"' index.html
+          grep -q '"Banque & crédits"' index.html
+          grep -q '"Voyages"' index.html
+          grep -q '"Cadeaux & événements"' index.html
+          grep -q '"Administratif & impôts"' index.html
+          grep -q 'name="subcategory"' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('index.html').read_text(encoding='utf-8')
+          assert html.count('// SPENDING-TAXONOMY-V1') == 1
+          assert 'placeholder="Ex. Auchan"' not in html
+          assert 'placeholder="Ex. Loyer"' not in html
+          assert html.count('data-spending-subcategory-field') == 2
+          assert 'subcategory: String(item.subcategory || "")' in html
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.S)
+          if not scripts:
+              raise SystemExit('no inline script found')
+          Path('/tmp/app-inline.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/app-inline.js
+          git diff --check
+
+      - name: Ensure main did not move
+        shell: bash
+        run: |
+          EXPECTED="$(git rev-parse HEAD)"
+          REMOTE="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$EXPECTED" = "$REMOTE"
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/scripts/spending_taxonomy_v1.py
+          rm .github/workflows/run-spending-taxonomy-v1.yml
+          git add index.html .github/scripts/spending_taxonomy_v1.py .github/workflows/run-spending-taxonomy-v1.yml
+          git diff --cached --check
+          git commit -m "feat: add spending category hierarchy"
+          git push origin main
+
+      - name: Deploy Firebase production
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MYBUDGETMANAGERAPPLICATION }}'
+          channelId: live
+          projectId: mybudgetmanagerapplication
