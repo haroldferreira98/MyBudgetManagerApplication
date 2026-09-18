@@ -75,6 +75,15 @@ if text.count(old_filter_handler) != 1:
     raise SystemExit(f'filter handler anchor count={text.count(old_filter_handler)}')
 text = text.replace(old_filter_handler, '', 1)
 
+old_menu_selector = '[data-operation-filter-menu], [data-operation-sort-menu], [data-operation-add-menu]'
+old_toggle_selector = '[data-operation-filter-toggle], [data-operation-sort-toggle], [data-operation-add-toggle]'
+if text.count(old_menu_selector) != 1:
+    raise SystemExit(f'close menu selector count={text.count(old_menu_selector)}')
+if text.count(old_toggle_selector) != 1:
+    raise SystemExit(f'close toggle selector count={text.count(old_toggle_selector)}')
+text = text.replace(old_menu_selector, '[data-operation-add-menu]', 1)
+text = text.replace(old_toggle_selector, '[data-operation-add-toggle]', 1)
+
 css = r'''
     /* OPERATION-FILTER-TABS-V1 */
     .operation-filter-tabs {
