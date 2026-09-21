@@ -107,6 +107,12 @@
       width: 100%;
     }
 
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .badge-chip {
       background: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-on-primary-container);
@@ -114,6 +120,16 @@
       border-radius: var(--radius-pill);
       font-size: 0.78rem;
       font-weight: 500;
+    }
+
+    .version-chip {
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface-variant);
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
 
     .icon-btn {
@@ -274,11 +290,10 @@
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
-      padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 10px 12px;
+      padding: calc(env(safe-area-inset-top, 0px) + 8px) 16px 10px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
       z-index: 1100;
     }
 
@@ -312,15 +327,14 @@
       background: var(--md-sys-color-surface-container-high);
       border-radius: var(--radius-pill);
       padding: 3px;
-      flex-shrink: 0;
     }
 
     .shade-tab {
       border: none;
       background: transparent;
-      padding: 6px 14px;
+      padding: 6px 16px;
       border-radius: var(--radius-pill);
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--md-sys-color-on-surface-variant);
       cursor: pointer;
@@ -333,15 +347,9 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
 
-    .shade-version {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: var(--radius-pill);
-      background: var(--md-sys-color-surface-container);
-      color: var(--md-sys-color-on-surface-variant);
+    .shade-spacer {
+      width: 38px;
       flex-shrink: 0;
-      letter-spacing: 0.04em;
     }
 
     .runner-body {
@@ -565,7 +573,10 @@
   <main id="view-home">
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
-      <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
+      <div class="top-bar-right">
+        <div class="version-chip">v1.4.3</div>
+        <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
+      </div>
     </div>
 
     <div class="header-text">
@@ -610,7 +621,8 @@
         <button class="shade-tab active" id="tab-preview">Aperçu</button>
       </div>
 
-      <div class="shade-version">v1.4.2</div>
+      <!-- Espace réservé pour équilibrer le centrage du bouton segmented -->
+      <div class="shade-spacer"></div>
     </header>
 
     <div class="runner-body">
@@ -752,7 +764,7 @@
 
     async function registerAndHandleFile(file, displayPath, autoOpen = true) {
       const content = await file.text();
-      const ext = file.name.split('.').pop().toLowerCase();
+      let ext = file.name.split('.').pop().toLowerCase();
       const id = 'file_' + Math.random().toString(36).substr(2, 9);
 
       fileStore.set(id, {
@@ -893,31 +905,61 @@
       }
     });
 
-    // Bouton de sauvegarde directe en fichier .html
-    btnSave.addEventListener('click', () => {
+    btnSave.addEventListener('click', async () => {
       syncAndRender();
       
       const fileData = fileStore.get(currentActiveFileId);
       let filename = fileData ? fileData.name : 'index.html';
       
-      // S'assure que le fichier sauvegardé a l'extension .html
-      if (!filename.endsWith('.html') && !filename.endsWith('.htm')) {
+      if (!filename.toLowerCase().endsWith('.html') && !filename.toLowerCase().endsWith('.htm')) {
         filename = filename.replace(/\.[^/.]+$/, "") + ".html";
       }
 
       const content = codeArea.value;
+
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{
+              description: 'Document HTML',
+              accept: { 'text/html': ['.html'] }
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(content);
+          await writable.close();
+          showToast(`« ${filename} » enregistré !`);
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      const fileObj = new File([content], filename, { type: 'text/html;charset=utf-8' });
+      if (navigator.canShare && navigator.canShare({ files: [fileObj] })) {
+        try {
+          await navigator.share({
+            files: [fileObj],
+            title: filename
+          });
+          showToast(`Fichier prêt pour enregistrement !`);
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
       const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
       const downloadUrl = URL.createObjectURL(blob);
-      
       const a = document.createElement('a');
       a.href = downloadUrl;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      
-      setTimeout(() => URL.revokeObjectURL(downloadUrl), 500);
-      showToast(`Fichier « ${filename} » sauvegardé !`);
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 800);
+      showToast(`Téléchargement de « ${filename} » lancé !`);
     });
 
     let syncTimer = null;
@@ -936,6 +978,10 @@
       if (fileData) {
         fileData.content = updatedCode;
       }
+
+      try {
+        localStorage.setItem('cached_file_' + currentActiveFileId, updatedCode);
+      } catch (e) {}
 
       renderAppFrame(updatedCode);
     }
@@ -961,7 +1007,7 @@
     function showToast(text) {
       toastMsg.textContent = text;
       toastMsg.classList.add('show');
-      setTimeout(() => toastMsg.classList.remove('show'), 2000);
+      setTimeout(() => toastMsg.classList.remove('show'), 2200);
     }
 
     shadeBackBtn.addEventListener('click', () => {
