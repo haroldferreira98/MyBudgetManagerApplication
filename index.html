@@ -285,16 +285,16 @@
       display: flex;
     }
 
+    /* Volet supérieur structuré en 3 zones équilibrées */
     .runner-shade {
       background: var(--shade-bg);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
       padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 10px 12px;
-      display: flex;
+      display: grid;
+      grid-template-columns: 42px 1fr 42px;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
       z-index: 1100;
     }
 
@@ -310,7 +310,7 @@
       border: none;
       cursor: pointer;
       transition: transform 0.15s ease;
-      flex-shrink: 0;
+      justify-self: start;
     }
 
     .shade-btn:active {
@@ -324,19 +324,27 @@
     }
 
     #shade-search-btn {
-      display: none;
+      justify-self: end;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     #shade-search-btn.visible {
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .shade-center {
       display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .shade-segmented {
-      display: flex;
+      display: inline-flex;
       background: var(--md-sys-color-surface-container-high);
       border-radius: var(--radius-pill);
       padding: 3px;
-      flex-shrink: 0;
     }
 
     .shade-tab {
@@ -400,8 +408,8 @@
     }
 
     .search-nav-btn {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: var(--radius-pill);
       border: none;
       background: var(--md-sys-color-surface-container-high);
@@ -633,7 +641,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-bar-right">
-        <span class="app-version-badge">v1.4.3</span>
+        <span class="app-version-badge">v1.4.4</span>
         <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
       </div>
     </div>
@@ -675,9 +683,11 @@
         </svg>
       </button>
 
-      <div class="shade-segmented">
-        <button class="shade-tab" id="tab-code">Coder</button>
-        <button class="shade-tab active" id="tab-preview">Aperçu</button>
+      <div class="shade-center">
+        <div class="shade-segmented">
+          <button class="shade-tab" id="tab-code">Coder</button>
+          <button class="shade-tab active" id="tab-preview">Aperçu</button>
+        </div>
       </div>
 
       <button class="shade-btn" id="shade-search-btn" aria-label="Rechercher">
@@ -762,7 +772,6 @@
     let currentActiveFileId = null;
     let pendingTxtData = null;
 
-    // Éléments DOM
     const viewHome = document.getElementById('view-home');
     const viewRunner = document.getElementById('view-runner');
     const appFrame = document.getElementById('app-frame');
@@ -790,7 +799,6 @@
     const btnCloseSettings = document.getElementById('btn-close-settings');
     const toastMsg = document.getElementById('toast-msg');
 
-    // Recherche DOM
     const searchBar = document.getElementById('search-bar');
     const searchInput = document.getElementById('search-input');
     const searchCount = document.getElementById('search-count');
@@ -801,7 +809,6 @@
     let searchIndices = [];
     let currentSearchIndex = -1;
 
-    // Thème
     const currentTheme = localStorage.getItem('theme_preference') || 'auto';
     applyTheme(currentTheme);
 
@@ -823,7 +830,6 @@
       opt.addEventListener('click', () => applyTheme(opt.getAttribute('data-set-theme')));
     });
 
-    // Fichiers & Dossiers
     document.getElementById('btn-import-file').addEventListener('click', () => filePicker.click());
     document.getElementById('btn-import-folder').addEventListener('click', () => folderPicker.click());
 
@@ -922,7 +928,6 @@
       }
     });
 
-    // Bascule Coder / Aperçu
     tabCode.addEventListener('click', showCodeMode);
     tabPreview.addEventListener('click', () => {
       syncAndRender();
@@ -946,7 +951,6 @@
       closeSearchBar();
     }
 
-    // Actions barre d'outils
     btnSelectAll.addEventListener('click', () => {
       codeArea.focus();
       codeArea.select();
@@ -957,7 +961,7 @@
     btnCopy.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(codeArea.value);
-        showToast("Code copié dans le presse-papiers");
+        showToast("Code copié");
       } catch (err) {
         codeArea.select();
         document.execCommand('copy');
@@ -981,7 +985,6 @@
       }
     });
 
-    // Sauvegarde smartphone native (.html garanti)
     btnSave.addEventListener('click', async () => {
       syncAndRender();
       const code = codeArea.value;
@@ -992,21 +995,19 @@
 
       const file = new File([code], filename, { type: 'text/html;charset=utf-8' });
 
-      // Partage natif mobile (ouvre "Enregistrer dans Fichiers" sur iOS)
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
             files: [file],
             title: filename
           });
-          showToast("Fichier partagé / enregistré");
+          showToast("Fichier prêt à être enregistré");
           return;
         } catch (e) {
           if (e.name === 'AbortError') return;
         }
       }
 
-      // File System API
       if (window.showSaveFilePicker) {
         try {
           const handle = await window.showSaveFilePicker({
@@ -1026,7 +1027,6 @@
         }
       }
 
-      // Téléchargement propre
       const blob = new Blob([code], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1039,7 +1039,6 @@
       showToast("Fichier téléchargé en .html");
     });
 
-    // Synchronisation en direct
     let syncTimer = null;
     codeArea.addEventListener('input', () => {
       clearTimeout(syncTimer);
@@ -1077,7 +1076,6 @@
       appFrame.srcdoc = finalHtml;
     }
 
-    // Gestion Recherche
     shadeSearchBtn.addEventListener('click', () => {
       searchBar.classList.toggle('active');
       if (searchBar.classList.contains('active')) {
@@ -1094,9 +1092,9 @@
       searchCount.textContent = '0/0';
       searchIndices = [];
       currentSearchIndex = -1;
+      searchInput.blur();
     }
 
-    // Calcul sans perte de focus
     searchInput.addEventListener('input', () => {
       updateSearchIndices();
     });
@@ -1139,6 +1137,12 @@
     function navigateSearch(direction) {
       if (searchIndices.length === 0) return;
 
+      // 1. Fermer le clavier virtuel pour ne pas cacher le code
+      searchInput.blur();
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+
       currentSearchIndex += direction;
       if (currentSearchIndex >= searchIndices.length) currentSearchIndex = 0;
       if (currentSearchIndex < 0) currentSearchIndex = searchIndices.length - 1;
@@ -1148,11 +1152,10 @@
       const pos = searchIndices[currentSearchIndex];
       const queryLen = searchInput.value.length;
 
-      // Positionner le curseur et défiler jusqu'à l'occurrence
-      codeArea.focus();
+      // 2. Sélectionner dans le textarea sans déclencher de re-focus clavier
       codeArea.setSelectionRange(pos, pos + queryLen);
 
-      // Calcul approximatif du scroll
+      // 3. Défiler le textarea directement à la ligne cible
       const linesBefore = codeArea.value.substring(0, pos).split('\n').length;
       const lineHeight = 19;
       codeArea.scrollTop = Math.max(0, (linesBefore * lineHeight) - 100);
