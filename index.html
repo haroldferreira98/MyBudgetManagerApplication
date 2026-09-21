@@ -6,9 +6,8 @@
   <title>Web Studio Mobile</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    /* Thème Clair par défaut (Palette Material You Lilas / Pixel) */
     :root {
       --md-sys-color-background: #fdf8fd;
       --md-sys-color-surface: #f7f2fa;
@@ -23,13 +22,13 @@
       --md-sys-color-on-surface: #1d1b20;
       --md-sys-color-on-surface-variant: #49454f;
       --md-sys-color-outline-variant: #cac4d0;
-      --md-sys-floating-btn-bg: rgba(237, 231, 246, 0.85);
-      --md-sys-floating-btn-color: #21005d;
+      --shade-bg: rgba(247, 242, 250, 0.94);
+      --editor-bg: #1e1e24;
+      --editor-fg: #f5f2f8;
       --radius-card: 28px;
       --radius-pill: 9999px;
     }
 
-    /* Thème Sombre */
     [data-theme="dark"] {
       --md-sys-color-background: #141218;
       --md-sys-color-surface: #1d1b20;
@@ -44,11 +43,11 @@
       --md-sys-color-on-surface: #e6e1e5;
       --md-sys-color-on-surface-variant: #cac4d0;
       --md-sys-color-outline-variant: #49454f;
-      --md-sys-floating-btn-bg: rgba(43, 41, 48, 0.85);
-      --md-sys-floating-btn-color: #eaddff;
+      --shade-bg: rgba(29, 27, 32, 0.94);
+      --editor-bg: #0f0e13;
+      --editor-fg: #ece6f0;
     }
 
-    /* Mode Auto selon les préférences de l'appareil */
     @media (prefers-color-scheme: dark) {
       [data-theme="auto"] {
         --md-sys-color-background: #141218;
@@ -64,8 +63,9 @@
         --md-sys-color-on-surface: #e6e1e5;
         --md-sys-color-on-surface-variant: #cac4d0;
         --md-sys-color-outline-variant: #49454f;
-        --md-sys-floating-btn-bg: rgba(43, 41, 48, 0.85);
-        --md-sys-floating-btn-color: #eaddff;
+        --shade-bg: rgba(29, 27, 32, 0.94);
+        --editor-bg: #0f0e13;
+        --editor-fg: #ece6f0;
       }
     }
 
@@ -91,12 +91,30 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* En-tête avec puce et bouton paramètres */
+    /* Page Accueil */
+    #view-home {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 20px 16px 20px;
+      overflow-y: auto;
+      gap: 22px;
+    }
+
     .top-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       width: 100%;
+    }
+
+    .badge-chip {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 0.78rem;
+      font-weight: 500;
     }
 
     .icon-btn {
@@ -111,38 +129,17 @@
       border: none;
       cursor: pointer;
       font-size: 1.2rem;
-      transition: transform 0.15s ease, background 0.15s ease;
+      transition: transform 0.15s ease;
     }
 
     .icon-btn:active {
       transform: scale(0.92);
-      background: var(--md-sys-color-surface-container-high);
-    }
-
-    /* Vue Accueil */
-    #view-home {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 20px 20px 16px 20px;
-      overflow-y: auto;
-      gap: 22px;
-    }
-
-    .badge-chip {
-      background: var(--md-sys-color-primary-container);
-      color: var(--md-sys-color-on-primary-container);
-      padding: 6px 14px;
-      border-radius: var(--radius-pill);
-      font-size: 0.78rem;
-      font-weight: 500;
     }
 
     .header-text h1 {
       font-size: 2rem;
       font-weight: 700;
       letter-spacing: -0.5px;
-      color: var(--md-sys-color-on-surface);
     }
 
     .header-text p {
@@ -151,7 +148,6 @@
       margin-top: 4px;
     }
 
-    /* Grille d'actions */
     .action-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -167,12 +163,11 @@
       gap: 10px;
       cursor: pointer;
       border: 1px solid rgba(255,255,255,0.04);
-      transition: transform 0.15s ease, background-color 0.15s ease;
+      transition: transform 0.15s ease;
     }
 
     .action-card:active {
       transform: scale(0.97);
-      background: var(--md-sys-color-surface-container-high);
     }
 
     .action-icon {
@@ -190,7 +185,6 @@
     .action-card h3 {
       font-size: 0.98rem;
       font-weight: 600;
-      color: var(--md-sys-color-on-surface);
     }
 
     .action-card span {
@@ -199,7 +193,6 @@
       line-height: 1.2;
     }
 
-    /* Section Fichiers */
     .section-title {
       font-size: 0.8rem;
       text-transform: uppercase;
@@ -224,16 +217,12 @@
       align-items: center;
       gap: 14px;
       cursor: pointer;
-      transition: transform 0.15s ease, background 0.15s ease;
+      transition: transform 0.15s ease;
     }
 
     .file-card:active {
       transform: scale(0.98);
       background: var(--md-sys-color-primary-container);
-    }
-
-    .file-card-icon {
-      font-size: 22px;
     }
 
     .file-card-info {
@@ -244,7 +233,6 @@
     .file-card-name {
       font-weight: 600;
       font-size: 0.92rem;
-      color: var(--md-sys-color-on-surface);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -259,57 +247,188 @@
       margin-top: 2px;
     }
 
-    /* Runner Plein Écran */
+    /* Vue Runner / Editeur Plein Écran */
     #view-runner {
       position: fixed;
       inset: 0;
-      background: #ffffff;
+      background: var(--md-sys-color-background);
       z-index: 1000;
       display: none;
+      flex-direction: column;
     }
 
     #view-runner.open {
-      display: block;
+      display: flex;
     }
 
-    iframe#app-frame {
-      width: 100vw;
-      height: 100dvh;
-      border: none;
-      background: #fff;
-    }
-
-    /* Bouton retour en haut à gauche */
-    #runner-back-btn {
-      position: absolute;
-      top: calc(env(safe-area-inset-top, 0px) + 12px);
-      left: 14px;
+    /* Volet de notification supérieur intégré */
+    .runner-shade {
+      background: var(--shade-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       z-index: 1100;
-      width: 40px;
-      height: 40px;
+    }
+
+    .shade-back-btn {
+      width: 38px;
+      height: 38px;
       border-radius: var(--radius-pill);
-      background: var(--md-sys-floating-btn-bg);
-      color: var(--md-sys-floating-btn-color);
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: none;
       cursor: pointer;
-      transition: transform 0.15s ease, opacity 0.15s ease;
+      transition: transform 0.15s ease;
+      flex-shrink: 0;
     }
 
-    #runner-back-btn:active {
+    .shade-back-btn:active {
       transform: scale(0.9);
-      opacity: 0.8;
     }
 
-    #runner-back-btn svg {
+    .shade-back-btn svg {
       width: 20px;
       height: 20px;
       fill: currentColor;
+    }
+
+    /* Sélecteur Coder / Aperçu au milieu */
+    .shade-segmented {
+      display: flex;
+      background: var(--md-sys-color-surface-container-high);
+      border-radius: var(--radius-pill);
+      padding: 3px;
+      flex-shrink: 0;
+    }
+
+    .shade-tab {
+      border: none;
+      background: transparent;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface-variant);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    .shade-tab.active {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    /* Version à droite */
+    .shade-version {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface-variant);
+      flex-shrink: 0;
+      letter-spacing: 0.04em;
+    }
+
+    /* Corps du Runner (Conteneur Swappable) */
+    .runner-body {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    iframe#app-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #ffffff;
+      display: block;
+    }
+
+    /* Éditeur de code en direct */
+    #editor-pane {
+      position: absolute;
+      inset: 0;
+      background: var(--editor-bg);
+      display: none;
+      flex-direction: column;
+    }
+
+    #editor-pane.active {
+      display: flex;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 8px;
+    }
+
+    .editor-toolbar .meta-name {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: #b3b3b3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tool-btn {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .tool-btn:active {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .tool-btn-primary {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    }
+
+    #code-area {
+      flex: 1;
+      width: 100%;
+      padding: 16px;
+      border: none;
+      outline: none;
+      resize: none;
+      background: transparent;
+      color: var(--editor-fg);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      user-select: text;
+      -webkit-user-select: text;
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: auto;
     }
 
     /* Modales */
@@ -351,7 +470,6 @@
       line-height: 1.4;
     }
 
-    /* Choix du thème (Segmented control Material You) */
     .theme-options {
       display: flex;
       flex-direction: column;
@@ -369,7 +487,6 @@
       cursor: pointer;
       font-size: 0.95rem;
       font-weight: 500;
-      transition: background 0.15s ease;
     }
 
     .theme-option.active {
@@ -403,11 +520,34 @@
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
     }
+
+    /* Notification Toast discret pour confirmation de mise à jour */
+    #toast-msg {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--md-sys-color-on-surface);
+      color: var(--md-sys-color-surface);
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 0.8rem;
+      font-weight: 500;
+      z-index: 3000;
+      opacity: 0;
+      transition: all 0.25s ease;
+      pointer-events: none;
+    }
+
+    #toast-msg.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Inputs invisibles pour la sélection -->
+  <!-- Inputs cachés -->
   <input type="file" id="filePicker" style="display: none;" accept=".html,.htm,.txt,.js,.css">
   <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
 
@@ -441,26 +581,55 @@
 
     <div class="file-list" id="fileList">
       <div class="file-card" data-default="demo">
-        <div class="file-card-icon">✨</div>
         <div class="file-card-info">
-          <div class="file-card-name">Template Smartphone Demo</div>
+          <div class="file-card-name">✨ Template Smartphone Demo</div>
           <div class="file-card-path">Exemple préconfiguré plein écran</div>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Runner Plein Écran avec flèche de retour permanente -->
+  <!-- Runner / Éditeur Plein Écran -->
   <section id="view-runner">
-    <button id="runner-back-btn" aria-label="Retour au menu">
-      <svg viewBox="0 0 24 24">
-        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-      </svg>
-    </button>
-    <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
+    <!-- Volet de notification supérieur intégré -->
+    <header class="runner-shade">
+      <!-- Gauche : Flèche retour -->
+      <button class="shade-back-btn" id="shade-back-btn" aria-label="Retour au menu">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+      </button>
+
+      <!-- Milieu : Bascule Coder / Aperçu -->
+      <div class="shade-segmented">
+        <button class="shade-tab" id="tab-code">Coder</button>
+        <button class="shade-tab active" id="tab-preview">Aperçu</button>
+      </div>
+
+      <!-- Droite : Version de maj -->
+      <div class="shade-version">v1.4.0</div>
+    </header>
+
+    <!-- Zone principale -->
+    <div class="runner-body">
+      <!-- Vue Aperçu Live -->
+      <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
+
+      <!-- Vue Coder en Direct -->
+      <div id="editor-pane">
+        <div class="editor-toolbar">
+          <span class="meta-name" id="editor-file-name">index.html</span>
+          <div class="editor-actions">
+            <button class="tool-btn" id="btn-select-all">Tout sélectionner</button>
+            <button class="tool-btn tool-btn-primary" id="btn-apply-update">Mettre à jour</button>
+          </div>
+        </div>
+        <textarea id="code-area" spellcheck="false" placeholder="<!-- Tapez ou collez votre code HTML ici -->"></textarea>
+      </div>
+    </div>
   </section>
 
-  <!-- Modal Conversion TXT -->
+  <!-- Modale Conversion TXT -->
   <div class="dialog-backdrop" id="modal-convert">
     <div class="dialog">
       <h3>Format texte détecté</h3>
@@ -472,7 +641,7 @@
     </div>
   </div>
 
-  <!-- Modal Paramètres Thème -->
+  <!-- Modale Paramètres Thème -->
   <div class="dialog-backdrop" id="modal-settings">
     <div class="dialog">
       <h3>Paramètres d'affichage</h3>
@@ -481,15 +650,15 @@
       <div class="theme-options">
         <div class="theme-option" data-set-theme="light">
           <span>Clair</span>
-          <span class="theme-check">☀️</span>
+          <span>☀️</span>
         </div>
         <div class="theme-option" data-set-theme="dark">
           <span>Sombre</span>
-          <span class="theme-check">🌙</span>
+          <span>🌙</span>
         </div>
         <div class="theme-option" data-set-theme="auto">
           <span>Automatique (Système)</span>
-          <span class="theme-check">⚙️</span>
+          <span>⚙️</span>
         </div>
       </div>
 
@@ -499,18 +668,29 @@
     </div>
   </div>
 
+  <!-- Toast Notification -->
+  <div id="toast-msg">Mise à jour effectuée ✓</div>
+
   <script>
     const fileStore = new Map();
+    let currentActiveFileId = null;
     let pendingTxtData = null;
 
-    // Récupération des éléments DOM
+    // DOM Elements
     const viewHome = document.getElementById('view-home');
     const viewRunner = document.getElementById('view-runner');
     const appFrame = document.getElementById('app-frame');
-    const runnerBackBtn = document.getElementById('runner-back-btn');
+    const editorPane = document.getElementById('editor-pane');
+    const codeArea = document.getElementById('code-area');
+    const editorFileName = document.getElementById('editor-file-name');
     const fileList = document.getElementById('fileList');
     const filePicker = document.getElementById('filePicker');
     const folderPicker = document.getElementById('folderPicker');
+    const shadeBackBtn = document.getElementById('shade-back-btn');
+    const tabCode = document.getElementById('tab-code');
+    const tabPreview = document.getElementById('tab-preview');
+    const btnSelectAll = document.getElementById('btn-select-all');
+    const btnApplyUpdate = document.getElementById('btn-apply-update');
     const modalConvert = document.getElementById('modal-convert');
     const modalText = document.getElementById('modal-text');
     const btnModalCancel = document.getElementById('btn-modal-cancel');
@@ -518,8 +698,9 @@
     const modalSettings = document.getElementById('modal-settings');
     const btnOpenSettings = document.getElementById('btn-open-settings');
     const btnCloseSettings = document.getElementById('btn-close-settings');
+    const toastMsg = document.getElementById('toast-msg');
 
-    // Gestion du Thème (Clair / Sombre / Auto)
+    // Thème (Auto / Dark / Light)
     const currentTheme = localStorage.getItem('theme_preference') || 'auto';
     applyTheme(currentTheme);
 
@@ -536,21 +717,13 @@
       });
     }
 
-    btnOpenSettings.addEventListener('click', () => {
-      modalSettings.style.display = 'flex';
-    });
-
-    btnCloseSettings.addEventListener('click', () => {
-      modalSettings.style.display = 'none';
-    });
-
+    btnOpenSettings.addEventListener('click', () => modalSettings.style.display = 'flex');
+    btnCloseSettings.addEventListener('click', () => modalSettings.style.display = 'none');
     document.querySelectorAll('.theme-option').forEach(opt => {
-      opt.addEventListener('click', () => {
-        applyTheme(opt.getAttribute('data-set-theme'));
-      });
+      opt.addEventListener('click', () => applyTheme(opt.getAttribute('data-set-theme')));
     });
 
-    // Déclencheurs de sélecteurs de fichiers
+    // Fichiers & Dossiers
     document.getElementById('btn-import-file').addEventListener('click', () => filePicker.click());
     document.getElementById('btn-import-folder').addEventListener('click', () => folderPicker.click());
 
@@ -591,17 +764,13 @@
       const card = document.createElement('div');
       card.className = 'file-card';
       card.innerHTML = `
-        <div class="file-card-icon">${ext === 'html' || ext === 'htm' ? '📄' : (ext === 'txt' ? '📝' : '⚙️')}</div>
         <div class="file-card-info">
-          <div class="file-card-name">${file.name}</div>
+          <div class="file-card-name">${ext === 'html' || ext === 'htm' ? '📄' : (ext === 'txt' ? '📝' : '⚙️')} ${file.name}</div>
           <div class="file-card-path">${displayPath}</div>
         </div>
       `;
 
-      card.addEventListener('click', () => {
-        openFile(id);
-      });
-
+      card.addEventListener('click', () => openFile(id));
       fileList.appendChild(card);
 
       if (autoOpen) {
@@ -614,13 +783,19 @@
       if (!fileData) return;
 
       if (fileData.ext === 'txt') {
-        pendingTxtData = fileData;
-        modalText.innerHTML = `Le fichier <strong>${fileData.name}</strong> est en texte brut (.txt). Voulez-vous l'ouvrir et l'exécuter sous le format <strong>.html</strong> plein écran ?`;
+        pendingTxtData = { ...fileData, id };
+        modalText.innerHTML = `Le fichier <strong>${fileData.name}</strong> est en texte brut (.txt). Voulez-vous l'ouvrir et l'éditer sous le format <strong>.html</strong> ?`;
         modalConvert.style.display = 'flex';
         return;
       }
 
-      runHtmlApp(fileData.content);
+      currentActiveFileId = id;
+      editorFileName.textContent = fileData.name;
+      codeArea.value = fileData.content;
+      
+      showPreviewMode();
+      renderAppFrame(fileData.content);
+      viewRunner.classList.add('open');
     }
 
     btnModalCancel.addEventListener('click', () => {
@@ -630,16 +805,79 @@
 
     btnModalConfirm.addEventListener('click', () => {
       if (pendingTxtData) {
-        runHtmlApp(pendingTxtData.content);
+        currentActiveFileId = pendingTxtData.id;
+        editorFileName.textContent = pendingTxtData.name.replace(/\.txt$/i, '.html');
+        codeArea.value = pendingTxtData.content;
+
+        showPreviewMode();
+        renderAppFrame(pendingTxtData.content);
+        viewRunner.classList.add('open');
+
         modalConvert.style.display = 'none';
         pendingTxtData = null;
       }
     });
 
-    // Lancement de l'application smartphone
-    function runHtmlApp(rawHtml) {
-      appFrame.srcdoc = '';
+    // Bascule Coder / Aperçu
+    tabCode.addEventListener('click', showCodeMode);
+    tabPreview.addEventListener('click', () => {
+      // Synchronise avant de rebasculer sur l'aperçu
+      syncAndRender();
+      showPreviewMode();
+    });
 
+    function showCodeMode() {
+      tabCode.classList.add('active');
+      tabPreview.classList.remove('active');
+      editorPane.classList.add('active');
+      appFrame.style.display = 'none';
+    }
+
+    function showPreviewMode() {
+      tabPreview.classList.add('active');
+      tabCode.classList.remove('active');
+      editorPane.classList.remove('active');
+      appFrame.style.display = 'block';
+    }
+
+    // Tout sélectionner
+    btnSelectAll.addEventListener('click', () => {
+      codeArea.focus();
+      codeArea.select();
+      codeArea.setSelectionRange(0, 9999999);
+      showToast("Tout le code a été sélectionné");
+    });
+
+    // Mettre à jour manuellement
+    btnApplyUpdate.addEventListener('click', () => {
+      syncAndRender();
+      showToast("Fichier synchronisé & rendu à jour");
+    });
+
+    // Mise à jour automatique en temps réel à la frappe (Debounce)
+    let syncTimer = null;
+    codeArea.addEventListener('input', () => {
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => {
+        syncAndRender(false);
+      }, 400);
+    });
+
+    function syncAndRender(notify = true) {
+      if (!currentActiveFileId) return;
+      const updatedCode = codeArea.value;
+
+      // Met à jour la mémoire vive du fichier
+      const fileData = fileStore.get(currentActiveFileId);
+      if (fileData) {
+        fileData.content = updatedCode;
+      }
+
+      // Met à jour l'aperçu
+      renderAppFrame(updatedCode);
+    }
+
+    function renderAppFrame(rawHtml) {
       let finalHtml = rawHtml;
       if (!finalHtml.includes('viewport')) {
         finalHtml = `
@@ -654,68 +892,77 @@
           </html>
         `;
       }
-
       appFrame.srcdoc = finalHtml;
-      viewRunner.classList.add('open');
     }
 
-    // Bouton de retour en haut à gauche
-    runnerBackBtn.addEventListener('click', () => {
+    function showToast(text) {
+      toastMsg.textContent = text;
+      toastMsg.classList.add('show');
+      setTimeout(() => toastMsg.classList.remove('show'), 2000);
+    }
+
+    // Retour au menu
+    shadeBackBtn.addEventListener('click', () => {
       viewRunner.classList.remove('open');
       setTimeout(() => {
         appFrame.srcdoc = '';
       }, 150);
     });
 
-    // Démo initiale
-    document.querySelector('[data-default="demo"]').addEventListener('click', () => {
-      runHtmlApp(`
-        <!DOCTYPE html>
-        <html lang="fr">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-          <style>
-            body {
-              font-family: -apple-system, Roboto, sans-serif;
-              padding: 24px;
-              background: #fdf8fd;
-              color: #1d1b20;
-              margin: 0;
-              display: flex;
-              flex-direction: column;
-              height: 100dvh;
-              box-sizing: border-box;
-            }
-            .card {
-              background: #ede7f6;
-              padding: 24px;
-              border-radius: 24px;
-              margin-top: 50px;
-              text-align: center;
-            }
-            button {
-              margin-top: 20px;
-              background: #6750a4;
-              color: white;
-              border: none;
-              padding: 14px 24px;
-              border-radius: 9999px;
-              font-size: 1rem;
-              font-weight: bold;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <h2>🎉 Application Smartphone Active</h2>
-            <p>Utilise la mini flèche en haut à gauche pour revenir à l'accueil.</p>
-            <button onclick="alert('Interaction mobile OK !')">Tester un clic</button>
-          </div>
-        </body>
-        </html>
-      `);
+    // Projet de démo
+    const demoCard = document.querySelector('[data-default="demo"]');
+    const demoId = 'demo_project';
+    fileStore.set(demoId, {
+      name: 'Template Smartphone Demo',
+      path: 'Exemple préconfiguré plein écran',
+      content: `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <style>
+    body {
+      font-family: -apple-system, Roboto, sans-serif;
+      padding: 24px;
+      background: #fdf8fd;
+      color: #1d1b20;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      box-sizing: border-box;
+    }
+    .card {
+      background: #ede7f6;
+      padding: 24px;
+      border-radius: 24px;
+      margin-top: 30px;
+      text-align: center;
+    }
+    button {
+      margin-top: 20px;
+      background: #6750a4;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 9999px;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🎉 Runner Smartphone Actif</h2>
+    <p>Clique sur l'onglet <strong>Coder</strong> en haut pour voir et modifier ce code en direct !</p>
+    <button onclick="alert('Interaction mobile OK !')">Tester un clic</button>
+  </div>
+</body>
+</html>`,
+      ext: 'html'
     });
+
+    demoCard.addEventListener('click', () => openFile(demoId));
   </script>
 </body>
 </html>
