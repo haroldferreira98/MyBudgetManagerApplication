@@ -25,8 +25,10 @@
       --shade-bg: rgba(247, 242, 250, 0.94);
       --editor-bg: #1e1e24;
       --editor-fg: #f5f2f8;
-      --highlight-active-bg: #2196f3;
-      --highlight-active-color: #ffffff;
+      --hl-match: rgba(33, 150, 243, 0.2);
+      --hl-active: rgba(33, 150, 243, 0.85);
+      --hl-active-border: #1976d2;
+      --hl-active-text: #ffffff;
       --radius-card: 28px;
       --radius-pill: 9999px;
     }
@@ -48,8 +50,10 @@
       --shade-bg: rgba(29, 27, 32, 0.94);
       --editor-bg: #0f0e13;
       --editor-fg: #ece6f0;
-      --highlight-active-bg: #ffeb3b;
-      --highlight-active-color: #000000;
+      --hl-match: rgba(255, 235, 59, 0.25);
+      --hl-active: #ffeb3b;
+      --hl-active-border: #fbc02d;
+      --hl-active-text: #000000;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -70,8 +74,10 @@
         --shade-bg: rgba(29, 27, 32, 0.94);
         --editor-bg: #0f0e13;
         --editor-fg: #ece6f0;
-        --highlight-active-bg: #ffeb3b;
-        --highlight-active-color: #000000;
+        --hl-match: rgba(255, 235, 59, 0.25);
+        --hl-active: #ffeb3b;
+        --hl-active-border: #fbc02d;
+        --hl-active-text: #000000;
       }
     }
 
@@ -507,61 +513,47 @@
       color: var(--md-sys-color-on-primary);
     }
 
-    /* Zone de code avec surlignage haute visibilité */
+    /* Éditeur de code natif scrollable */
     .editor-container {
       flex: 1;
       position: relative;
-      overflow: hidden;
-    }
-
-    /* Calque de surlignage synchronisé */
-    #code-backdrop {
-      position: absolute;
-      inset: 0;
-      padding: 16px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      line-height: 1.5;
-      white-space: pre;
-      overflow: hidden;
-      color: transparent;
-      pointer-events: none;
+      overflow: auto;
       background: transparent;
-    }
-
-    .highlight-active {
-      background-color: var(--highlight-active-bg) !important;
-      color: var(--highlight-active-color) !important;
-      border-radius: 4px;
-      box-shadow: 0 0 0 2px var(--highlight-active-bg);
-      font-weight: 700;
-    }
-
-    .highlight-match {
-      background-color: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
+      padding: 16px;
+      -webkit-overflow-scrolling: touch;
     }
 
     #code-area {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      padding: 16px;
-      border: none;
+      min-height: 100%;
       outline: none;
-      resize: none;
-      background: transparent;
-      color: var(--editor-fg);
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.85rem;
-      line-height: 1.5;
+      line-height: 1.55;
+      color: var(--editor-fg);
+      white-space: pre;
+      word-break: normal;
+      overflow-wrap: normal;
       user-select: text;
       -webkit-user-select: text;
-      white-space: pre;
-      overflow-wrap: normal;
-      overflow: auto;
-      z-index: 2;
+      display: inline-block;
+      min-width: 100%;
+    }
+
+    /* Styles de surlignage épurés et chirurgicaux */
+    mark.code-match {
+      background-color: var(--hl-match);
+      color: inherit;
+      border-radius: 3px;
+      padding: 1px 0;
+    }
+
+    mark.code-match-active {
+      background-color: var(--hl-active);
+      color: var(--hl-active-text);
+      font-weight: 700;
+      border-radius: 4px;
+      padding: 1px 3px;
+      box-shadow: 0 0 0 1px var(--hl-active-border);
     }
 
     .dialog-backdrop {
@@ -686,7 +678,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-bar-right">
-        <span class="app-version-badge">v1.4.5</span>
+        <span class="app-version-badge">v1.4.6</span>
         <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
       </div>
     </div>
@@ -745,7 +737,7 @@
     <!-- Barre de recherche -->
     <div id="search-bar">
       <div class="search-input-box">
-        <input type="text" id="search-input" placeholder="Rechercher dans le code…" autocomplete="off">
+        <input type="text" id="search-input" placeholder="Rechercher dans le code…" autocomplete="off" autocapitalize="off">
         <span id="search-count">0/0</span>
       </div>
       <button class="search-nav-btn" id="search-prev" aria-label="Précédent">▲</button>
@@ -768,9 +760,8 @@
           </div>
         </div>
 
-        <div class="editor-container">
-          <div id="code-backdrop"></div>
-          <textarea id="code-area" spellcheck="false" placeholder="<!-- Code HTML -->"></textarea>
+        <div class="editor-container" id="editor-scroll-box">
+          <pre id="code-area" contenteditable="true" spellcheck="false"></pre>
         </div>
       </div>
     </div>
@@ -820,13 +811,14 @@
     const fileStore = new Map();
     let currentActiveFileId = null;
     let pendingTxtData = null;
+    let rawCodeBuffer = "";
 
     const viewHome = document.getElementById('view-home');
     const viewRunner = document.getElementById('view-runner');
     const appFrame = document.getElementById('app-frame');
     const editorPane = document.getElementById('editor-pane');
     const codeArea = document.getElementById('code-area');
-    const codeBackdrop = document.getElementById('code-backdrop');
+    const editorScrollBox = document.getElementById('editor-scroll-box');
     const editorFileName = document.getElementById('editor-file-name');
     const fileList = document.getElementById('fileList');
     const emptyStateMsg = document.getElementById('empty-state-msg');
@@ -856,14 +848,8 @@
     const searchNext = document.getElementById('search-next');
     const searchClose = document.getElementById('search-close');
 
-    let searchIndices = [];
-    let currentSearchIndex = -1;
-
-    // Synchronisation du scroll entre le textarea et le backdrop de surlignage
-    codeArea.addEventListener('scroll', () => {
-      codeBackdrop.scrollTop = codeArea.scrollTop;
-      codeBackdrop.scrollLeft = codeArea.scrollLeft;
-    });
+    let totalMatches = 0;
+    let currentMatchIndex = 0;
 
     const currentTheme = localStorage.getItem('theme_preference') || 'auto';
     applyTheme(currentTheme);
@@ -878,7 +864,6 @@
           opt.classList.remove('active');
         }
       });
-      renderSearchHighlights();
     }
 
     btnOpenSettings.addEventListener('click', () => modalSettings.style.display = 'flex');
@@ -956,8 +941,8 @@
 
       currentActiveFileId = id;
       editorFileName.textContent = fileData.name;
-      codeArea.value = fileData.content;
-      codeBackdrop.textContent = '';
+      rawCodeBuffer = fileData.content;
+      codeArea.textContent = rawCodeBuffer;
       
       showPreviewMode();
       renderAppFrame(fileData.content);
@@ -975,8 +960,8 @@
         const newHtmlName = pendingTxtData.name.replace(/\.txt$/i, '.html');
         editorFileName.textContent = newHtmlName;
         pendingTxtData.name = newHtmlName;
-        codeArea.value = pendingTxtData.content;
-        codeBackdrop.textContent = '';
+        rawCodeBuffer = pendingTxtData.content;
+        codeArea.textContent = rawCodeBuffer;
 
         showPreviewMode();
         renderAppFrame(pendingTxtData.content);
@@ -989,7 +974,7 @@
 
     tabCode.addEventListener('click', showCodeMode);
     tabPreview.addEventListener('click', () => {
-      syncAndRender();
+      syncFromDOM();
       showPreviewMode();
     });
 
@@ -1011,20 +996,21 @@
     }
 
     btnSelectAll.addEventListener('click', () => {
-      codeArea.focus();
-      codeArea.select();
-      codeArea.setSelectionRange(0, 9999999);
+      const range = document.createRange();
+      range.selectNodeContents(codeArea);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
       showToast("Code sélectionné");
     });
 
     btnCopy.addEventListener('click', async () => {
+      syncFromDOM();
       try {
-        await navigator.clipboard.writeText(codeArea.value);
+        await navigator.clipboard.writeText(rawCodeBuffer);
         showToast("Code copié");
       } catch (err) {
-        codeArea.select();
-        document.execCommand('copy');
-        showToast("Code copié");
+        showToast("Erreur de copie");
       }
     });
 
@@ -1032,12 +1018,8 @@
       try {
         const text = await navigator.clipboard.readText();
         if (text) {
-          const start = codeArea.selectionStart;
-          const end = codeArea.selectionEnd;
-          codeArea.value = codeArea.value.substring(0, start) + text + codeArea.value.substring(end);
-          codeArea.selectionStart = codeArea.selectionEnd = start + text.length;
-          syncAndRender();
-          renderSearchHighlights();
+          document.execCommand('insertText', false, text);
+          syncFromDOM();
           showToast("Code collé");
         }
       } catch (err) {
@@ -1046,8 +1028,8 @@
     });
 
     btnSave.addEventListener('click', async () => {
-      syncAndRender();
-      const code = codeArea.value;
+      syncFromDOM();
+      const code = rawCodeBuffer;
       let filename = editorFileName.textContent || 'application.html';
       if (!filename.toLowerCase().endsWith('.html') && !filename.toLowerCase().endsWith('.htm')) {
         filename += '.html';
@@ -1061,7 +1043,7 @@
             files: [file],
             title: filename
           });
-          showToast("Fichier prêt à être enregistré");
+          showToast("Fichier partagé / enregistré");
           return;
         } catch (e) {
           if (e.name === 'AbortError') return;
@@ -1099,26 +1081,24 @@
       showToast("Fichier téléchargé en .html");
     });
 
+    // Synchronisation depuis le code édité
     let syncTimer = null;
     codeArea.addEventListener('input', () => {
       clearTimeout(syncTimer);
       syncTimer = setTimeout(() => {
-        syncAndRender();
-        if (searchBar.classList.contains('active')) {
-          updateSearchIndices(false);
-        }
-      }, 400);
+        syncFromDOM();
+      }, 350);
     });
 
-    function syncAndRender() {
+    function syncFromDOM() {
       if (!currentActiveFileId) return;
-      const updatedCode = codeArea.value;
+      rawCodeBuffer = codeArea.innerText.replace(/\r\n/g, '\n');
 
       const fileData = fileStore.get(currentActiveFileId);
       if (fileData) {
-        fileData.content = updatedCode;
+        fileData.content = rawCodeBuffer;
       }
-      renderAppFrame(updatedCode);
+      renderAppFrame(rawCodeBuffer);
     }
 
     function renderAppFrame(rawHtml) {
@@ -1139,11 +1119,12 @@
       appFrame.srcdoc = finalHtml;
     }
 
+    // Gestion Recherche
     shadeSearchBtn.addEventListener('click', () => {
       searchBar.classList.toggle('active');
       if (searchBar.classList.contains('active')) {
         searchInput.focus();
-        if (searchInput.value) updateSearchIndices();
+        if (searchInput.value) performHighlight();
       } else {
         closeSearchBar();
       }
@@ -1155,14 +1136,20 @@
       searchBar.classList.remove('active');
       searchInput.value = '';
       searchCount.textContent = '0/0';
-      searchIndices = [];
-      currentSearchIndex = -1;
-      codeBackdrop.innerHTML = '';
+      totalMatches = 0;
+      currentMatchIndex = 0;
+      clearHighlights();
       searchInput.blur();
     }
 
+    function clearHighlights() {
+      // Restaure le texte brut sans balises mark
+      codeArea.textContent = rawCodeBuffer;
+    }
+
     searchInput.addEventListener('input', () => {
-      updateSearchIndices();
+      currentMatchIndex = 0;
+      performHighlight();
     });
 
     searchInput.addEventListener('keydown', (e) => {
@@ -1175,99 +1162,80 @@
     searchNext.addEventListener('click', () => navigateSearch(1));
     searchPrev.addEventListener('click', () => navigateSearch(-1));
 
-    function updateSearchIndices(resetIndex = true) {
-      const query = searchInput.value.toLowerCase();
-      searchIndices = [];
-
-      if (!query) {
-        searchCount.textContent = '0/0';
-        currentSearchIndex = -1;
-        codeBackdrop.innerHTML = '';
-        return;
-      }
-
-      const text = codeArea.value.toLowerCase();
-      let pos = text.indexOf(query);
-      while (pos !== -1) {
-        searchIndices.push(pos);
-        pos = text.indexOf(query, pos + query.length);
-      }
-
-      if (searchIndices.length > 0) {
-        if (resetIndex || currentSearchIndex < 0 || currentSearchIndex >= searchIndices.length) {
-          currentSearchIndex = 0;
-        }
-        searchCount.textContent = `${currentSearchIndex + 1}/${searchIndices.length}`;
-      } else {
-        currentSearchIndex = -1;
-        searchCount.textContent = '0/0';
-      }
-
-      renderSearchHighlights();
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
-    function renderSearchHighlights() {
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function performHighlight() {
       const query = searchInput.value;
-      if (!query || searchIndices.length === 0) {
-        codeBackdrop.innerHTML = '';
+      if (!query || query.length === 0) {
+        clearHighlights();
+        searchCount.textContent = '0/0';
+        totalMatches = 0;
         return;
       }
 
-      const fullText = codeArea.value;
-      const queryLen = query.length;
-      let html = '';
-      let lastPos = 0;
+      const regex = new RegExp(escapeRegExp(query), 'gi');
+      const matches = [...rawCodeBuffer.matchAll(regex)];
+      totalMatches = matches.length;
 
-      function escapeHtml(str) {
-        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      if (totalMatches === 0) {
+        clearHighlights();
+        searchCount.textContent = '0/0';
+        return;
       }
 
-      searchIndices.forEach((pos, idx) => {
-        html += escapeHtml(fullText.substring(lastPos, pos));
-        const matched = escapeHtml(fullText.substring(pos, pos + queryLen));
-        if (idx === currentSearchIndex) {
-          html += `<mark class="highlight-active">${matched}</mark>`;
+      if (currentMatchIndex >= totalMatches) currentMatchIndex = 0;
+      if (currentMatchIndex < 0) currentMatchIndex = totalMatches - 1;
+
+      searchCount.textContent = `${currentMatchIndex + 1}/${totalMatches}`;
+
+      // Construction du HTML annoté avec de vrais éléments <mark>
+      let html = '';
+      let lastIndex = 0;
+
+      matches.forEach((m, idx) => {
+        const start = m.index;
+        const end = start + m[0].length;
+
+        html += escapeHtml(rawCodeBuffer.substring(lastIndex, start));
+        const matchedText = escapeHtml(rawCodeBuffer.substring(start, end));
+
+        if (idx === currentMatchIndex) {
+          html += `<mark class="code-match code-match-active" id="active-search-match">${matchedText}</mark>`;
         } else {
-          html += `<mark class="highlight-match">${matched}</mark>`;
+          html += `<mark class="code-match">${matchedText}</mark>`;
         }
-        lastPos = pos + queryLen;
+
+        lastIndex = end;
       });
 
-      html += escapeHtml(fullText.substring(lastPos));
-      codeBackdrop.innerHTML = html;
+      html += escapeHtml(rawCodeBuffer.substring(lastIndex));
+      codeArea.innerHTML = html;
 
-      // Sync instantané des scrolls
-      codeBackdrop.scrollTop = codeArea.scrollTop;
-      codeBackdrop.scrollLeft = codeArea.scrollLeft;
+      // Défilement garanti au centre
+      const activeEl = document.getElementById('active-search-match');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }
     }
 
     function navigateSearch(direction) {
-      if (searchIndices.length === 0) return;
+      if (totalMatches === 0) return;
 
-      // 1. Fermer le clavier virtuel
+      // Fermeture immédiate du clavier
       searchInput.blur();
-      if (document.activeElement) {
-        document.activeElement.blur();
-      }
+      if (document.activeElement) document.activeElement.blur();
 
-      // 2. Déplacer l'index
-      currentSearchIndex += direction;
-      if (currentSearchIndex >= searchIndices.length) currentSearchIndex = 0;
-      if (currentSearchIndex < 0) currentSearchIndex = searchIndices.length - 1;
+      currentMatchIndex += direction;
+      if (currentMatchIndex >= totalMatches) currentMatchIndex = 0;
+      if (currentMatchIndex < 0) currentMatchIndex = totalMatches - 1;
 
-      searchCount.textContent = `${currentSearchIndex + 1}/${searchIndices.length}`;
-
-      // 3. Dessiner le surlignage couleur (Jaune ou Bleu selon thème)
-      renderSearchHighlights();
-
-      // 4. Dérouler le texte directement sur la ligne de l'occurrence
-      const pos = searchIndices[currentSearchIndex];
-      const linesBefore = codeArea.value.substring(0, pos).split('\n').length;
-      const lineHeight = 19;
-      const targetScroll = Math.max(0, (linesBefore * lineHeight) - 120);
-
-      codeArea.scrollTop = targetScroll;
-      codeBackdrop.scrollTop = targetScroll;
+      performHighlight();
     }
 
     function showToast(text) {
