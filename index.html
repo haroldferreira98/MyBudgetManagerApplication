@@ -216,42 +216,6 @@
       background: #fff;
     }
 
-    /* Zone tactile pour le Swipe retour */
-    #edge-swipe-zone {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 32px;
-      height: 100%;
-      z-index: 150;
-      touch-action: pan-y;
-    }
-
-    /* Indicateur visuel de swipe retour */
-    #back-pill {
-      position: absolute;
-      top: calc(env(safe-area-inset-top, 16px) + 12px);
-      left: 14px;
-      z-index: 200;
-      background: rgba(29, 27, 32, 0.65);
-      color: #fff;
-      padding: 8px 14px;
-      border-radius: var(--radius-pill);
-      font-size: 0.8rem;
-      font-weight: 500;
-      backdrop-filter: blur(12px);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      opacity: 0.85;
-      cursor: pointer;
-    }
-
-    #back-pill:active {
-      transform: scale(0.94);
-      opacity: 1;
-    }
-
     /* Modale Material You pour conversion .txt */
     .dialog-backdrop {
       display: none;
@@ -318,7 +282,7 @@
 </head>
 <body>
 
-  <!-- Hidden inputs -->
+  <!-- Inputs cachés -->
   <input type="file" id="filePicker" style="display: none;" accept=".html,.htm,.txt,.js,.css">
   <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
 
@@ -348,7 +312,6 @@
     <div class="section-title">Fichiers & Projets Smartphone</div>
 
     <div class="file-list" id="fileList">
-      <!-- Fichier de démo de base -->
       <div class="file-card" data-default="demo">
         <div class="file-card-icon">✨</div>
         <div class="file-card-info">
@@ -359,16 +322,8 @@
     </div>
   </main>
 
-  <!-- Vue Exécution Plein Écran -->
+  <!-- Vue Runner Plein Écran -->
   <section id="view-runner">
-    <div id="back-pill">
-      <span>‹</span>
-      <span>Menu (Swipe →)</span>
-    </div>
-
-    <!-- Zone de bordure pour capter le geste swipe -->
-    <div id="edge-swipe-zone"></div>
-
     <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
   </section>
 
@@ -385,29 +340,23 @@
   </div>
 
   <script>
-    // Stockage en mémoire des fichiers (résout le bug du re-clic sur mobile)
     const fileStore = new Map();
     let pendingTxtData = null;
 
-    // Éléments DOM
     const viewHome = document.getElementById('view-home');
     const viewRunner = document.getElementById('view-runner');
     const appFrame = document.getElementById('app-frame');
     const fileList = document.getElementById('fileList');
     const filePicker = document.getElementById('filePicker');
     const folderPicker = document.getElementById('folderPicker');
-    const backPill = document.getElementById('back-pill');
-    const edgeZone = document.getElementById('edge-swipe-zone');
     const modalConvert = document.getElementById('modal-convert');
     const modalText = document.getElementById('modal-text');
     const btnModalCancel = document.getElementById('btn-modal-cancel');
     const btnModalConfirm = document.getElementById('btn-modal-confirm');
 
-    // Déclencheurs boutons
     document.getElementById('btn-import-file').addEventListener('click', () => filePicker.click());
     document.getElementById('btn-import-folder').addEventListener('click', () => folderPicker.click());
 
-    // Import Fichier Unique
     filePicker.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -415,7 +364,6 @@
       filePicker.value = '';
     });
 
-    // Import Dossier
     folderPicker.addEventListener('change', async (e) => {
       const files = Array.from(e.target.files);
       if (!files.length) return;
@@ -424,7 +372,6 @@
       fileStore.clear();
 
       for (const file of files) {
-        // Filtrer les fichiers systèmes invisibles
         if (file.name.startsWith('.')) continue;
         const fullPath = file.webkitRelativePath || file.name;
         await registerAndHandleFile(file, fullPath, false);
@@ -432,7 +379,6 @@
       folderPicker.value = '';
     });
 
-    // Enregistrement et création des cartes
     async function registerAndHandleFile(file, displayPath, autoOpen = true) {
       const content = await file.text();
       const ext = file.name.split('.').pop().toLowerCase();
@@ -445,7 +391,6 @@
         ext: ext
       });
 
-      // Ajout de la carte visuelle dans la liste
       const card = document.createElement('div');
       card.className = 'file-card';
       card.innerHTML = `
@@ -467,7 +412,6 @@
       }
     }
 
-    // Gestion du clic sur un fichier
     function openFile(id) {
       const fileData = fileStore.get(id);
       if (!fileData) return;
@@ -482,7 +426,6 @@
       runHtmlApp(fileData.content);
     }
 
-    // Modal TXT Actions
     btnModalCancel.addEventListener('click', () => {
       modalConvert.style.display = 'none';
       pendingTxtData = null;
@@ -496,12 +439,9 @@
       }
     });
 
-    // Lancement de l'application dans l'iframe
     function runHtmlApp(rawHtml) {
-      // Nettoyer l'ancienne iframe
       appFrame.srcdoc = '';
 
-      // Injection du code avec balises viewport smartphone garanties
       let finalHtml = rawHtml;
       if (!finalHtml.includes('viewport')) {
         finalHtml = `
@@ -521,7 +461,6 @@
       viewRunner.classList.add('open');
     }
 
-    // Fermeture du plein écran
     function closeRunner() {
       viewRunner.classList.remove('open');
       setTimeout(() => {
@@ -529,9 +468,7 @@
       }, 300);
     }
 
-    backPill.addEventListener('click', closeRunner);
-
-    // Geste Swipe Horizontal vers la droite pour revenir au menu
+    // Gestion du swipe large vers la droite
     let touchStartX = 0;
     let touchStartY = 0;
     let isSwiping = false;
@@ -539,8 +476,11 @@
     window.addEventListener('touchstart', (e) => {
       if (!viewRunner.classList.contains('open')) return;
       const touch = e.touches[0];
-      // Démarre uniquement depuis le quart gauche de l'écran pour ne pas interférer avec les scrolls de l'app
-      if (touch.clientX < 80) {
+      
+      // Largeur de manœuvre élargie : 50% + 25% de 50% = 62.5% de l'écran
+      const maxAllowedStartX = window.innerWidth * 0.625;
+
+      if (touch.clientX < maxAllowedStartX) {
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
         isSwiping = true;
@@ -553,8 +493,9 @@
       const deltaX = touch.clientX - touchStartX;
       const deltaY = Math.abs(touch.clientY - touchStartY);
 
-      // Si le geste va vers la droite et n'est pas un scroll vertical
-      if (deltaX > 20 && deltaY < 40) {
+      // Mouvement horizontal dominant
+      if (deltaX > 15 && deltaY < deltaX * 0.75) {
+        viewRunner.style.transition = 'none';
         viewRunner.style.transform = `translateX(${deltaX}px)`;
       }
     }, { passive: true });
@@ -565,16 +506,17 @@
       const touch = e.changedTouches[0];
       const deltaX = touch.clientX - touchStartX;
 
-      if (deltaX > 110) {
-        viewRunner.style.transition = 'transform 0.2s cubic-bezier(0.2, 0, 0, 1)';
+      // Déclenchement de la fermeture si le geste est significatif
+      if (deltaX > 90) {
+        viewRunner.style.transition = 'transform 0.22s cubic-bezier(0.2, 0, 0, 1)';
         viewRunner.style.transform = 'translateX(100%)';
         setTimeout(() => {
           viewRunner.style.transition = '';
           viewRunner.style.transform = '';
           closeRunner();
-        }, 200);
+        }, 220);
       } else {
-        viewRunner.style.transition = 'transform 0.2s ease';
+        viewRunner.style.transition = 'transform 0.2s ease-out';
         viewRunner.style.transform = 'translateX(0)';
         setTimeout(() => {
           viewRunner.style.transition = '';
@@ -582,7 +524,6 @@
       }
     }, { passive: true });
 
-    // Clic démo de base
     document.querySelector('[data-default="demo"]').addEventListener('click', () => {
       runHtmlApp(`
         <!DOCTYPE html>
@@ -624,7 +565,7 @@
         <body>
           <div class="card">
             <h2>🎉 Application Smartphone Active</h2>
-            <p>Elle tourne en 100% plein écran.</p>
+            <p>100% de l'écran libéré sans éléments superposés.</p>
             <button onclick="alert('Interaction mobile OK !')">Tester un clic</button>
           </div>
         </body>
