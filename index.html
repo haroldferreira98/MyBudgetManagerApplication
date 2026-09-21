@@ -3,29 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Pixel Mobile Web Studio</title>
+  <title>Web Studio Mobile</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
+      --md-sys-color-background: #fdf8fd;
+      --md-sys-color-surface: #f7f2fa;
+      --md-sys-color-surface-container: #ede7f6;
+      --md-sys-color-surface-container-high: #e6e0ee;
       --md-sys-color-primary: #6750a4;
       --md-sys-color-on-primary: #ffffff;
       --md-sys-color-primary-container: #eaddff;
       --md-sys-color-on-primary-container: #21005d;
-      --md-sys-color-surface: #fdf8fd;
-      --md-sys-color-surface-container: #f3edf7;
-      --md-sys-color-surface-container-high: #ece6f0;
-      --md-sys-color-surface-container-highest: #e6e0e9;
+      --md-sys-color-secondary-container: #e8def8;
+      --md-sys-color-on-secondary-container: #1d192b;
+      --md-sys-color-outline-variant: #cac4d0;
       --md-sys-color-on-surface: #1d1b20;
       --md-sys-color-on-surface-variant: #49454f;
-      --md-sys-color-outline: #79747e;
-      --md-sys-color-outline-variant: #cac4d0;
-      --radius-sm: 12px;
-      --radius-md: 20px;
-      --radius-lg: 28px;
+      --radius-card: 28px;
       --radius-pill: 9999px;
-      --ease-m3: cubic-bezier(0.2, 0, 0, 1);
     }
 
     * {
@@ -33,815 +31,606 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
 
-    html, body {
-      width: 100%;
-      height: 100dvh;
-      overflow: hidden;
-      background: var(--md-sys-color-surface);
+    body {
+      font-family: 'Google Sans', sans-serif;
+      background-color: var(--md-sys-color-background);
       color: var(--md-sys-color-on-surface);
-      font-family: 'Google Sans Text', sans-serif;
-    }
-
-    /* Écrans de navigation */
-    .screen {
-      position: absolute;
-      inset: 0;
-      width: 100%;
       height: 100dvh;
+      width: 100vw;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      transition: transform 0.32s var(--ease-m3), opacity 0.25s ease;
-      background: var(--md-sys-color-surface);
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
+    /* Vue Menu Accueil */
     #view-home {
-      transform: translateX(0);
-      padding: max(16px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom)) 18px;
-      gap: 14px;
-      overflow-y: auto;
-    }
-
-    #view-editor {
-      transform: translateX(100%);
-      z-index: 20;
-    }
-
-    #view-runner {
-      transform: translateX(100%);
-      z-index: 40;
-      background: #000000;
-    }
-
-    .screen.active {
-      transform: translateX(0);
-    }
-
-    /* En-tête Google Pixel */
-    .top-header {
+      flex: 1;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 0 10px 0;
+      flex-direction: column;
+      padding: 20px 20px 16px 20px;
+      overflow-y: auto;
+      gap: 22px;
+      transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s ease;
     }
 
-    .pixel-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+    .badge-chip {
+      align-self: flex-start;
       background: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-on-primary-container);
       padding: 6px 14px;
       border-radius: var(--radius-pill);
       font-size: 0.78rem;
-      font-weight: 600;
+      font-weight: 500;
     }
 
-    .headline {
-      font-family: 'Google Sans', sans-serif;
-      font-size: 1.85rem;
+    .header-text h1 {
+      font-size: 2rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.5px;
+      color: var(--md-sys-color-on-surface);
     }
 
-    .subline {
-      font-size: 0.88rem;
+    .header-text p {
       color: var(--md-sys-color-on-surface-variant);
+      font-size: 0.95rem;
+      margin-top: 4px;
     }
 
-    /* Grille d'actions mobile */
-    .actions-grid {
+    /* Grille d'actions */
+    .action-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 14px;
     }
 
-    .m3-card-btn {
+    .action-card {
       background: var(--md-sys-color-surface-container);
-      border-radius: var(--radius-lg);
-      padding: 16px;
+      border-radius: var(--radius-card);
+      padding: 20px 16px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      min-height: 125px;
-      border: 1px solid transparent;
+      gap: 10px;
       cursor: pointer;
-      user-select: none;
+      border: 1px solid rgba(0,0,0,0.04);
+      transition: transform 0.15s ease, background-color 0.15s ease;
     }
 
-    .m3-card-btn:active {
-      background: var(--md-sys-color-surface-container-highest);
+    .action-card:active {
       transform: scale(0.97);
+      background: var(--md-sys-color-surface-container-high);
     }
 
-    .icon-chip {
-      width: 42px;
-      height: 42px;
-      border-radius: var(--radius-pill);
-      background: var(--md-sys-color-primary-container);
-      color: var(--md-sys-color-on-primary-container);
+    .action-icon {
+      font-size: 26px;
+      background: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.25rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
 
-    .card-label {
-      font-size: 0.95rem;
+    .action-card h3 {
+      font-size: 0.98rem;
       font-weight: 600;
+      color: var(--md-sys-color-on-surface);
     }
 
-    .card-desc {
-      font-size: 0.72rem;
+    .action-card span {
+      font-size: 0.78rem;
       color: var(--md-sys-color-on-surface-variant);
-      margin-top: 2px;
+      line-height: 1.2;
     }
 
-    /* Liste de fichiers / projets */
-    .section-label {
+    /* Section Fichiers */
+    .section-title {
       font-size: 0.8rem;
-      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--md-sys-color-on-surface-variant);
-      margin-top: 6px;
+      font-weight: 700;
+      margin-bottom: -10px;
     }
 
-    .file-stack {
+    .file-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      overflow-y: auto;
-      flex: 1;
+      gap: 10px;
+      padding-bottom: 20px;
     }
 
-    .file-item {
+    .file-card {
+      background: var(--md-sys-color-surface-container);
+      border-radius: 20px;
+      padding: 14px 16px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      background: var(--md-sys-color-surface-container-high);
-      border-radius: var(--radius-md);
+      gap: 14px;
       cursor: pointer;
+      border: 1px solid rgba(0,0,0,0.03);
+      transition: transform 0.15s ease, background 0.15s ease;
     }
 
-    .file-item:active {
-      background: var(--md-sys-color-surface-container-highest);
+    .file-card:active {
       transform: scale(0.98);
+      background: var(--md-sys-color-primary-container);
     }
 
-    .file-details {
+    .file-card-icon {
+      font-size: 22px;
+    }
+
+    .file-card-info {
       flex: 1;
       overflow: hidden;
     }
 
-    .file-name {
-      font-size: 0.9rem;
+    .file-card-name {
       font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--md-sys-color-on-surface);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .file-sub {
-      font-size: 0.72rem;
+    .file-card-path {
+      font-size: 0.75rem;
       color: var(--md-sys-color-on-surface-variant);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
     }
 
-    /* Éditeur Mobile */
-    .editor-navbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: max(12px, env(safe-area-inset-top)) 14px 10px 14px;
-      background: var(--md-sys-color-surface-container);
-      border-bottom: 1px solid var(--md-sys-color-outline-variant);
-    }
-
-    .nav-btn {
-      border: none;
-      background: var(--md-sys-color-surface-container-highest);
-      color: var(--md-sys-color-on-surface);
-      border-radius: var(--radius-pill);
-      padding: 8px 14px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .nav-btn.primary {
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-    }
-
-    .code-container {
-      flex: 1;
+    /* Vue Runner Plein Écran */
+    #view-runner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100dvh;
+      background: #ffffff;
+      z-index: 100;
       display: flex;
       flex-direction: column;
-      background: #121212;
-      position: relative;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
     }
 
-    .mobile-textarea {
-      flex: 1;
+    #view-runner.open {
+      transform: translateX(0);
+    }
+
+    iframe#app-frame {
       width: 100%;
       height: 100%;
       border: none;
-      outline: none;
-      padding: 16px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      line-height: 1.5;
-      background: #121212;
-      color: #e0e0e0;
-      resize: none;
-      white-space: pre;
+      background: #fff;
     }
 
-    /* Barre d'outils mobile au-dessus du clavier virtuel */
-    .mobile-keyboard-bar {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      background: #1e1e1e;
-      padding: 8px 12px max(8px, env(safe-area-inset-bottom)) 12px;
-      border-top: 1px solid #333;
-    }
-
-    .key-chip {
-      background: #2d2d2d;
-      color: #ffffff;
-      border: none;
-      border-radius: var(--radius-sm);
-      padding: 6px 12px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-
-    .key-chip:active {
-      background: var(--md-sys-color-primary);
-    }
-
-    /* Runner Plein Écran */
-    .fullscreen-frame {
-      width: 100%;
-      height: 100dvh;
-      border: none;
-      background: #ffffff;
-    }
-
-    /* Gesture & Touch Detection pour le Swipe Retour */
-    .gesture-edge-sensor {
+    /* Zone tactile pour le Swipe retour */
+    #edge-swipe-zone {
       position: absolute;
       top: 0;
       left: 0;
       width: 32px;
-      height: 100dvh;
-      z-index: 100;
+      height: 100%;
+      z-index: 150;
+      touch-action: pan-y;
     }
 
-    .swipe-pill-feedback {
+    /* Indicateur visuel de swipe retour */
+    #back-pill {
       position: absolute;
-      top: 50%;
-      left: 0;
-      width: 6px;
-      height: 64px;
-      background: var(--md-sys-color-primary);
-      border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
-      transform: translateY(-50%) scaleX(0);
-      transform-origin: left center;
-      transition: transform 0.15s ease;
-      z-index: 110;
-      pointer-events: none;
-    }
-
-    /* Bouton flottant de secours pour quitter */
-    .float-back-btn {
-      position: absolute;
-      top: max(14px, env(safe-area-inset-top));
+      top: calc(env(safe-area-inset-top, 16px) + 12px);
       left: 14px;
-      z-index: 90;
-      background: rgba(33, 0, 93, 0.75);
-      backdrop-filter: blur(10px);
-      color: #ffffff;
-      border: none;
-      border-radius: var(--radius-pill);
+      z-index: 200;
+      background: rgba(29, 27, 32, 0.65);
+      color: #fff;
       padding: 8px 14px;
+      border-radius: var(--radius-pill);
       font-size: 0.8rem;
-      font-weight: 600;
+      font-weight: 500;
+      backdrop-filter: blur(12px);
       display: flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      opacity: 0.85;
+      cursor: pointer;
     }
 
-    /* Dialog Material You (modal de conversion TXT) */
+    #back-pill:active {
+      transform: scale(0.94);
+      opacity: 1;
+    }
+
+    /* Modale Material You pour conversion .txt */
     .dialog-backdrop {
       display: none;
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(6px);
-      z-index: 200;
-      align-items: center;
+      backdrop-filter: blur(4px);
       justify-content: center;
+      align-items: center;
+      z-index: 500;
       padding: 24px;
     }
 
-    .dialog-backdrop.open {
-      display: flex;
-    }
-
-    .m3-dialog {
-      background: var(--md-sys-color-surface-container-high);
-      border-radius: var(--radius-lg);
+    .dialog {
+      background: var(--md-sys-color-surface);
+      border-radius: var(--radius-card);
       padding: 24px;
       width: 100%;
-      max-width: 320px;
+      max-width: 340px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      gap: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
-    .dialog-h {
-      font-size: 1.25rem;
+    .dialog h3 {
+      font-size: 1.15rem;
       font-weight: 700;
+      color: var(--md-sys-color-on-surface);
     }
 
-    .dialog-p {
-      font-size: 0.9rem;
-      line-height: 1.4;
+    .dialog p {
+      font-size: 0.88rem;
       color: var(--md-sys-color-on-surface-variant);
+      line-height: 1.4;
     }
 
-    .dialog-btns {
+    .dialog-buttons {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 8px;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 6px;
     }
 
-    .dialog-btn {
-      width: 100%;
-      padding: 12px;
+    .btn {
+      padding: 10px 18px;
       border-radius: var(--radius-pill);
       border: none;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
     }
 
-    .dialog-btn.primary {
+    .btn-tonal {
+      background: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+    }
+
+    .btn-filled {
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
     }
-
-    .dialog-btn.secondary {
-      background: var(--md-sys-color-surface-container-highest);
-      color: var(--md-sys-color-on-surface);
-    }
   </style>
 </head>
 <body>
 
-  <!-- Input masqués -->
-  <input type="file" id="filePicker" style="display: none;">
+  <!-- Hidden inputs -->
+  <input type="file" id="filePicker" style="display: none;" accept=".html,.htm,.txt,.js,.css">
   <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
 
-  <!-- ÉCRAN 1 : ACCUEIL -->
-  <section id="view-home" class="screen">
-    <div class="top-header">
-      <span class="pixel-badge">Google Pixel &bull; Material You</span>
+  <!-- Page d'accueil -->
+  <main id="view-home">
+    <div class="badge-chip">Google Pixel • Material You</div>
+
+    <div class="header-text">
+      <h1>Web Studio</h1>
+      <p>Éditeur & Runner 100% Smartphone</p>
     </div>
 
-    <div>
-      <h1 class="headline">Web Studio</h1>
-      <p class="subline">Éditeur & Runner 100% Smartphone</p>
-    </div>
-
-    <div class="actions-grid">
-      <div class="m3-card-btn" onclick="document.getElementById('filePicker').click()">
-        <div class="icon-chip">📄</div>
-        <div>
-          <div class="card-label">Importer fichier</div>
-          <div class="card-desc">HTML ou TXT</div>
-        </div>
+    <div class="action-grid">
+      <div class="action-card" id="btn-import-file">
+        <div class="action-icon">📄</div>
+        <h3>Importer fichier</h3>
+        <span>HTML ou TXT</span>
       </div>
 
-      <div class="m3-card-btn" onclick="document.getElementById('folderPicker').click()">
-        <div class="icon-chip">📁</div>
-        <div>
-          <div class="card-label">Importer dossier</div>
-          <div class="card-desc">Arborescence complète</div>
-        </div>
+      <div class="action-card" id="btn-import-folder">
+        <div class="action-icon">📁</div>
+        <h3>Importer dossier</h3>
+        <span>Arborescence complète</span>
       </div>
     </div>
 
-    <div class="section-label">Fichiers & Templates Smartphone</div>
-    <div class="file-stack" id="fileStack">
-      <div class="file-item" onclick="openBudgetTemplate()">
-        <div style="font-size: 1.4rem;">💰</div>
-        <div class="file-details">
-          <div class="file-name">Budget_Manager_Mobile.html</div>
-          <div class="file-sub">Template Mobile Pixel &bull; Prêt à lancer</div>
+    <div class="section-title">Fichiers & Projets Smartphone</div>
+
+    <div class="file-list" id="fileList">
+      <!-- Fichier de démo de base -->
+      <div class="file-card" data-default="demo">
+        <div class="file-card-icon">✨</div>
+        <div class="file-card-info">
+          <div class="file-card-name">Template Smartphone Demo</div>
+          <div class="file-card-path">Exemple préconfiguré plein écran</div>
         </div>
       </div>
     </div>
-  </section>
+  </main>
 
-  <!-- ÉCRAN 2 : ÉDITEUR DE CODE MOBILE -->
-  <section id="view-editor" class="screen">
-    <header class="editor-navbar">
-      <button class="nav-btn" onclick="goToHome()">‹ Menu</button>
-      <span id="activeDocTitle" style="font-size: 0.85rem; font-weight: 600; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">document.html</span>
-      <button class="nav-btn primary" onclick="runCurrentCodeInFullscreen()">▶ Lancer</button>
-    </header>
-
-    <div class="code-container">
-      <textarea id="mobileCodeArea" class="mobile-textarea" spellcheck="false" placeholder="<!-- Tape ton code HTML mobile ici -->"></textarea>
-      
-      <!-- Raccourcis pour clavier de smartphone -->
-      <div class="mobile-keyboard-bar">
-        <button class="key-chip" onclick="insertSymbol('<')">&lt;</button>
-        <button class="key-chip" onclick="insertSymbol('>')">&gt;</button>
-        <button class="key-chip" onclick="insertSymbol('/')">/</button>
-        <button class="key-chip" onclick="insertSymbol('=')">=</button>
-        <button class="key-chip" onclick="insertSymbol('&quot;')">&quot;</button>
-        <button class="key-chip" onclick="insertSymbol('{')">{</button>
-        <button class="key-chip" onclick="insertSymbol('}')">}</button>
-        <button class="key-chip" onclick="insertSymbol(';')">;</button>
-        <button class="key-chip" onclick="insertSymbol('class=&quot;&quot;')">class</button>
-      </div>
+  <!-- Vue Exécution Plein Écran -->
+  <section id="view-runner">
+    <div id="back-pill">
+      <span>‹</span>
+      <span>Menu (Swipe →)</span>
     </div>
+
+    <!-- Zone de bordure pour capter le geste swipe -->
+    <div id="edge-swipe-zone"></div>
+
+    <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
   </section>
 
-  <!-- ÉCRAN 3 : RUNNER PLEIN ÉCRAN POUR APPLICATION MOBILE -->
-  <section id="view-runner" class="screen">
-    <div class="gesture-edge-sensor" id="edgeSensor"></div>
-    <div class="swipe-pill-feedback" id="swipeFeedback"></div>
-
-    <button class="float-back-btn" onclick="exitFullscreenToEditor()">
-      <span>‹</span> Retour Éditeur
-    </button>
-
-    <iframe id="mobileRunnerFrame" class="fullscreen-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin"></iframe>
-  </section>
-
-  <!-- DIALOG : Conversion de fichier .txt -->
-  <div class="dialog-backdrop" id="txtConversionDialog">
-    <div class="m3-dialog">
-      <div class="dialog-h">Ouvrir le fichier</div>
-      <div class="dialog-p" id="dialogTxtMessage">
-        Le fichier est au format brut (.txt). Voulez-vous le convertir et l'éditer en tant qu'application <strong>HTML pour smartphone</strong> ?
-      </div>
-      <div class="dialog-btns">
-        <button class="dialog-btn primary" onclick="confirmTxtToHtml()">Ouvrir en .html</button>
-        <button class="dialog-btn secondary" onclick="closeTxtDialog()">Annuler</button>
+  <!-- Boîte de dialogue conversion TXT -->
+  <div class="dialog-backdrop" id="modal-convert">
+    <div class="dialog">
+      <h3>Format texte détecté</h3>
+      <p id="modal-text">Ce fichier texte brut (.txt) va être converti pour s'exécuter comme une application <strong>HTML</strong> smartphone.</p>
+      <div class="dialog-buttons">
+        <button class="btn btn-tonal" id="btn-modal-cancel">Annuler</button>
+        <button class="btn btn-filled" id="btn-modal-confirm">Ouvrir en .html</button>
       </div>
     </div>
   </div>
 
   <script>
-    // État global
-    const appState = {
-      currentFileName: 'Budget_Manager_Mobile.html',
-      rawCode: '',
-      pendingTxtFile: null
-    };
+    // Stockage en mémoire des fichiers (résout le bug du re-clic sur mobile)
+    const fileStore = new Map();
+    let pendingTxtData = null;
 
-    // Références DOM
+    // Éléments DOM
     const viewHome = document.getElementById('view-home');
-    const viewEditor = document.getElementById('view-editor');
     const viewRunner = document.getElementById('view-runner');
-    const mobileCodeArea = document.getElementById('mobileCodeArea');
-    const mobileRunnerFrame = document.getElementById('mobileRunnerFrame');
-    const activeDocTitle = document.getElementById('activeDocTitle');
-    const fileStack = document.getElementById('fileStack');
+    const appFrame = document.getElementById('app-frame');
+    const fileList = document.getElementById('fileList');
     const filePicker = document.getElementById('filePicker');
     const folderPicker = document.getElementById('folderPicker');
-    const txtDialog = document.getElementById('txtConversionDialog');
-    const dialogTxtMsg = document.getElementById('dialogTxtMessage');
-    const edgeSensor = document.getElementById('edgeSensor');
-    const swipeFeedback = document.getElementById('swipeFeedback');
+    const backPill = document.getElementById('back-pill');
+    const edgeZone = document.getElementById('edge-swipe-zone');
+    const modalConvert = document.getElementById('modal-convert');
+    const modalText = document.getElementById('modal-text');
+    const btnModalCancel = document.getElementById('btn-modal-cancel');
+    const btnModalConfirm = document.getElementById('btn-modal-confirm');
 
-    // Template par défaut : Une vraie app smartphone en HTML/CSS/JS (DA Pixel Budget)
-    const DEFAULT_SMARTPHONE_APP = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Budget Manager</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Text:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #fdf8fd;
-      --card-bg: #ede7f6;
-      --primary: #6750a4;
-      --primary-cont: #eaddff;
-      --on-primary-cont: #21005d;
-      --text: #1d1b20;
-      --muted: #49454f;
-    }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: 'Google Sans Text', sans-serif;
-      min-height: 100dvh;
-      padding: max(20px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom)) 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .header {
-      font-family: 'Google Sans', sans-serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-    .balance-card {
-      background: var(--primary-cont);
-      color: var(--on-primary-cont);
-      border-radius: 28px;
-      padding: 24px;
-      box-shadow: 0 4px 16px rgba(103, 80, 164, 0.15);
-    }
-    .balance-sub {
-      font-size: 0.85rem;
-      font-weight: 500;
-      opacity: 0.85;
-    }
-    .balance-amount {
-      font-family: 'Google Sans', sans-serif;
-      font-size: 2.3rem;
-      font-weight: 700;
-      margin-top: 6px;
-    }
-    .action-btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 16px;
-      border-radius: 9999px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(103, 80, 164, 0.25);
-    }
-    .action-btn:active {
-      transform: scale(0.98);
-      filter: brightness(0.95);
-    }
-    .list-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-      margin-top: 8px;
-    }
-    .tx-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex: 1;
-      overflow-y: auto;
-    }
-    .tx-item {
-      background: var(--card-bg);
-      border-radius: 18px;
-      padding: 14px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 500;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">Mon Budget Pixel</div>
+    // Déclencheurs boutons
+    document.getElementById('btn-import-file').addEventListener('click', () => filePicker.click());
+    document.getElementById('btn-import-folder').addEventListener('click', () => folderPicker.click());
 
-  <div class="balance-card">
-    <div class="balance-sub">Solde restant</div>
-    <div class="balance-amount" id="balanceDisplay">1 840,50 €</div>
-  </div>
-
-  <button class="action-btn" onclick="addExpense()">+ Ajouter 15 € (Café Pixel)</button>
-
-  <div class="list-title">Dernières opérations</div>
-  <div class="tx-list" id="transactions">
-    <div class="tx-item">
-      <span>Abonnement Google One</span>
-      <span style="color: #ba1a1a;">- 9,99 €</span>
-    </div>
-    <div class="tx-item">
-      <span>Courses Monoprix</span>
-      <span style="color: #ba1a1a;">- 34,20 €</span>
-    </div>
-  </div>
-
-  <script>
-    let solde = 1840.50;
-    function addExpense() {
-      solde -= 15.00;
-      document.getElementById('balanceDisplay').textContent = solde.toFixed(2).replace('.', ',') + ' €';
-      const el = document.createElement('div');
-      el.className = 'tx-item';
-      el.innerHTML = '<span>Café Pixel</span><span style="color: #ba1a1a;">- 15,00 €</span>';
-      document.getElementById('transactions').prepend(el);
-    }
-  <\/script>
-</body>
-</html>`;
-
-    // 1. Navigation entre écrans
-    function goToHome() {
-      viewHome.classList.add('active');
-      viewEditor.classList.remove('active');
-      viewRunner.classList.remove('active');
-    }
-
-    function goToEditor() {
-      viewHome.classList.remove('active');
-      viewEditor.classList.add('active');
-      viewRunner.classList.remove('active');
-    }
-
-    function runCurrentCodeInFullscreen() {
-      appState.rawCode = mobileCodeArea.value;
-      
-      // Injection de la protection mobile si la balise viewport manque dans le code de l'utilisateur
-      let code = appState.rawCode;
-      if (!code.includes('viewport')) {
-        code = `<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">\n` + code;
-      }
-
-      mobileRunnerFrame.srcdoc = code;
-      viewRunner.classList.add('active');
-    }
-
-    function exitFullscreenToEditor() {
-      viewRunner.classList.remove('active');
-      setTimeout(() => {
-        mobileRunnerFrame.srcdoc = '';
-      }, 300);
-    }
-
-    // 2. Gestion de l'import de fichier unique
-    filePicker.addEventListener('change', (e) => {
+    // Import Fichier Unique
+    filePicker.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      processFile(file);
+      await registerAndHandleFile(file, file.name);
       filePicker.value = '';
     });
 
-    // 3. Gestion de l'import de dossier
-    folderPicker.addEventListener('change', (e) => {
+    // Import Dossier
+    folderPicker.addEventListener('change', async (e) => {
       const files = Array.from(e.target.files);
       if (!files.length) return;
 
-      fileStack.innerHTML = '';
-      files.forEach((file) => {
-        const item = document.createElement('div');
-        item.className = 'file-item';
-        item.innerHTML = `
-          <div style="font-size: 1.3rem;">📄</div>
-          <div class="file-details">
-            <div class="file-name">${file.name}</div>
-            <div class="file-sub">${file.webkitRelativePath || 'Dossier'}</div>
-          </div>
-        `;
-        item.onclick = () => processFile(file);
-        fileStack.appendChild(item);
-      });
+      fileList.innerHTML = '';
+      fileStore.clear();
 
-      // Lance automatiquement le premier HTML pertinent ou ouvre l'éditeur
-      const indexFile = files.find(f => f.name.toLowerCase() === 'index.html') 
-                     || files.find(f => f.name.endsWith('.html') || f.name.endsWith('.txt')) 
-                     || files[0];
-
-      if (indexFile) processFile(indexFile);
+      for (const file of files) {
+        // Filtrer les fichiers systèmes invisibles
+        if (file.name.startsWith('.')) continue;
+        const fullPath = file.webkitRelativePath || file.name;
+        await registerAndHandleFile(file, fullPath, false);
+      }
       folderPicker.value = '';
     });
 
-    // 4. Traitement & dialogue .txt -> .html
-    function processFile(file) {
-      const extension = file.name.split('.').pop().toLowerCase();
+    // Enregistrement et création des cartes
+    async function registerAndHandleFile(file, displayPath, autoOpen = true) {
+      const content = await file.text();
+      const ext = file.name.split('.').pop().toLowerCase();
+      const id = 'file_' + Math.random().toString(36).substr(2, 9);
 
-      if (extension === 'txt') {
-        appState.pendingTxtFile = file;
-        dialogTxtMsg.innerHTML = `Le fichier <strong>${file.name}</strong> est un document texte brut. Voulez-vous le transformer et l'ouvrir en tant que <strong>code HTML pour smartphone</strong> ?`;
-        txtDialog.classList.add('open');
+      fileStore.set(id, {
+        name: file.name,
+        path: displayPath,
+        content: content,
+        ext: ext
+      });
+
+      // Ajout de la carte visuelle dans la liste
+      const card = document.createElement('div');
+      card.className = 'file-card';
+      card.innerHTML = `
+        <div class="file-card-icon">${ext === 'html' || ext === 'htm' ? '📄' : (ext === 'txt' ? '📝' : '⚙️')}</div>
+        <div class="file-card-info">
+          <div class="file-card-name">${file.name}</div>
+          <div class="file-card-path">${displayPath}</div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => {
+        openFile(id);
+      });
+
+      fileList.appendChild(card);
+
+      if (autoOpen) {
+        openFile(id);
+      }
+    }
+
+    // Gestion du clic sur un fichier
+    function openFile(id) {
+      const fileData = fileStore.get(id);
+      if (!fileData) return;
+
+      if (fileData.ext === 'txt') {
+        pendingTxtData = fileData;
+        modalText.innerHTML = `Le fichier <strong>${fileData.name}</strong> est en texte brut (.txt). Voulez-vous l'ouvrir et l'exécuter sous le format <strong>.html</strong> plein écran ?`;
+        modalConvert.style.display = 'flex';
         return;
       }
 
-      readFileContent(file, file.name);
+      runHtmlApp(fileData.content);
     }
 
-    function confirmTxtToHtml() {
-      if (!appState.pendingTxtFile) return;
-      const htmlName = appState.pendingTxtFile.name.replace(/\.txt$/i, '.html');
-      readFileContent(appState.pendingTxtFile, htmlName);
-      closeTxtDialog();
+    // Modal TXT Actions
+    btnModalCancel.addEventListener('click', () => {
+      modalConvert.style.display = 'none';
+      pendingTxtData = null;
+    });
+
+    btnModalConfirm.addEventListener('click', () => {
+      if (pendingTxtData) {
+        runHtmlApp(pendingTxtData.content);
+        modalConvert.style.display = 'none';
+        pendingTxtData = null;
+      }
+    });
+
+    // Lancement de l'application dans l'iframe
+    function runHtmlApp(rawHtml) {
+      // Nettoyer l'ancienne iframe
+      appFrame.srcdoc = '';
+
+      // Injection du code avec balises viewport smartphone garanties
+      let finalHtml = rawHtml;
+      if (!finalHtml.includes('viewport')) {
+        finalHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+          </head>
+          <body>
+            ${rawHtml}
+          </body>
+          </html>
+        `;
+      }
+
+      appFrame.srcdoc = finalHtml;
+      viewRunner.classList.add('open');
     }
 
-    function closeTxtDialog() {
-      txtDialog.classList.remove('open');
-      appState.pendingTxtFile = null;
+    // Fermeture du plein écran
+    function closeRunner() {
+      viewRunner.classList.remove('open');
+      setTimeout(() => {
+        appFrame.srcdoc = '';
+      }, 300);
     }
 
-    function readFileContent(file, targetTitle) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        appState.rawCode = e.target.result;
-        appState.currentFileName = targetTitle;
-        activeDocTitle.textContent = targetTitle;
-        mobileCodeArea.value = appState.rawCode;
-        
-        // Ouvre directement en plein écran comme demandé
-        runCurrentCodeInFullscreen();
-      };
-      reader.readAsText(file);
-    }
+    backPill.addEventListener('click', closeRunner);
 
-    // 5. Template Budget démo
-    function openBudgetTemplate() {
-      appState.rawCode = DEFAULT_SMARTPHONE_APP;
-      appState.currentFileName = 'Budget_Manager_Mobile.html';
-      activeDocTitle.textContent = appState.currentFileName;
-      mobileCodeArea.value = appState.rawCode;
-      runCurrentCodeInFullscreen();
-    }
-
-    // 6. Raccourcis pour clavier de smartphone
-    function insertSymbol(sym) {
-      const start = mobileCodeArea.selectionStart;
-      const end = mobileCodeArea.selectionEnd;
-      const val = mobileCodeArea.value;
-      mobileCodeArea.value = val.substring(0, start) + sym + val.substring(end);
-      mobileCodeArea.selectionStart = mobileCodeArea.selectionEnd = start + sym.length;
-      mobileCodeArea.focus();
-    }
-
-    // 7. GESTION DU SWIPE HORIZONTAL VERS LA DROITE
+    // Geste Swipe Horizontal vers la droite pour revenir au menu
     let touchStartX = 0;
     let touchStartY = 0;
-    let trackingSwipe = false;
+    let isSwiping = false;
 
-    edgeSensor.addEventListener('touchstart', (e) => {
+    window.addEventListener('touchstart', (e) => {
+      if (!viewRunner.classList.contains('open')) return;
       const touch = e.touches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-      if (touchStartX <= 40) {
-        trackingSwipe = true;
+      // Démarre uniquement depuis le quart gauche de l'écran pour ne pas interférer avec les scrolls de l'app
+      if (touch.clientX < 80) {
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        isSwiping = true;
       }
     }, { passive: true });
 
-    edgeSensor.addEventListener('touchmove', (e) => {
-      if (!trackingSwipe) return;
+    window.addEventListener('touchmove', (e) => {
+      if (!isSwiping) return;
       const touch = e.touches[0];
-      const diffX = touch.clientX - touchStartX;
-      const diffY = Math.abs(touch.clientY - touchStartY);
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = Math.abs(touch.clientY - touchStartY);
 
-      if (diffX > 0 && diffX > diffY) {
-        const progress = Math.min(diffX / 110, 1);
-        swipeFeedback.style.transform = `translateY(-50%) scaleX(${progress * 4})`;
+      // Si le geste va vers la droite et n'est pas un scroll vertical
+      if (deltaX > 20 && deltaY < 40) {
+        viewRunner.style.transform = `translateX(${deltaX}px)`;
       }
     }, { passive: true });
 
-    edgeSensor.addEventListener('touchend', (e) => {
-      if (!trackingSwipe) return;
+    window.addEventListener('touchend', (e) => {
+      if (!isSwiping) return;
+      isSwiping = false;
       const touch = e.changedTouches[0];
-      const diffX = touch.clientX - touchStartX;
-      const diffY = Math.abs(touch.clientY - touchStartY);
+      const deltaX = touch.clientX - touchStartX;
 
-      if (diffX > 75 && diffX > diffY) {
-        // Retour direct au menu
-        exitFullscreenToEditor();
-        goToHome();
+      if (deltaX > 110) {
+        viewRunner.style.transition = 'transform 0.2s cubic-bezier(0.2, 0, 0, 1)';
+        viewRunner.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          viewRunner.style.transition = '';
+          viewRunner.style.transform = '';
+          closeRunner();
+        }, 200);
+      } else {
+        viewRunner.style.transition = 'transform 0.2s ease';
+        viewRunner.style.transform = 'translateX(0)';
+        setTimeout(() => {
+          viewRunner.style.transition = '';
+        }, 200);
       }
-
-      swipeFeedback.style.transform = `translateY(-50%) scaleX(0)`;
-      trackingSwipe = false;
     }, { passive: true });
 
-    // Initialisation
-    mobileCodeArea.value = DEFAULT_SMARTPHONE_APP;
+    // Clic démo de base
+    document.querySelector('[data-default="demo"]').addEventListener('click', () => {
+      runHtmlApp(`
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+          <style>
+            body {
+              font-family: -apple-system, Roboto, sans-serif;
+              padding: 24px;
+              background: #fdf8fd;
+              color: #1d1b20;
+              margin: 0;
+              display: flex;
+              flex-direction: column;
+              height: 100dvh;
+              box-sizing: border-box;
+            }
+            .card {
+              background: #ede7f6;
+              padding: 24px;
+              border-radius: 24px;
+              margin-top: 50px;
+              text-align: center;
+            }
+            button {
+              margin-top: 20px;
+              background: #6750a4;
+              color: white;
+              border: none;
+              padding: 14px 24px;
+              border-radius: 9999px;
+              font-size: 1rem;
+              font-weight: bold;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h2>🎉 Application Smartphone Active</h2>
+            <p>Elle tourne en 100% plein écran.</p>
+            <button onclick="alert('Interaction mobile OK !')">Tester un clic</button>
+          </div>
+        </body>
+        </html>
+      `);
+    });
   </script>
 </body>
 </html>
