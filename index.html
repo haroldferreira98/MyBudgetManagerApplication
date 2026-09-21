@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="auto">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Web Studio Mobile</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
+    /* Thème Clair par défaut (Palette Material You Lilas / Pixel) */
     :root {
       --md-sys-color-background: #fdf8fd;
       --md-sys-color-surface: #f7f2fa;
@@ -19,11 +20,53 @@
       --md-sys-color-on-primary-container: #21005d;
       --md-sys-color-secondary-container: #e8def8;
       --md-sys-color-on-secondary-container: #1d192b;
-      --md-sys-color-outline-variant: #cac4d0;
       --md-sys-color-on-surface: #1d1b20;
       --md-sys-color-on-surface-variant: #49454f;
+      --md-sys-color-outline-variant: #cac4d0;
+      --md-sys-floating-btn-bg: rgba(237, 231, 246, 0.85);
+      --md-sys-floating-btn-color: #21005d;
       --radius-card: 28px;
       --radius-pill: 9999px;
+    }
+
+    /* Thème Sombre */
+    [data-theme="dark"] {
+      --md-sys-color-background: #141218;
+      --md-sys-color-surface: #1d1b20;
+      --md-sys-color-surface-container: #2b2930;
+      --md-sys-color-surface-container-high: #36343b;
+      --md-sys-color-primary: #d0bcff;
+      --md-sys-color-on-primary: #381e72;
+      --md-sys-color-primary-container: #4f378b;
+      --md-sys-color-on-primary-container: #eaddff;
+      --md-sys-color-secondary-container: #4a4458;
+      --md-sys-color-on-secondary-container: #e8def8;
+      --md-sys-color-on-surface: #e6e1e5;
+      --md-sys-color-on-surface-variant: #cac4d0;
+      --md-sys-color-outline-variant: #49454f;
+      --md-sys-floating-btn-bg: rgba(43, 41, 48, 0.85);
+      --md-sys-floating-btn-color: #eaddff;
+    }
+
+    /* Mode Auto selon les préférences de l'appareil */
+    @media (prefers-color-scheme: dark) {
+      [data-theme="auto"] {
+        --md-sys-color-background: #141218;
+        --md-sys-color-surface: #1d1b20;
+        --md-sys-color-surface-container: #2b2930;
+        --md-sys-color-surface-container-high: #36343b;
+        --md-sys-color-primary: #d0bcff;
+        --md-sys-color-on-primary: #381e72;
+        --md-sys-color-primary-container: #4f378b;
+        --md-sys-color-on-primary-container: #eaddff;
+        --md-sys-color-secondary-container: #4a4458;
+        --md-sys-color-on-secondary-container: #e8def8;
+        --md-sys-color-on-surface: #e6e1e5;
+        --md-sys-color-on-surface-variant: #cac4d0;
+        --md-sys-color-outline-variant: #49454f;
+        --md-sys-floating-btn-bg: rgba(43, 41, 48, 0.85);
+        --md-sys-floating-btn-color: #eaddff;
+      }
     }
 
     * {
@@ -45,9 +88,38 @@
       flex-direction: column;
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* Vue Menu Accueil */
+    /* En-tête avec puce et bouton paramètres */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-pill);
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.92);
+      background: var(--md-sys-color-surface-container-high);
+    }
+
+    /* Vue Accueil */
     #view-home {
       flex: 1;
       display: flex;
@@ -55,11 +127,9 @@
       padding: 20px 20px 16px 20px;
       overflow-y: auto;
       gap: 22px;
-      transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s ease;
     }
 
     .badge-chip {
-      align-self: flex-start;
       background: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-on-primary-container);
       padding: 6px 14px;
@@ -96,7 +166,7 @@
       flex-direction: column;
       gap: 10px;
       cursor: pointer;
-      border: 1px solid rgba(0,0,0,0.04);
+      border: 1px solid rgba(255,255,255,0.04);
       transition: transform 0.15s ease, background-color 0.15s ease;
     }
 
@@ -106,8 +176,8 @@
     }
 
     .action-icon {
-      font-size: 26px;
-      background: #fff;
+      font-size: 24px;
+      background: var(--md-sys-color-background);
       width: 44px;
       height: 44px;
       border-radius: 14px;
@@ -154,7 +224,6 @@
       align-items: center;
       gap: 14px;
       cursor: pointer;
-      border: 1px solid rgba(0,0,0,0.03);
       transition: transform 0.15s ease, background 0.15s ease;
     }
 
@@ -190,43 +259,71 @@
       margin-top: 2px;
     }
 
-    /* Vue Runner Plein Écran */
+    /* Runner Plein Écran */
     #view-runner {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100dvh;
+      inset: 0;
       background: #ffffff;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      transform: translateX(100%);
-      transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+      z-index: 1000;
+      display: none;
     }
 
     #view-runner.open {
-      transform: translateX(0);
+      display: block;
     }
 
     iframe#app-frame {
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100dvh;
       border: none;
       background: #fff;
     }
 
-    /* Modale Material You pour conversion .txt */
+    /* Bouton retour en haut à gauche */
+    #runner-back-btn {
+      position: absolute;
+      top: calc(env(safe-area-inset-top, 0px) + 12px);
+      left: 14px;
+      z-index: 1100;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-pill);
+      background: var(--md-sys-floating-btn-bg);
+      color: var(--md-sys-floating-btn-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    #runner-back-btn:active {
+      transform: scale(0.9);
+      opacity: 0.8;
+    }
+
+    #runner-back-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Modales */
     .dialog-backdrop {
       display: none;
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       justify-content: center;
-      align-items: center;
-      z-index: 500;
-      padding: 24px;
+      align-items: flex-end;
+      z-index: 2000;
+      padding: 16px;
     }
 
     .dialog {
@@ -234,37 +331,65 @@
       border-radius: var(--radius-card);
       padding: 24px;
       width: 100%;
-      max-width: 340px;
+      max-width: 400px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      gap: 16px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+      margin-bottom: env(safe-area-inset-bottom, 8px);
     }
 
     .dialog h3 {
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       font-weight: 700;
       color: var(--md-sys-color-on-surface);
     }
 
     .dialog p {
-      font-size: 0.88rem;
+      font-size: 0.9rem;
       color: var(--md-sys-color-on-surface-variant);
       line-height: 1.4;
+    }
+
+    /* Choix du thème (Segmented control Material You) */
+    .theme-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .theme-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-radius: 18px;
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: background 0.15s ease;
+    }
+
+    .theme-option.active {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      font-weight: 700;
     }
 
     .dialog-buttons {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      margin-top: 6px;
+      margin-top: 4px;
     }
 
     .btn {
-      padding: 10px 18px;
+      padding: 10px 20px;
       border-radius: var(--radius-pill);
       border: none;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
     }
@@ -282,13 +407,16 @@
 </head>
 <body>
 
-  <!-- Inputs cachés -->
+  <!-- Inputs invisibles pour la sélection -->
   <input type="file" id="filePicker" style="display: none;" accept=".html,.htm,.txt,.js,.css">
   <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
 
   <!-- Page d'accueil -->
   <main id="view-home">
-    <div class="badge-chip">Google Pixel • Material You</div>
+    <div class="top-bar">
+      <div class="badge-chip">Google Pixel • Material You</div>
+      <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
+    </div>
 
     <div class="header-text">
       <h1>Web Studio</h1>
@@ -322,12 +450,17 @@
     </div>
   </main>
 
-  <!-- Vue Runner Plein Écran -->
+  <!-- Runner Plein Écran avec flèche de retour permanente -->
   <section id="view-runner">
+    <button id="runner-back-btn" aria-label="Retour au menu">
+      <svg viewBox="0 0 24 24">
+        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+      </svg>
+    </button>
     <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
   </section>
 
-  <!-- Boîte de dialogue conversion TXT -->
+  <!-- Modal Conversion TXT -->
   <div class="dialog-backdrop" id="modal-convert">
     <div class="dialog">
       <h3>Format texte détecté</h3>
@@ -339,13 +472,42 @@
     </div>
   </div>
 
+  <!-- Modal Paramètres Thème -->
+  <div class="dialog-backdrop" id="modal-settings">
+    <div class="dialog">
+      <h3>Paramètres d'affichage</h3>
+      <p>Choisis le thème graphique de ton studio :</p>
+
+      <div class="theme-options">
+        <div class="theme-option" data-set-theme="light">
+          <span>Clair</span>
+          <span class="theme-check">☀️</span>
+        </div>
+        <div class="theme-option" data-set-theme="dark">
+          <span>Sombre</span>
+          <span class="theme-check">🌙</span>
+        </div>
+        <div class="theme-option" data-set-theme="auto">
+          <span>Automatique (Système)</span>
+          <span class="theme-check">⚙️</span>
+        </div>
+      </div>
+
+      <div class="dialog-buttons">
+        <button class="btn btn-filled" id="btn-close-settings">Terminé</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const fileStore = new Map();
     let pendingTxtData = null;
 
+    // Récupération des éléments DOM
     const viewHome = document.getElementById('view-home');
     const viewRunner = document.getElementById('view-runner');
     const appFrame = document.getElementById('app-frame');
+    const runnerBackBtn = document.getElementById('runner-back-btn');
     const fileList = document.getElementById('fileList');
     const filePicker = document.getElementById('filePicker');
     const folderPicker = document.getElementById('folderPicker');
@@ -353,7 +515,42 @@
     const modalText = document.getElementById('modal-text');
     const btnModalCancel = document.getElementById('btn-modal-cancel');
     const btnModalConfirm = document.getElementById('btn-modal-confirm');
+    const modalSettings = document.getElementById('modal-settings');
+    const btnOpenSettings = document.getElementById('btn-open-settings');
+    const btnCloseSettings = document.getElementById('btn-close-settings');
 
+    // Gestion du Thème (Clair / Sombre / Auto)
+    const currentTheme = localStorage.getItem('theme_preference') || 'auto';
+    applyTheme(currentTheme);
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme_preference', theme);
+
+      document.querySelectorAll('.theme-option').forEach(opt => {
+        if (opt.getAttribute('data-set-theme') === theme) {
+          opt.classList.add('active');
+        } else {
+          opt.classList.remove('active');
+        }
+      });
+    }
+
+    btnOpenSettings.addEventListener('click', () => {
+      modalSettings.style.display = 'flex';
+    });
+
+    btnCloseSettings.addEventListener('click', () => {
+      modalSettings.style.display = 'none';
+    });
+
+    document.querySelectorAll('.theme-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        applyTheme(opt.getAttribute('data-set-theme'));
+      });
+    });
+
+    // Déclencheurs de sélecteurs de fichiers
     document.getElementById('btn-import-file').addEventListener('click', () => filePicker.click());
     document.getElementById('btn-import-folder').addEventListener('click', () => folderPicker.click());
 
@@ -439,6 +636,7 @@
       }
     });
 
+    // Lancement de l'application smartphone
     function runHtmlApp(rawHtml) {
       appFrame.srcdoc = '';
 
@@ -461,69 +659,15 @@
       viewRunner.classList.add('open');
     }
 
-    function closeRunner() {
+    // Bouton de retour en haut à gauche
+    runnerBackBtn.addEventListener('click', () => {
       viewRunner.classList.remove('open');
       setTimeout(() => {
         appFrame.srcdoc = '';
-      }, 300);
-    }
+      }, 150);
+    });
 
-    // Gestion du swipe large vers la droite
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let isSwiping = false;
-
-    window.addEventListener('touchstart', (e) => {
-      if (!viewRunner.classList.contains('open')) return;
-      const touch = e.touches[0];
-      
-      // Largeur de manœuvre élargie : 50% + 25% de 50% = 62.5% de l'écran
-      const maxAllowedStartX = window.innerWidth * 0.625;
-
-      if (touch.clientX < maxAllowedStartX) {
-        touchStartX = touch.clientX;
-        touchStartY = touch.clientY;
-        isSwiping = true;
-      }
-    }, { passive: true });
-
-    window.addEventListener('touchmove', (e) => {
-      if (!isSwiping) return;
-      const touch = e.touches[0];
-      const deltaX = touch.clientX - touchStartX;
-      const deltaY = Math.abs(touch.clientY - touchStartY);
-
-      // Mouvement horizontal dominant
-      if (deltaX > 15 && deltaY < deltaX * 0.75) {
-        viewRunner.style.transition = 'none';
-        viewRunner.style.transform = `translateX(${deltaX}px)`;
-      }
-    }, { passive: true });
-
-    window.addEventListener('touchend', (e) => {
-      if (!isSwiping) return;
-      isSwiping = false;
-      const touch = e.changedTouches[0];
-      const deltaX = touch.clientX - touchStartX;
-
-      // Déclenchement de la fermeture si le geste est significatif
-      if (deltaX > 90) {
-        viewRunner.style.transition = 'transform 0.22s cubic-bezier(0.2, 0, 0, 1)';
-        viewRunner.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-          viewRunner.style.transition = '';
-          viewRunner.style.transform = '';
-          closeRunner();
-        }, 220);
-      } else {
-        viewRunner.style.transition = 'transform 0.2s ease-out';
-        viewRunner.style.transform = 'translateX(0)';
-        setTimeout(() => {
-          viewRunner.style.transition = '';
-        }, 200);
-      }
-    }, { passive: true });
-
+    // Démo initiale
     document.querySelector('[data-default="demo"]').addEventListener('click', () => {
       runHtmlApp(`
         <!DOCTYPE html>
@@ -565,7 +709,7 @@
         <body>
           <div class="card">
             <h2>🎉 Application Smartphone Active</h2>
-            <p>100% de l'écran libéré sans éléments superposés.</p>
+            <p>Utilise la mini flèche en haut à gauche pour revenir à l'accueil.</p>
             <button onclick="alert('Interaction mobile OK !')">Tester un clic</button>
           </div>
         </body>
