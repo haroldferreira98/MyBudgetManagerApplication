@@ -91,7 +91,6 @@
       transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* Page Accueil */
     #view-home {
       flex: 1;
       display: flex;
@@ -247,7 +246,16 @@
       margin-top: 2px;
     }
 
-    /* Vue Runner / Editeur Plein Écran */
+    .empty-state {
+      padding: 30px 16px;
+      text-align: center;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 0.9rem;
+      background: var(--md-sys-color-surface-container);
+      border-radius: 20px;
+      border: 1px dashed var(--md-sys-color-outline-variant);
+    }
+
     #view-runner {
       position: fixed;
       inset: 0;
@@ -261,7 +269,6 @@
       display: flex;
     }
 
-    /* Volet de notification supérieur intégré */
     .runner-shade {
       background: var(--shade-bg);
       backdrop-filter: blur(20px);
@@ -300,7 +307,6 @@
       fill: currentColor;
     }
 
-    /* Sélecteur Coder / Aperçu au milieu */
     .shade-segmented {
       display: flex;
       background: var(--md-sys-color-surface-container-high);
@@ -327,7 +333,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
 
-    /* Version à droite */
     .shade-version {
       font-size: 0.72rem;
       font-weight: 700;
@@ -339,7 +344,6 @@
       letter-spacing: 0.04em;
     }
 
-    /* Corps du Runner (Conteneur Swappable) */
     .runner-body {
       flex: 1;
       position: relative;
@@ -354,7 +358,6 @@
       display: block;
     }
 
-    /* Éditeur de code en direct */
     #editor-pane {
       position: absolute;
       inset: 0;
@@ -371,10 +374,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 14px;
+      padding: 8px 12px;
       background: rgba(255, 255, 255, 0.05);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       gap: 8px;
+      overflow-x: auto;
     }
 
     .editor-toolbar .meta-name {
@@ -384,11 +388,13 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      max-width: 85px;
     }
 
     .editor-actions {
       display: flex;
       gap: 6px;
+      flex-shrink: 0;
     }
 
     .tool-btn {
@@ -400,6 +406,9 @@
       font-size: 0.75rem;
       font-weight: 600;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       transition: background 0.15s ease;
     }
 
@@ -407,9 +416,13 @@
       background: rgba(255, 255, 255, 0.25);
     }
 
-    .tool-btn-primary {
+    .tool-btn-save {
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
+    }
+
+    .tool-btn-save:active {
+      filter: brightness(1.15);
     }
 
     #code-area {
@@ -431,7 +444,6 @@
       overflow-x: auto;
     }
 
-    /* Modales */
     .dialog-backdrop {
       display: none;
       position: fixed;
@@ -521,7 +533,6 @@
       color: var(--md-sys-color-on-primary);
     }
 
-    /* Notification Toast discret pour confirmation de mise à jour */
     #toast-msg {
       position: fixed;
       bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
@@ -547,7 +558,6 @@
 </head>
 <body>
 
-  <!-- Inputs cachés -->
   <input type="file" id="filePicker" style="display: none;" accept=".html,.htm,.txt,.js,.css">
   <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
 
@@ -577,51 +587,43 @@
       </div>
     </div>
 
-    <div class="section-title">Fichiers & Projets Smartphone</div>
+    <div class="section-title">Fichiers & Projets</div>
 
     <div class="file-list" id="fileList">
-      <div class="file-card" data-default="demo">
-        <div class="file-card-info">
-          <div class="file-card-name">✨ Template Smartphone Demo</div>
-          <div class="file-card-path">Exemple préconfiguré plein écran</div>
-        </div>
+      <div class="empty-state" id="empty-state-notice">
+        Aucun fichier ouvert pour l'instant.<br>Importe un fichier ou un dossier pour commencer.
       </div>
     </div>
   </main>
 
   <!-- Runner / Éditeur Plein Écran -->
   <section id="view-runner">
-    <!-- Volet de notification supérieur intégré -->
     <header class="runner-shade">
-      <!-- Gauche : Flèche retour -->
       <button class="shade-back-btn" id="shade-back-btn" aria-label="Retour au menu">
         <svg viewBox="0 0 24 24">
           <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
         </svg>
       </button>
 
-      <!-- Milieu : Bascule Coder / Aperçu -->
       <div class="shade-segmented">
         <button class="shade-tab" id="tab-code">Coder</button>
         <button class="shade-tab active" id="tab-preview">Aperçu</button>
       </div>
 
-      <!-- Droite : Version de maj -->
-      <div class="shade-version">v1.4.0</div>
+      <div class="shade-version">v1.4.2</div>
     </header>
 
-    <!-- Zone principale -->
     <div class="runner-body">
-      <!-- Vue Aperçu Live -->
       <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
 
-      <!-- Vue Coder en Direct -->
       <div id="editor-pane">
         <div class="editor-toolbar">
           <span class="meta-name" id="editor-file-name">index.html</span>
           <div class="editor-actions">
-            <button class="tool-btn" id="btn-select-all">Tout sélectionner</button>
-            <button class="tool-btn tool-btn-primary" id="btn-apply-update">Mettre à jour</button>
+            <button class="tool-btn" id="btn-select-all">Tout</button>
+            <button class="tool-btn" id="btn-copy">Copier</button>
+            <button class="tool-btn" id="btn-paste">Coller</button>
+            <button class="tool-btn tool-btn-save" id="btn-save">💾 Sauvegarder</button>
           </div>
         </div>
         <textarea id="code-area" spellcheck="false" placeholder="<!-- Tapez ou collez votre code HTML ici -->"></textarea>
@@ -668,15 +670,13 @@
     </div>
   </div>
 
-  <!-- Toast Notification -->
-  <div id="toast-msg">Mise à jour effectuée ✓</div>
+  <div id="toast-msg">Action effectuée ✓</div>
 
   <script>
     const fileStore = new Map();
     let currentActiveFileId = null;
     let pendingTxtData = null;
 
-    // DOM Elements
     const viewHome = document.getElementById('view-home');
     const viewRunner = document.getElementById('view-runner');
     const appFrame = document.getElementById('app-frame');
@@ -684,13 +684,16 @@
     const codeArea = document.getElementById('code-area');
     const editorFileName = document.getElementById('editor-file-name');
     const fileList = document.getElementById('fileList');
+    const emptyStateNotice = document.getElementById('empty-state-notice');
     const filePicker = document.getElementById('filePicker');
     const folderPicker = document.getElementById('folderPicker');
     const shadeBackBtn = document.getElementById('shade-back-btn');
     const tabCode = document.getElementById('tab-code');
     const tabPreview = document.getElementById('tab-preview');
     const btnSelectAll = document.getElementById('btn-select-all');
-    const btnApplyUpdate = document.getElementById('btn-apply-update');
+    const btnCopy = document.getElementById('btn-copy');
+    const btnPaste = document.getElementById('btn-paste');
+    const btnSave = document.getElementById('btn-save');
     const modalConvert = document.getElementById('modal-convert');
     const modalText = document.getElementById('modal-text');
     const btnModalCancel = document.getElementById('btn-modal-cancel');
@@ -700,7 +703,6 @@
     const btnCloseSettings = document.getElementById('btn-close-settings');
     const toastMsg = document.getElementById('toast-msg');
 
-    // Thème (Auto / Dark / Light)
     const currentTheme = localStorage.getItem('theme_preference') || 'auto';
     applyTheme(currentTheme);
 
@@ -723,7 +725,6 @@
       opt.addEventListener('click', () => applyTheme(opt.getAttribute('data-set-theme')));
     });
 
-    // Fichiers & Dossiers
     document.getElementById('btn-import-file').addEventListener('click', () => filePicker.click());
     document.getElementById('btn-import-folder').addEventListener('click', () => folderPicker.click());
 
@@ -760,6 +761,10 @@
         content: content,
         ext: ext
       });
+
+      if (emptyStateNotice && emptyStateNotice.parentElement) {
+        emptyStateNotice.remove();
+      }
 
       const card = document.createElement('div');
       card.className = 'file-card';
@@ -806,8 +811,15 @@
     btnModalConfirm.addEventListener('click', () => {
       if (pendingTxtData) {
         currentActiveFileId = pendingTxtData.id;
-        editorFileName.textContent = pendingTxtData.name.replace(/\.txt$/i, '.html');
+        const newName = pendingTxtData.name.replace(/\.txt$/i, '.html');
+        editorFileName.textContent = newName;
         codeArea.value = pendingTxtData.content;
+
+        const fileRecord = fileStore.get(pendingTxtData.id);
+        if (fileRecord) {
+          fileRecord.name = newName;
+          fileRecord.ext = 'html';
+        }
 
         showPreviewMode();
         renderAppFrame(pendingTxtData.content);
@@ -818,10 +830,8 @@
       }
     });
 
-    // Bascule Coder / Aperçu
     tabCode.addEventListener('click', showCodeMode);
     tabPreview.addEventListener('click', () => {
-      // Synchronise avant de rebasculer sur l'aperçu
       syncAndRender();
       showPreviewMode();
     });
@@ -840,40 +850,93 @@
       appFrame.style.display = 'block';
     }
 
-    // Tout sélectionner
     btnSelectAll.addEventListener('click', () => {
       codeArea.focus();
       codeArea.select();
       codeArea.setSelectionRange(0, 9999999);
-      showToast("Tout le code a été sélectionné");
+      showToast("Code sélectionné");
     });
 
-    // Mettre à jour manuellement
-    btnApplyUpdate.addEventListener('click', () => {
+    btnCopy.addEventListener('click', async () => {
+      try {
+        const textToCopy = codeArea.value;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(textToCopy);
+        } else {
+          codeArea.focus();
+          codeArea.select();
+          document.execCommand('copy');
+        }
+        showToast("Code copié dans le presse-papier");
+      } catch (err) {
+        showToast("Erreur lors de la copie");
+      }
+    });
+
+    btnPaste.addEventListener('click', async () => {
+      try {
+        let text = '';
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          text = await navigator.clipboard.readText();
+        }
+        if (text) {
+          codeArea.value = text;
+          syncAndRender();
+          showToast("Code collé et synchronisé");
+        } else {
+          codeArea.focus();
+          showToast("Utilisez le geste coller de votre clavier");
+        }
+      } catch (err) {
+        codeArea.focus();
+        showToast("Autorisez l'accès presse-papier ou collez manuellement");
+      }
+    });
+
+    // Bouton de sauvegarde directe en fichier .html
+    btnSave.addEventListener('click', () => {
       syncAndRender();
-      showToast("Fichier synchronisé & rendu à jour");
+      
+      const fileData = fileStore.get(currentActiveFileId);
+      let filename = fileData ? fileData.name : 'index.html';
+      
+      // S'assure que le fichier sauvegardé a l'extension .html
+      if (!filename.endsWith('.html') && !filename.endsWith('.htm')) {
+        filename = filename.replace(/\.[^/.]+$/, "") + ".html";
+      }
+
+      const content = codeArea.value;
+      const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+      const downloadUrl = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      setTimeout(() => URL.revokeObjectURL(downloadUrl), 500);
+      showToast(`Fichier « ${filename} » sauvegardé !`);
     });
 
-    // Mise à jour automatique en temps réel à la frappe (Debounce)
     let syncTimer = null;
     codeArea.addEventListener('input', () => {
       clearTimeout(syncTimer);
       syncTimer = setTimeout(() => {
-        syncAndRender(false);
-      }, 400);
+        syncAndRender();
+      }, 300);
     });
 
-    function syncAndRender(notify = true) {
+    function syncAndRender() {
       if (!currentActiveFileId) return;
       const updatedCode = codeArea.value;
 
-      // Met à jour la mémoire vive du fichier
       const fileData = fileStore.get(currentActiveFileId);
       if (fileData) {
         fileData.content = updatedCode;
       }
 
-      // Met à jour l'aperçu
       renderAppFrame(updatedCode);
     }
 
@@ -901,68 +964,12 @@
       setTimeout(() => toastMsg.classList.remove('show'), 2000);
     }
 
-    // Retour au menu
     shadeBackBtn.addEventListener('click', () => {
       viewRunner.classList.remove('open');
       setTimeout(() => {
         appFrame.srcdoc = '';
       }, 150);
     });
-
-    // Projet de démo
-    const demoCard = document.querySelector('[data-default="demo"]');
-    const demoId = 'demo_project';
-    fileStore.set(demoId, {
-      name: 'Template Smartphone Demo',
-      path: 'Exemple préconfiguré plein écran',
-      content: `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <style>
-    body {
-      font-family: -apple-system, Roboto, sans-serif;
-      padding: 24px;
-      background: #fdf8fd;
-      color: #1d1b20;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100dvh;
-      box-sizing: border-box;
-    }
-    .card {
-      background: #ede7f6;
-      padding: 24px;
-      border-radius: 24px;
-      margin-top: 30px;
-      text-align: center;
-    }
-    button {
-      margin-top: 20px;
-      background: #6750a4;
-      color: white;
-      border: none;
-      padding: 14px 24px;
-      border-radius: 9999px;
-      font-size: 1rem;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2>🎉 Runner Smartphone Actif</h2>
-    <p>Clique sur l'onglet <strong>Coder</strong> en haut pour voir et modifier ce code en direct !</p>
-    <button onclick="alert('Interaction mobile OK !')">Tester un clic</button>
-  </div>
-</body>
-</html>`,
-      ext: 'html'
-    });
-
-    demoCard.addEventListener('click', () => openFile(demoId));
   </script>
 </body>
 </html>
