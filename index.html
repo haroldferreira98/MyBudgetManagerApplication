@@ -25,6 +25,8 @@
       --shade-bg: rgba(247, 242, 250, 0.94);
       --editor-bg: #1e1e24;
       --editor-fg: #f5f2f8;
+      --highlight-active-bg: #2196f3;
+      --highlight-active-color: #ffffff;
       --radius-card: 28px;
       --radius-pill: 9999px;
     }
@@ -46,6 +48,8 @@
       --shade-bg: rgba(29, 27, 32, 0.94);
       --editor-bg: #0f0e13;
       --editor-fg: #ece6f0;
+      --highlight-active-bg: #ffeb3b;
+      --highlight-active-color: #000000;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -66,6 +70,8 @@
         --shade-bg: rgba(29, 27, 32, 0.94);
         --editor-bg: #0f0e13;
         --editor-fg: #ece6f0;
+        --highlight-active-bg: #ffeb3b;
+        --highlight-active-color: #000000;
       }
     }
 
@@ -285,7 +291,6 @@
       display: flex;
     }
 
-    /* Volet supérieur structuré en 3 zones équilibrées */
     .runner-shade {
       background: var(--shade-bg);
       backdrop-filter: blur(20px);
@@ -372,6 +377,7 @@
       padding: 8px 12px;
       background: var(--md-sys-color-surface-container);
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      z-index: 1050;
     }
 
     #search-bar.active {
@@ -460,6 +466,7 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       gap: 6px;
       overflow-x: auto;
+      z-index: 10;
     }
 
     .editor-toolbar .meta-name {
@@ -500,9 +507,46 @@
       color: var(--md-sys-color-on-primary);
     }
 
-    #code-area {
+    /* Zone de code avec surlignage haute visibilité */
+    .editor-container {
       flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Calque de surlignage synchronisé */
+    #code-backdrop {
+      position: absolute;
+      inset: 0;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      white-space: pre;
+      overflow: hidden;
+      color: transparent;
+      pointer-events: none;
+      background: transparent;
+    }
+
+    .highlight-active {
+      background-color: var(--highlight-active-bg) !important;
+      color: var(--highlight-active-color) !important;
+      border-radius: 4px;
+      box-shadow: 0 0 0 2px var(--highlight-active-bg);
+      font-weight: 700;
+    }
+
+    .highlight-match {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    #code-area {
+      position: absolute;
+      inset: 0;
       width: 100%;
+      height: 100%;
       padding: 16px;
       border: none;
       outline: none;
@@ -516,7 +560,8 @@
       -webkit-user-select: text;
       white-space: pre;
       overflow-wrap: normal;
-      overflow-x: auto;
+      overflow: auto;
+      z-index: 2;
     }
 
     .dialog-backdrop {
@@ -641,7 +686,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-bar-right">
-        <span class="app-version-badge">v1.4.4</span>
+        <span class="app-version-badge">v1.4.5</span>
         <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
       </div>
     </div>
@@ -722,7 +767,11 @@
             <button class="tool-btn tool-btn-primary" id="btn-save">💾 Sauvegarder</button>
           </div>
         </div>
-        <textarea id="code-area" spellcheck="false" placeholder="<!-- Code HTML -->"></textarea>
+
+        <div class="editor-container">
+          <div id="code-backdrop"></div>
+          <textarea id="code-area" spellcheck="false" placeholder="<!-- Code HTML -->"></textarea>
+        </div>
       </div>
     </div>
   </section>
@@ -777,6 +826,7 @@
     const appFrame = document.getElementById('app-frame');
     const editorPane = document.getElementById('editor-pane');
     const codeArea = document.getElementById('code-area');
+    const codeBackdrop = document.getElementById('code-backdrop');
     const editorFileName = document.getElementById('editor-file-name');
     const fileList = document.getElementById('fileList');
     const emptyStateMsg = document.getElementById('empty-state-msg');
@@ -809,6 +859,12 @@
     let searchIndices = [];
     let currentSearchIndex = -1;
 
+    // Synchronisation du scroll entre le textarea et le backdrop de surlignage
+    codeArea.addEventListener('scroll', () => {
+      codeBackdrop.scrollTop = codeArea.scrollTop;
+      codeBackdrop.scrollLeft = codeArea.scrollLeft;
+    });
+
     const currentTheme = localStorage.getItem('theme_preference') || 'auto';
     applyTheme(currentTheme);
 
@@ -822,6 +878,7 @@
           opt.classList.remove('active');
         }
       });
+      renderSearchHighlights();
     }
 
     btnOpenSettings.addEventListener('click', () => modalSettings.style.display = 'flex');
@@ -900,6 +957,7 @@
       currentActiveFileId = id;
       editorFileName.textContent = fileData.name;
       codeArea.value = fileData.content;
+      codeBackdrop.textContent = '';
       
       showPreviewMode();
       renderAppFrame(fileData.content);
@@ -918,6 +976,7 @@
         editorFileName.textContent = newHtmlName;
         pendingTxtData.name = newHtmlName;
         codeArea.value = pendingTxtData.content;
+        codeBackdrop.textContent = '';
 
         showPreviewMode();
         renderAppFrame(pendingTxtData.content);
@@ -978,6 +1037,7 @@
           codeArea.value = codeArea.value.substring(0, start) + text + codeArea.value.substring(end);
           codeArea.selectionStart = codeArea.selectionEnd = start + text.length;
           syncAndRender();
+          renderSearchHighlights();
           showToast("Code collé");
         }
       } catch (err) {
@@ -1044,6 +1104,9 @@
       clearTimeout(syncTimer);
       syncTimer = setTimeout(() => {
         syncAndRender();
+        if (searchBar.classList.contains('active')) {
+          updateSearchIndices(false);
+        }
       }, 400);
     });
 
@@ -1081,6 +1144,8 @@
       if (searchBar.classList.contains('active')) {
         searchInput.focus();
         if (searchInput.value) updateSearchIndices();
+      } else {
+        closeSearchBar();
       }
     });
 
@@ -1092,6 +1157,7 @@
       searchCount.textContent = '0/0';
       searchIndices = [];
       currentSearchIndex = -1;
+      codeBackdrop.innerHTML = '';
       searchInput.blur();
     }
 
@@ -1109,13 +1175,14 @@
     searchNext.addEventListener('click', () => navigateSearch(1));
     searchPrev.addEventListener('click', () => navigateSearch(-1));
 
-    function updateSearchIndices() {
+    function updateSearchIndices(resetIndex = true) {
       const query = searchInput.value.toLowerCase();
       searchIndices = [];
-      currentSearchIndex = -1;
 
       if (!query) {
         searchCount.textContent = '0/0';
+        currentSearchIndex = -1;
+        codeBackdrop.innerHTML = '';
         return;
       }
 
@@ -1127,38 +1194,80 @@
       }
 
       if (searchIndices.length > 0) {
-        currentSearchIndex = 0;
-        searchCount.textContent = `1/${searchIndices.length}`;
+        if (resetIndex || currentSearchIndex < 0 || currentSearchIndex >= searchIndices.length) {
+          currentSearchIndex = 0;
+        }
+        searchCount.textContent = `${currentSearchIndex + 1}/${searchIndices.length}`;
       } else {
+        currentSearchIndex = -1;
         searchCount.textContent = '0/0';
       }
+
+      renderSearchHighlights();
+    }
+
+    function renderSearchHighlights() {
+      const query = searchInput.value;
+      if (!query || searchIndices.length === 0) {
+        codeBackdrop.innerHTML = '';
+        return;
+      }
+
+      const fullText = codeArea.value;
+      const queryLen = query.length;
+      let html = '';
+      let lastPos = 0;
+
+      function escapeHtml(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      searchIndices.forEach((pos, idx) => {
+        html += escapeHtml(fullText.substring(lastPos, pos));
+        const matched = escapeHtml(fullText.substring(pos, pos + queryLen));
+        if (idx === currentSearchIndex) {
+          html += `<mark class="highlight-active">${matched}</mark>`;
+        } else {
+          html += `<mark class="highlight-match">${matched}</mark>`;
+        }
+        lastPos = pos + queryLen;
+      });
+
+      html += escapeHtml(fullText.substring(lastPos));
+      codeBackdrop.innerHTML = html;
+
+      // Sync instantané des scrolls
+      codeBackdrop.scrollTop = codeArea.scrollTop;
+      codeBackdrop.scrollLeft = codeArea.scrollLeft;
     }
 
     function navigateSearch(direction) {
       if (searchIndices.length === 0) return;
 
-      // 1. Fermer le clavier virtuel pour ne pas cacher le code
+      // 1. Fermer le clavier virtuel
       searchInput.blur();
       if (document.activeElement) {
         document.activeElement.blur();
       }
 
+      // 2. Déplacer l'index
       currentSearchIndex += direction;
       if (currentSearchIndex >= searchIndices.length) currentSearchIndex = 0;
       if (currentSearchIndex < 0) currentSearchIndex = searchIndices.length - 1;
 
       searchCount.textContent = `${currentSearchIndex + 1}/${searchIndices.length}`;
 
+      // 3. Dessiner le surlignage couleur (Jaune ou Bleu selon thème)
+      renderSearchHighlights();
+
+      // 4. Dérouler le texte directement sur la ligne de l'occurrence
       const pos = searchIndices[currentSearchIndex];
-      const queryLen = searchInput.value.length;
-
-      // 2. Sélectionner dans le textarea sans déclencher de re-focus clavier
-      codeArea.setSelectionRange(pos, pos + queryLen);
-
-      // 3. Défiler le textarea directement à la ligne cible
       const linesBefore = codeArea.value.substring(0, pos).split('\n').length;
       const lineHeight = 19;
-      codeArea.scrollTop = Math.max(0, (linesBefore * lineHeight) - 100);
+      const targetScroll = Math.max(0, (linesBefore * lineHeight) - 120);
+
+      codeArea.scrollTop = targetScroll;
+      codeBackdrop.scrollTop = targetScroll;
     }
 
     function showToast(text) {
