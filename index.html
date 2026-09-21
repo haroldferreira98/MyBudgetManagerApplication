@@ -297,7 +297,7 @@
       z-index: 1100;
     }
 
-    .shade-back-btn {
+    .shade-btn {
       width: 38px;
       height: 38px;
       border-radius: var(--radius-pill);
@@ -308,15 +308,15 @@
       justify-content: center;
       border: none;
       cursor: pointer;
-      transition: transform 0.15s ease;
+      transition: transform 0.15s ease, background 0.15s ease;
       flex-shrink: 0;
     }
 
-    .shade-back-btn:active {
+    .shade-btn:active {
       transform: scale(0.9);
     }
 
-    .shade-back-btn svg {
+    .shade-btn svg {
       width: 20px;
       height: 20px;
       fill: currentColor;
@@ -347,9 +347,85 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
 
-    .shade-spacer {
+    /* Emplacement de la loupe à droite */
+    .shade-right-slot {
       width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
+    }
+
+    #shade-search-btn {
+      display: none;
+    }
+
+    #shade-search-btn.active-search {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    }
+
+    /* Barre de recherche intégrée */
+    #search-bar-panel {
+      display: none;
+      background: var(--md-sys-color-surface-container);
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      align-items: center;
+      gap: 8px;
+      z-index: 1050;
+    }
+
+    #search-bar-panel.open {
+      display: flex;
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: var(--md-sys-color-background);
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      gap: 8px;
+      border: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .search-input-wrap input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 0.85rem;
+      color: var(--md-sys-color-on-surface);
+      font-family: inherit;
+    }
+
+    .search-count {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--md-sys-color-on-surface-variant);
+      white-space: nowrap;
+    }
+
+    .search-nav-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-pill);
+      border: none;
+      background: var(--md-sys-color-surface-container-high);
+      color: var(--md-sys-color-on-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .search-nav-btn:active {
+      transform: scale(0.9);
     }
 
     .runner-body {
@@ -574,7 +650,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-bar-right">
-        <div class="version-chip">v1.4.3</div>
+        <div class="version-chip">v1.4.4</div>
         <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
       </div>
     </div>
@@ -610,7 +686,7 @@
   <!-- Runner / Éditeur Plein Écran -->
   <section id="view-runner">
     <header class="runner-shade">
-      <button class="shade-back-btn" id="shade-back-btn" aria-label="Retour au menu">
+      <button class="shade-btn" id="shade-back-btn" aria-label="Retour au menu">
         <svg viewBox="0 0 24 24">
           <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
         </svg>
@@ -621,9 +697,26 @@
         <button class="shade-tab active" id="tab-preview">Aperçu</button>
       </div>
 
-      <!-- Espace réservé pour équilibrer le centrage du bouton segmented -->
-      <div class="shade-spacer"></div>
+      <!-- Emplacement Loupe à droite (visible uniquement en mode Coder) -->
+      <div class="shade-right-slot">
+        <button class="shade-btn" id="shade-search-btn" aria-label="Rechercher">
+          <svg viewBox="0 0 24 24">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          </svg>
+        </button>
+      </div>
     </header>
+
+    <!-- Barre de recherche dépliable -->
+    <div id="search-bar-panel">
+      <div class="search-input-wrap">
+        <input type="text" id="search-input" placeholder="Rechercher dans le code…" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <span class="search-count" id="search-count">0/0</span>
+      </div>
+      <button class="search-nav-btn" id="btn-search-prev" aria-label="Précédent">▲</button>
+      <button class="search-nav-btn" id="btn-search-next" aria-label="Suivant">▼</button>
+      <button class="search-nav-btn" id="btn-search-close" aria-label="Fermer">✕</button>
+    </div>
 
     <div class="runner-body">
       <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
@@ -689,6 +782,7 @@
     let currentActiveFileId = null;
     let pendingTxtData = null;
 
+    // Éléments DOM
     const viewHome = document.getElementById('view-home');
     const viewRunner = document.getElementById('view-runner');
     const appFrame = document.getElementById('app-frame');
@@ -702,6 +796,13 @@
     const shadeBackBtn = document.getElementById('shade-back-btn');
     const tabCode = document.getElementById('tab-code');
     const tabPreview = document.getElementById('tab-preview');
+    const shadeSearchBtn = document.getElementById('shade-search-btn');
+    const searchBarPanel = document.getElementById('search-bar-panel');
+    const searchInput = document.getElementById('search-input');
+    const searchCount = document.getElementById('search-count');
+    const btnSearchPrev = document.getElementById('btn-search-prev');
+    const btnSearchNext = document.getElementById('btn-search-next');
+    const btnSearchClose = document.getElementById('btn-search-close');
     const btnSelectAll = document.getElementById('btn-select-all');
     const btnCopy = document.getElementById('btn-copy');
     const btnPaste = document.getElementById('btn-paste');
@@ -715,6 +816,7 @@
     const btnCloseSettings = document.getElementById('btn-close-settings');
     const toastMsg = document.getElementById('toast-msg');
 
+    // Thème (Auto / Dark / Light)
     const currentTheme = localStorage.getItem('theme_preference') || 'auto';
     applyTheme(currentTheme);
 
@@ -737,6 +839,7 @@
       opt.addEventListener('click', () => applyTheme(opt.getAttribute('data-set-theme')));
     });
 
+    // Gestion Fichiers & Dossiers
     document.getElementById('btn-import-file').addEventListener('click', () => filePicker.click());
     document.getElementById('btn-import-folder').addEventListener('click', () => folderPicker.click());
 
@@ -842,6 +945,7 @@
       }
     });
 
+    // Bascule Coder / Aperçu
     tabCode.addEventListener('click', showCodeMode);
     tabPreview.addEventListener('click', () => {
       syncAndRender();
@@ -853,6 +957,8 @@
       tabPreview.classList.remove('active');
       editorPane.classList.add('active');
       appFrame.style.display = 'none';
+      // Loupe visible uniquement sur Coder
+      shadeSearchBtn.style.display = 'flex';
     }
 
     function showPreviewMode() {
@@ -860,8 +966,98 @@
       tabCode.classList.remove('active');
       editorPane.classList.remove('active');
       appFrame.style.display = 'block';
+      // Masquer la loupe et la barre de recherche
+      shadeSearchBtn.style.display = 'none';
+      closeSearchBar();
     }
 
+    // Gestion de la Recherche
+    let searchMatches = [];
+    let currentMatchIndex = -1;
+
+    shadeSearchBtn.addEventListener('click', () => {
+      if (searchBarPanel.classList.contains('open')) {
+        closeSearchBar();
+      } else {
+        searchBarPanel.classList.add('open');
+        shadeSearchBtn.classList.add('active-search');
+        searchInput.focus();
+        if (searchInput.value.trim()) {
+          performSearch();
+        }
+      }
+    });
+
+    btnSearchClose.addEventListener('click', closeSearchBar);
+
+    function closeSearchBar() {
+      searchBarPanel.classList.remove('open');
+      shadeSearchBtn.classList.remove('active-search');
+      searchMatches = [];
+      currentMatchIndex = -1;
+      searchCount.textContent = '0/0';
+    }
+
+    searchInput.addEventListener('input', performSearch);
+
+    function performSearch() {
+      const query = searchInput.value;
+      searchMatches = [];
+      currentMatchIndex = -1;
+
+      if (!query) {
+        searchCount.textContent = '0/0';
+        return;
+      }
+
+      const content = codeArea.value;
+      const lowerContent = content.toLowerCase();
+      const lowerQuery = query.toLowerCase();
+      let pos = 0;
+
+      while ((pos = lowerContent.indexOf(lowerQuery, pos)) !== -1) {
+        searchMatches.push({ start: pos, end: pos + query.length });
+        pos += query.length;
+      }
+
+      if (searchMatches.length > 0) {
+        currentMatchIndex = 0;
+        highlightCurrentMatch();
+      } else {
+        searchCount.textContent = '0/0';
+      }
+    }
+
+    function highlightCurrentMatch() {
+      if (currentMatchIndex < 0 || currentMatchIndex >= searchMatches.length) return;
+
+      const match = searchMatches[currentMatchIndex];
+      searchCount.textContent = `${currentMatchIndex + 1}/${searchMatches.length}`;
+
+      // Sélectionne et déplace le curseur dans le textarea
+      codeArea.focus();
+      codeArea.setSelectionRange(match.start, match.end);
+
+      // Calcul du scroll pour faire apparaître l'occurrence à l'écran
+      const textBefore = codeArea.value.substring(0, match.start);
+      const linesBefore = textBefore.split('\n').length;
+      const lineHeight = 21; // ~ hauteur d'une ligne de police
+      codeArea.scrollTop = Math.max(0, (linesBefore - 4) * lineHeight);
+    }
+
+    btnSearchNext.addEventListener('click', () => {
+      if (searchMatches.length === 0) return;
+      currentMatchIndex = (currentMatchIndex + 1) % searchMatches.length;
+      highlightCurrentMatch();
+    });
+
+    btnSearchPrev.addEventListener('click', () => {
+      if (searchMatches.length === 0) return;
+      currentMatchIndex = (currentMatchIndex - 1 + searchMatches.length) % searchMatches.length;
+      highlightCurrentMatch();
+    });
+
+    // Actions rapides
     btnSelectAll.addEventListener('click', () => {
       codeArea.focus();
       codeArea.select();
@@ -894,6 +1090,7 @@
         if (text) {
           codeArea.value = text;
           syncAndRender();
+          if (searchBarPanel.classList.contains('open')) performSearch();
           showToast("Code collé et synchronisé");
         } else {
           codeArea.focus();
@@ -967,6 +1164,7 @@
       clearTimeout(syncTimer);
       syncTimer = setTimeout(() => {
         syncAndRender();
+        if (searchBarPanel.classList.contains('open')) performSearch();
       }, 300);
     });
 
@@ -1011,6 +1209,7 @@
     }
 
     shadeBackBtn.addEventListener('click', () => {
+      closeSearchBar();
       viewRunner.classList.remove('open');
       setTimeout(() => {
         appFrame.srcdoc = '';
