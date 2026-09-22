@@ -475,48 +475,39 @@
       display: flex;
     }
 
+    /* Barre d'outils optimisée : 100% de la largeur, aucun scroll horizontal */
     .editor-toolbar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
+      padding: 6px 8px;
       background: rgba(255, 255, 255, 0.05);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      gap: 6px;
-      overflow-x: auto;
       z-index: 10;
-    }
-
-    .editor-toolbar .meta-name {
-      font-size: 0.78rem;
-      font-family: 'JetBrains Mono', monospace;
-      color: #b3b3b3;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 80px;
+      width: 100%;
     }
 
     .editor-actions {
       display: flex;
-      gap: 6px;
-      align-items: center;
+      width: 100%;
+      gap: 5px;
     }
 
     .tool-btn {
+      flex: 1;
       background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
       border: none;
-      padding: 6px 10px;
+      padding: 7px 0;
       border-radius: var(--radius-pill);
       font-size: 0.72rem;
       font-weight: 600;
       cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s ease;
-      display: inline-flex;
+      text-align: center;
+      display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: center;
+      transition: background 0.15s ease;
+      white-space: nowrap;
     }
 
     .tool-btn:active {
@@ -526,12 +517,12 @@
     .tool-btn.active-state {
       background: var(--md-sys-color-primary) !important;
       color: var(--md-sys-color-on-primary) !important;
-      box-shadow: 0 0 0 1px #fff;
     }
 
     .tool-btn-primary {
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
+      flex: 1.1;
     }
 
     .editor-workspace {
@@ -743,7 +734,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-bar-right">
-        <span class="app-version-badge">v1.4.8</span>
+        <span class="app-version-badge">v1.4.9</span>
         <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
       </div>
     </div>
@@ -815,22 +806,20 @@
       <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
 
       <div id="editor-pane">
+        <!-- Barre d'outils optimisée -->
         <div class="editor-toolbar">
-          <span class="meta-name" id="editor-file-name">index.html</span>
           <div class="editor-actions">
-            <!-- Bouton Émoticône Clavier -->
             <button class="tool-btn" id="btn-toggle-keyboard">⌨️ Clavier</button>
-            <button class="tool-btn" id="btn-select-all">Tout sélec.</button>
+            <button class="tool-btn" id="btn-select-all">Tout</button>
             <button class="tool-btn" id="btn-copy">Copier</button>
             <button class="tool-btn" id="btn-paste">Coller</button>
-            <button class="tool-btn tool-btn-primary" id="btn-save">💾 Sauvegarder</button>
+            <button class="tool-btn tool-btn-primary" id="btn-save">💾 Sauveg.</button>
           </div>
         </div>
 
         <div class="editor-workspace">
           <div id="gutter-bar"></div>
           <div class="editor-container" id="editor-scroll-box">
-            <!-- Bloqué par défaut (false) : aucun clavier intempestif ni barre iOS -->
             <pre id="code-area" contenteditable="false" spellcheck="false" inputmode="none"></pre>
           </div>
         </div>
@@ -892,7 +881,6 @@
     const codeArea = document.getElementById('code-area');
     const gutterBar = document.getElementById('gutter-bar');
     const editorScrollBox = document.getElementById('editor-scroll-box');
-    const editorFileName = document.getElementById('editor-file-name');
     const fileList = document.getElementById('fileList');
     const emptyStateMsg = document.getElementById('empty-state-msg');
     const filePicker = document.getElementById('filePicker');
@@ -1018,7 +1006,6 @@
       }
 
       currentActiveFileId = id;
-      editorFileName.textContent = fileData.name;
       rawCodeBuffer = fileData.content;
       codeArea.textContent = rawCodeBuffer;
       disableKeyboard();
@@ -1038,7 +1025,6 @@
       if (pendingTxtData) {
         currentActiveFileId = pendingTxtData.id;
         const newHtmlName = pendingTxtData.name.replace(/\.txt$/i, '.html');
-        editorFileName.textContent = newHtmlName;
         pendingTxtData.name = newHtmlName;
         rawCodeBuffer = pendingTxtData.content;
         codeArea.textContent = rawCodeBuffer;
@@ -1081,7 +1067,7 @@
       closeSearchBar();
     }
 
-    /* GESTION VOLONTAIRE DU CLAVIER */
+    /* GESTION DU CLAVIER RÉACTIVE EN 1 SEUL TAP */
     function enableKeyboard() {
       isKeyboardEnabled = true;
       btnToggleKeyboard.classList.add('active-state');
@@ -1089,7 +1075,7 @@
       codeArea.setAttribute('contenteditable', 'true');
       codeArea.removeAttribute('inputmode');
       codeArea.focus();
-      showToast("Mode saisie activé (Clavier ouvert)");
+      showToast("Mode saisie activé");
     }
 
     function disableKeyboard() {
@@ -1103,7 +1089,9 @@
       }
     }
 
-    btnToggleKeyboard.addEventListener('click', () => {
+    btnToggleKeyboard.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       if (isKeyboardEnabled) {
         disableKeyboard();
       } else {
@@ -1111,7 +1099,6 @@
       }
     });
 
-    /* Empêcher tout focus involontaire sur le code si le clavier n'est pas activé */
     codeArea.addEventListener('focus', (e) => {
       if (!isKeyboardEnabled) {
         e.preventDefault();
@@ -1131,9 +1118,49 @@
       gutterBar.scrollTop = editorScrollBox.scrollTop;
     }
 
-    /* Sélection tactile sans aucun clavier */
+    /* AUTO-SCROLL VERTICAL CONTINU PENDANT LE DRAG */
     let isGutterDragging = false;
     let dragStartLine = null;
+    let autoScrollRaf = null;
+    let lastClientY = 0;
+
+    function startAutoScroll() {
+      if (autoScrollRaf) return;
+      function step() {
+        if (!isGutterDragging) {
+          autoScrollRaf = null;
+          return;
+        }
+
+        const rect = editorScrollBox.getBoundingClientRect();
+        const topThreshold = rect.top + 70;
+        const bottomThreshold = rect.bottom - 70;
+        let scrollSpeed = 0;
+
+        if (lastClientY < topThreshold) {
+          scrollSpeed = -Math.min(18, (topThreshold - lastClientY) * 0.45);
+        } else if (lastClientY > bottomThreshold) {
+          scrollSpeed = Math.min(18, (lastClientY - bottomThreshold) * 0.45);
+        }
+
+        if (scrollSpeed !== 0) {
+          editorScrollBox.scrollTop += scrollSpeed;
+          gutterBar.scrollTop = editorScrollBox.scrollTop;
+          const currentLine = getLineFromY(lastClientY);
+          selectLinesRange(dragStartLine, currentLine);
+        }
+
+        autoScrollRaf = requestAnimationFrame(step);
+      }
+      autoScrollRaf = requestAnimationFrame(step);
+    }
+
+    function stopAutoScroll() {
+      if (autoScrollRaf) {
+        cancelAnimationFrame(autoScrollRaf);
+        autoScrollRaf = null;
+      }
+    }
 
     function getLineFromY(clientY) {
       const rect = gutterBar.getBoundingClientRect();
@@ -1143,6 +1170,7 @@
       return Math.max(1, Math.min(lineNumber, maxLines));
     }
 
+    /* SÉLECTION NATIVE COMPLÈTE (AVEC BARRE BLEUE MÊME SUR 1 SEULE LIGNE) */
     function selectLinesRange(fromLine, toLine) {
       const min = Math.min(fromLine, toLine);
       const max = Math.max(fromLine, toLine);
@@ -1202,25 +1230,29 @@
       isGutterDragging = true;
       disableKeyboard();
       const touch = e.touches[0];
-      dragStartLine = getLineFromY(touch.clientY);
+      lastClientY = touch.clientY;
+      dragStartLine = getLineFromY(lastClientY);
       selectLinesRange(dragStartLine, dragStartLine);
+      startAutoScroll();
     }, { passive: false });
 
     gutterBar.addEventListener('touchmove', (e) => {
       if (!isGutterDragging) return;
       e.preventDefault();
       const touch = e.touches[0];
-      const currentLine = getLineFromY(touch.clientY);
+      lastClientY = touch.clientY;
+      const currentLine = getLineFromY(lastClientY);
       selectLinesRange(dragStartLine, currentLine);
     }, { passive: false });
 
     gutterBar.addEventListener('touchend', () => {
       isGutterDragging = false;
-      showToast("Lignes sélectionnées");
+      stopAutoScroll();
     });
 
     gutterBar.addEventListener('touchcancel', () => {
       isGutterDragging = false;
+      stopAutoScroll();
     });
 
     btnSelectAll.addEventListener('click', () => {
@@ -1242,7 +1274,7 @@
 
       try {
         await navigator.clipboard.writeText(textToCopy);
-        showToast(selectedText ? "Lignes sélectionnées copiées ✓" : "Tout le code copié ✓");
+        showToast(selectedText ? "Lignes copiées ✓" : "Tout copié ✓");
       } catch (err) {
         showToast("Erreur de copie");
       }
@@ -1262,14 +1294,18 @@
           showToast("Code collé");
         }
       } catch (err) {
-        showToast("Autorisation requise pour coller");
+        showToast("Autorisation requise");
       }
     });
 
     btnSave.addEventListener('click', async () => {
       syncFromDOM();
       const code = rawCodeBuffer;
-      let filename = editorFileName.textContent || 'application.html';
+      let filename = 'index.html';
+      const fileData = currentActiveFileId ? fileStore.get(currentActiveFileId) : null;
+      if (fileData && fileData.name) {
+        filename = fileData.name;
+      }
       if (!filename.toLowerCase().endsWith('.html') && !filename.toLowerCase().endsWith('.htm')) {
         filename += '.html';
       }
@@ -1317,7 +1353,7 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast("Fichier téléchargé en .html");
+      showToast("Téléchargé en .html");
     });
 
     let syncTimer = null;
@@ -1464,7 +1500,6 @@
     function navigateSearch(direction) {
       if (totalMatches === 0) return;
 
-      // Ferme le clavier et annule tout focus
       searchInput.blur();
       if (document.activeElement) document.activeElement.blur();
 
