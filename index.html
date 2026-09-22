@@ -475,7 +475,7 @@
       display: flex;
     }
 
-    /* Barre d'outils optimisée : 100% de la largeur, aucun scroll horizontal */
+    /* Barre d'outils optimisée : 100% largeur écran sans débordement */
     .editor-toolbar {
       display: flex;
       align-items: center;
@@ -734,7 +734,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-bar-right">
-        <span class="app-version-badge">v1.4.9</span>
+        <span class="app-version-badge">v1.5.0</span>
         <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
       </div>
     </div>
@@ -806,7 +806,6 @@
       <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
 
       <div id="editor-pane">
-        <!-- Barre d'outils optimisée -->
         <div class="editor-toolbar">
           <div class="editor-actions">
             <button class="tool-btn" id="btn-toggle-keyboard">⌨️ Clavier</button>
@@ -1067,7 +1066,6 @@
       closeSearchBar();
     }
 
-    /* GESTION DU CLAVIER RÉACTIVE EN 1 SEUL TAP */
     function enableKeyboard() {
       isKeyboardEnabled = true;
       btnToggleKeyboard.classList.add('active-state');
@@ -1118,7 +1116,7 @@
       gutterBar.scrollTop = editorScrollBox.scrollTop;
     }
 
-    /* AUTO-SCROLL VERTICAL CONTINU PENDANT LE DRAG */
+    /* AUTO-SCROLL ULTRA PROGRESSIF ET ULTRA RAPIDE */
     let isGutterDragging = false;
     let dragStartLine = null;
     let autoScrollRaf = null;
@@ -1133,14 +1131,20 @@
         }
 
         const rect = editorScrollBox.getBoundingClientRect();
-        const topThreshold = rect.top + 70;
-        const bottomThreshold = rect.bottom - 70;
+        const topThreshold = rect.top + 95;
+        const bottomThreshold = rect.bottom - 95;
         let scrollSpeed = 0;
 
         if (lastClientY < topThreshold) {
-          scrollSpeed = -Math.min(18, (topThreshold - lastClientY) * 0.45);
+          // Ratio de proximité vers le haut (0 = seuil, 1 = tout en haut de l'écran)
+          const ratio = Math.max(0, Math.min(1.4, (topThreshold - lastClientY) / 85));
+          // Vitesse quadratique : douce au début, fulgurante tout en haut (jusqu'à 75px / frame)
+          scrollSpeed = -(8 + Math.pow(ratio, 2.2) * 65);
         } else if (lastClientY > bottomThreshold) {
-          scrollSpeed = Math.min(18, (lastClientY - bottomThreshold) * 0.45);
+          // Ratio de proximité vers le bas (0 = seuil, 1 = tout en bas de l'écran)
+          const ratio = Math.max(0, Math.min(1.4, (lastClientY - bottomThreshold) / 85));
+          // Vitesse quadratique : douce au début, fulgurante tout en bas
+          scrollSpeed = (8 + Math.pow(ratio, 2.2) * 65);
         }
 
         if (scrollSpeed !== 0) {
@@ -1170,7 +1174,6 @@
       return Math.max(1, Math.min(lineNumber, maxLines));
     }
 
-    /* SÉLECTION NATIVE COMPLÈTE (AVEC BARRE BLEUE MÊME SUR 1 SEULE LIGNE) */
     function selectLinesRange(fromLine, toLine) {
       const min = Math.min(fromLine, toLine);
       const max = Math.max(fromLine, toLine);
