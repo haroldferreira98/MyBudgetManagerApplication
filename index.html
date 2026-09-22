@@ -475,7 +475,6 @@
       display: flex;
     }
 
-    /* Barre d'outils multi-lignes */
     .editor-toolbar {
       display: flex;
       flex-direction: column;
@@ -491,6 +490,7 @@
       display: flex;
       width: 100%;
       gap: 5px;
+      align-items: center;
     }
 
     .tool-btn {
@@ -529,6 +529,40 @@
     .tool-btn-sub {
       background: rgba(255, 255, 255, 0.08);
       color: #e0dced;
+    }
+
+    /* Indicateur de sauvegarde automatique (iCloud / Local) */
+    .save-indicator {
+      font-size: 0.68rem;
+      color: #a49fc0;
+      font-weight: 500;
+      padding-left: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .save-indicator-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4caf50;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .save-indicator-dot.syncing {
+      background: #ff9800;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
     }
 
     .editor-workspace {
@@ -740,7 +774,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-bar-right">
-        <span class="app-version-badge">v1.5.1</span>
+        <span class="app-version-badge">v1.5.2</span>
         <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
       </div>
     </div>
@@ -754,7 +788,7 @@
       <div class="action-card" id="btn-import-file">
         <div class="action-icon">📄</div>
         <h3>Importer fichier</h3>
-        <span>HTML ou TXT</span>
+        <span>iCloud / Local (Auto-save)</span>
       </div>
 
       <div class="action-card" id="btn-import-folder">
@@ -822,10 +856,13 @@
             <button class="tool-btn" id="btn-paste">Coller</button>
             <button class="tool-btn tool-btn-primary" id="btn-save">💾 Sauveg.</button>
           </div>
-          <!-- Rangée 2 : Annuler juste en dessous de Clavier -->
+          <!-- Rangée 2 : Annuler + Statut Auto-Save iCloud / Cache -->
           <div class="toolbar-row">
             <button class="tool-btn tool-btn-sub" id="btn-undo">↩ Annuler</button>
-            <div style="flex: 4;"></div>
+            <div class="save-indicator">
+              <span class="save-indicator-dot" id="save-status-dot"></span>
+              <span id="save-status-text">Synchronisé</span>
+            </div>
           </div>
         </div>
 
@@ -886,10 +923,13 @@
     let rawCodeBuffer = "";
     let isKeyboardEnabled = false;
 
-    // Pile d'historique pour le bouton Annuler (Undo)
+    // Pile d'historique Undo
     const undoHistory = [];
     let isAllSelectedFlag = false;
-    let selectedLineRange = null; // { from, to }
+    let selectedLineRange = null;
+
+    // Timer Auto-Save
+    let autoSaveDebounceTimer = null;
 
     const viewHome = document.getElementById('view-home');
     const viewRunner = document.getElementById('view-runner');
@@ -912,6 +952,8 @@
     const btnPaste = document.getElementById('btn-paste');
     const btnSave = document.getElementById('btn-save');
     const btnUndo = document.getElementById('btn-undo');
+    const saveStatusDot = document.getElementById('save-status-dot');
+    const saveStatusText = document.getElementById('save-status-text');
     const modalConvert = document.getElementById('modal-convert');
     const modalText = document.getElementById('modal-text');
     const btnModalCancel = document.getElementById('btn-modal-cancel');
@@ -956,13 +998,42 @@
       opt.addEventListener('click', () => applyTheme(opt.getAttribute('data-set-theme')));
     });
 
-    document.getElementById('btn-import-file').addEventListener('click', () => filePicker.click());
+    // IMPORT DE FICHIER : Tente d'abord l'API moderne File System Access (iCloud direct)
+    document.getElementById('btn-import-file').addEventListener('click', async () => {
+      if (window.showOpenFilePicker) {
+        try {
+          const [handle] = await window.showOpenFilePicker({
+            types: [{
+              description: 'Documents Web',
+              accept: {
+                'text/html': ['.html', '.htm'],
+                'text/plain': ['.txt'],
+                'text/css': ['.css'],
+                'text/javascript': ['.js']
+              }
+            }],
+            multiple: false
+          });
+
+          if (handle) {
+            const file = await handle.getFile();
+            await registerAndHandleFile(file, file.name, true, handle);
+            return;
+          }
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+      // Fallback classique
+      filePicker.click();
+    });
+
     document.getElementById('btn-import-folder').addEventListener('click', () => folderPicker.click());
 
     filePicker.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      await registerAndHandleFile(file, file.name);
+      await registerAndHandleFile(file, file.name, true, null);
       filePicker.value = '';
     });
 
@@ -976,15 +1047,20 @@
       for (const file of files) {
         if (file.name.startsWith('.')) continue;
         const fullPath = file.webkitRelativePath || file.name;
-        await registerAndHandleFile(file, fullPath, false);
+        await registerAndHandleFile(file, fullPath, false, null);
       }
       folderPicker.value = '';
     });
 
-    async function registerAndHandleFile(file, displayPath, autoOpen = true) {
+    async function registerAndHandleFile(file, displayPath, autoOpen = true, fileHandle = null) {
       if (emptyStateMsg) emptyStateMsg.style.display = 'none';
 
-      const content = await file.text();
+      // Vérifie si un cache local plus récent existe
+      const storageKey = 'cache_file_' + file.name;
+      const cachedContent = localStorage.getItem(storageKey);
+      const rawContent = await file.text();
+      const content = cachedContent !== null ? cachedContent : rawContent;
+
       const ext = file.name.split('.').pop().toLowerCase();
       const id = 'file_' + Math.random().toString(36).substr(2, 9);
 
@@ -992,7 +1068,9 @@
         name: file.name,
         path: displayPath,
         content: content,
-        ext: ext
+        ext: ext,
+        handle: fileHandle, // Conserve le handle natif si disponible
+        storageKey: storageKey
       });
 
       const card = document.createElement('div');
@@ -1000,7 +1078,7 @@
       card.innerHTML = `
         <div class="file-card-info">
           <div class="file-card-name">${ext === 'html' || ext === 'htm' ? '📄' : (ext === 'txt' ? '📝' : '⚙️')} ${file.name}</div>
-          <div class="file-card-path">${displayPath}</div>
+          <div class="file-card-path">${displayPath} ${cachedContent !== null ? '• Restauré du cache' : ''}</div>
         </div>
       `;
 
@@ -1037,6 +1115,7 @@
       disableKeyboard();
       resetSelectionState();
       renderGutter();
+      updateSaveIndicator("Prêt");
       
       showPreviewMode();
       renderAppFrame(fileData.content);
@@ -1061,6 +1140,7 @@
         disableKeyboard();
         resetSelectionState();
         renderGutter();
+        updateSaveIndicator("Prêt");
 
         showPreviewMode();
         renderAppFrame(pendingTxtData.content);
@@ -1295,7 +1375,6 @@
       stopAutoScroll();
     });
 
-    // TOUT SÉLECTIONNER
     btnSelectAll.addEventListener('click', () => {
       disableKeyboard();
       const range = document.createRange();
@@ -1311,7 +1390,6 @@
       showToast("Code sélectionné");
     });
 
-    // COPIER
     btnCopy.addEventListener('click', async () => {
       syncFromDOM();
       const sel = window.getSelection();
@@ -1326,13 +1404,11 @@
       }
     });
 
-    // COLLER ROBUSTE (Remplace la sélection active ou tout le document)
     btnPaste.addEventListener('click', async () => {
       let pastedText = "";
       try {
         pastedText = await navigator.clipboard.readText();
       } catch (err) {
-        // Fallback prompt si le navigateur bloque readText
         pastedText = prompt("Collez votre code ici :") || "";
       }
 
@@ -1341,19 +1417,15 @@
       pushToUndoHistory(rawCodeBuffer);
 
       if (isAllSelectedFlag) {
-        // Remplacement de 100% du document
         rawCodeBuffer = pastedText;
       } else if (selectedLineRange) {
-        // Remplacement d'une tranche de lignes ciblée
         const lines = rawCodeBuffer.split('\n');
         const min = selectedLineRange.from;
         const max = selectedLineRange.to;
-
         const before = lines.slice(0, min - 1);
         const after = lines.slice(max);
         rawCodeBuffer = [...before, pastedText, ...after].join('\n');
       } else {
-        // Remplacement de la sélection native ou ajout à la fin
         const sel = window.getSelection();
         if (sel.rangeCount > 0 && !sel.isCollapsed) {
           const range = sel.getRangeAt(0);
@@ -1362,7 +1434,6 @@
           range.insertNode(textNode);
           rawCodeBuffer = codeArea.innerText.replace(/\r\n/g, '\n');
         } else {
-          // Si rien de sélectionné, remplace tout pour faciliter le swap de fichier
           rawCodeBuffer = pastedText;
         }
       }
@@ -1371,13 +1442,12 @@
       resetSelectionState();
       renderGutter();
       syncFromDOM();
-      showToast("Code collé avec succès ✓");
+      triggerAutoSave();
+      showToast("Code collé & sauvegardé ✓");
     });
 
-    // BOUTON ANNULER (UNDO)
     btnUndo.addEventListener('click', () => {
       if (undoHistory.length > 1) {
-        // Retire l'état actuel et restaure le précédent
         undoHistory.pop();
         const previousState = undoHistory[undoHistory.length - 1];
         rawCodeBuffer = previousState;
@@ -1385,6 +1455,7 @@
         resetSelectionState();
         renderGutter();
         syncFromDOM();
+        triggerAutoSave();
         showToast("Action annulée ↩");
       } else if (undoHistory.length === 1) {
         rawCodeBuffer = undoHistory[0];
@@ -1392,13 +1463,57 @@
         resetSelectionState();
         renderGutter();
         syncFromDOM();
-        showToast("Retour à la version initiale");
+        triggerAutoSave();
+        showToast("Version initiale restaurée");
       } else {
         showToast("Rien à annuler");
       }
     });
 
-    // SAUVEGARDE
+    /* AUTO-SAVE HYBRIDE : Écriture iCloud en tâche de fond + Cache Local */
+    function updateSaveIndicator(text, isSyncing = false) {
+      saveStatusText.textContent = text;
+      if (isSyncing) {
+        saveStatusDot.classList.add('syncing');
+      } else {
+        saveStatusDot.classList.remove('syncing');
+      }
+    }
+
+    function triggerAutoSave() {
+      if (!currentActiveFileId) return;
+      clearTimeout(autoSaveDebounceTimer);
+      updateSaveIndicator("Sauvegarde en cours…", true);
+
+      autoSaveDebounceTimer = setTimeout(async () => {
+        const fileData = fileStore.get(currentActiveFileId);
+        if (!fileData) return;
+
+        // 1. Sauvegarde instantanée dans le cache LocalStorage
+        try {
+          localStorage.setItem(fileData.storageKey, rawCodeBuffer);
+        } catch (e) {
+          console.warn("LocalStorage plein ou restreint");
+        }
+
+        // 2. Écriture directe sur le fichier iCloud si handle disponible
+        if (fileData.handle && fileData.handle.createWritable) {
+          try {
+            const writable = await fileData.handle.createWritable();
+            await writable.write(rawCodeBuffer);
+            await writable.close();
+            updateSaveIndicator("Enregistré dans iCloud ✓");
+            return;
+          } catch (err) {
+            // Safari peut bloquer les écritures sans interaction directe
+            console.log("Écriture directe en arrière-plan non autorisée par le navigateur:", err);
+          }
+        }
+
+        updateSaveIndicator("Sauvegardé en cache local ✓");
+      }, 700);
+    }
+
     btnSave.addEventListener('click', async () => {
       syncFromDOM();
       const code = rawCodeBuffer;
@@ -1411,6 +1526,26 @@
         filename += '.html';
       }
 
+      // 1. Mise à jour cache immédiate
+      if (fileData) {
+        localStorage.setItem(fileData.storageKey, code);
+      }
+
+      // 2. Si on a le handle iCloud, on écrit dedans directement
+      if (fileData && fileData.handle && fileData.handle.createWritable) {
+        try {
+          const writable = await fileData.handle.createWritable();
+          await writable.write(code);
+          await writable.close();
+          updateSaveIndicator("Enregistré dans iCloud ✓");
+          showToast("Fichier iCloud mis à jour ✓");
+          return;
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+
+      // 3. Fallback Share / Enregistrer sous
       const file = new File([code], filename, { type: 'text/html;charset=utf-8' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1464,6 +1599,7 @@
         pushToUndoHistory(codeArea.innerText.replace(/\r\n/g, '\n'));
         syncFromDOM();
         renderGutter();
+        triggerAutoSave();
       }, 350);
     });
 
