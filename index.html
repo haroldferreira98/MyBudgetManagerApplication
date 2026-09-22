@@ -9,102 +9,86 @@
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --md-sys-color-background: #fdf8fd;
-      --md-sys-color-surface: #f7f2fa;
-      --md-sys-color-surface-container: #ede7f6;
-      --md-sys-color-surface-container-high: #e6e0ee;
-      --md-sys-color-primary: #6750a4;
-      --md-sys-color-on-primary: #ffffff;
-      --md-sys-color-primary-container: #eaddff;
-      --md-sys-color-on-primary-container: #21005d;
-      --md-sys-color-secondary-container: #e8def8;
-      --md-sys-color-on-secondary-container: #1d192b;
-      --md-sys-color-on-surface: #1d1b20;
-      --md-sys-color-on-surface-variant: #49454f;
-      --md-sys-color-outline-variant: #cac4d0;
-      --shade-bg: rgba(247, 242, 250, 0.94);
+      --bg: #fdf8fd;
+      --surface: #f7f2fa;
+      --surface-c: #ede7f6;
+      --surface-h: #e6e0ee;
+      --primary: #6750a4;
+      --on-primary: #ffffff;
+      --primary-c: #eaddff;
+      --on-primary-c: #21005d;
+      --sec-c: #e8def8;
+      --on-sec-c: #1d192b;
+      --text: #1d1b20;
+      --text-sub: #49454f;
+      --outline: #cac4d0;
+      --shade: rgba(247, 242, 250, 0.94);
       --editor-bg: #1e1e24;
       --editor-fg: #f5f2f8;
       --gutter-bg: #16161b;
       --gutter-fg: #757182;
-      --gutter-active-bg: rgba(103, 80, 164, 0.35);
-      --gutter-active-fg: #eaddff;
+      --gutter-act-bg: rgba(103, 80, 164, 0.35);
+      --gutter-act-fg: #eaddff;
       --hl-match: rgba(33, 150, 243, 0.2);
-      --hl-active: rgba(33, 150, 243, 0.85);
-      --hl-active-border: #1976d2;
-      --hl-active-text: #ffffff;
-      --radius-card: 28px;
+      --hl-act: #2196f3;
+      --radius-card: 24px;
       --radius-pill: 9999px;
     }
-
-    [data-theme="dark"] {
-      --md-sys-color-background: #141218;
-      --md-sys-color-surface: #1d1b20;
-      --md-sys-color-surface-container: #2b2930;
-      --md-sys-color-surface-container-high: #36343b;
-      --md-sys-color-primary: #d0bcff;
-      --md-sys-color-on-primary: #381e72;
-      --md-sys-color-primary-container: #4f378b;
-      --md-sys-color-on-primary-container: #eaddff;
-      --md-sys-color-secondary-container: #4a4458;
-      --md-sys-color-on-secondary-container: #e8def8;
-      --md-sys-color-on-surface: #e6e1e5;
-      --md-sys-color-on-surface-variant: #cac4d0;
-      --md-sys-color-outline-variant: #49454f;
-      --shade-bg: rgba(29, 27, 32, 0.94);
-      --editor-bg: #0f0e13;
-      --editor-fg: #ece6f0;
-      --gutter-bg: #09080c;
-      --gutter-fg: #605d68;
-      --gutter-active-bg: rgba(208, 188, 255, 0.25);
-      --gutter-active-fg: #d0bcff;
-      --hl-match: rgba(255, 235, 59, 0.25);
-      --hl-active: #ffeb3b;
-      --hl-active-border: #fbc02d;
-      --hl-active-text: #000000;
-    }
-
-    @media (prefers-color-scheme: dark) {
+    [data-theme="dark"], @media (prefers-color-scheme: dark) {
       [data-theme="auto"] {
-        --md-sys-color-background: #141218;
-        --md-sys-color-surface: #1d1b20;
-        --md-sys-color-surface-container: #2b2930;
-        --md-sys-color-surface-container-high: #36343b;
-        --md-sys-color-primary: #d0bcff;
-        --md-sys-color-on-primary: #381e72;
-        --md-sys-color-primary-container: #4f378b;
-        --md-sys-color-on-primary-container: #eaddff;
-        --md-sys-color-secondary-container: #4a4458;
-        --md-sys-color-on-secondary-container: #e8def8;
-        --md-sys-color-on-surface: #e6e1e5;
-        --md-sys-color-on-surface-variant: #cac4d0;
-        --md-sys-color-outline-variant: #49454f;
-        --shade-bg: rgba(29, 27, 32, 0.94);
+        --bg: #141218;
+        --surface: #1d1b20;
+        --surface-c: #2b2930;
+        --surface-h: #36343b;
+        --primary: #d0bcff;
+        --on-primary: #381e72;
+        --primary-c: #4f378b;
+        --on-primary-c: #eaddff;
+        --sec-c: #4a4458;
+        --on-sec-c: #e8def8;
+        --text: #e6e1e5;
+        --text-sub: #cac4d0;
+        --outline: #49454f;
+        --shade: rgba(29, 27, 32, 0.94);
         --editor-bg: #0f0e13;
         --editor-fg: #ece6f0;
         --gutter-bg: #09080c;
         --gutter-fg: #605d68;
-        --gutter-active-bg: rgba(208, 188, 255, 0.25);
-        --gutter-active-fg: #d0bcff;
+        --gutter-act-bg: rgba(208, 188, 255, 0.25);
+        --gutter-act-fg: #d0bcff;
         --hl-match: rgba(255, 235, 59, 0.25);
-        --hl-active: #ffeb3b;
-        --hl-active-border: #fbc02d;
-        --hl-active-text: #000000;
+        --hl-act: #ffeb3b;
       }
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
+    [data-theme="dark"] {
+      --bg: #141218;
+      --surface: #1d1b20;
+      --surface-c: #2b2930;
+      --surface-h: #36343b;
+      --primary: #d0bcff;
+      --on-primary: #381e72;
+      --primary-c: #4f378b;
+      --on-primary-c: #eaddff;
+      --sec-c: #4a4458;
+      --on-sec-c: #e8def8;
+      --text: #e6e1e5;
+      --text-sub: #cac4d0;
+      --outline: #49454f;
+      --shade: rgba(29, 27, 32, 0.94);
+      --editor-bg: #0f0e13;
+      --editor-fg: #ece6f0;
+      --gutter-bg: #09080c;
+      --gutter-fg: #605d68;
+      --gutter-act-bg: rgba(208, 188, 255, 0.25);
+      --gutter-act-fg: #d0bcff;
+      --hl-match: rgba(255, 235, 59, 0.25);
+      --hl-act: #ffeb3b;
     }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
     body {
       font-family: 'Google Sans', sans-serif;
-      background-color: var(--md-sys-color-background);
-      color: var(--md-sys-color-on-surface);
+      background: var(--bg);
+      color: var(--text);
       height: 100dvh;
       width: 100vw;
       overflow: hidden;
@@ -112,387 +96,84 @@
       flex-direction: column;
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
-      transition: background-color 0.25s ease, color 0.25s ease;
     }
-
-    #view-home {
-      flex: 1;
+    svg.icon { width: 20px; height: 20px; fill: currentColor; display: block; flex-shrink: 0; }
+    #view-home { flex: 1; display: flex; flex-direction: column; padding: 20px 20px 16px; overflow-y: auto; gap: 20px; }
+    .top-bar { display: flex; align-items: center; justify-content: space-between; }
+    .badge-chip { background: var(--primary-c); color: var(--on-primary-c); padding: 6px 14px; border-radius: var(--radius-pill); font-size: 0.78rem; font-weight: 500; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .version-badge { font-size: 0.72rem; font-weight: 700; padding: 6px 10px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text-sub); }
+    .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text); display: grid; place-items: center; border: none; cursor: pointer; }
+    .icon-btn:active { transform: scale(0.92); }
+    .header-text h1 { font-size: 1.85rem; font-weight: 700; letter-spacing: -0.5px; }
+    .header-text p { color: var(--text-sub); font-size: 0.92rem; margin-top: 4px; }
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .action-card {
+      background: var(--surface-c);
+      border-radius: var(--radius-card);
+      padding: 18px 16px;
       display: flex;
       flex-direction: column;
-      padding: 20px 20px 16px 20px;
-      overflow-y: auto;
-      gap: 22px;
+      gap: 10px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.05);
     }
-
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-    }
-
-    .top-bar-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .app-version-badge {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 6px 10px;
-      border-radius: var(--radius-pill);
-      background: var(--md-sys-color-surface-container);
-      color: var(--md-sys-color-on-surface-variant);
-      letter-spacing: 0.04em;
-    }
-
-    .badge-chip {
-      background: var(--md-sys-color-primary-container);
-      color: var(--md-sys-color-on-primary-container);
-      padding: 6px 14px;
-      border-radius: var(--radius-pill);
-      font-size: 0.78rem;
-      font-weight: 500;
-    }
-
-    .icon-btn {
+    .action-card:active { transform: scale(0.97); }
+    .action-icon {
+      background: var(--bg);
+      color: var(--primary);
       width: 42px;
       height: 42px;
-      border-radius: var(--radius-pill);
-      background: var(--md-sys-color-surface-container);
-      color: var(--md-sys-color-on-surface);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      cursor: pointer;
-      font-size: 1.2rem;
-      transition: transform 0.15s ease;
-    }
-
-    .icon-btn:active {
-      transform: scale(0.92);
-    }
-
-    .header-text h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .header-text p {
-      color: var(--md-sys-color-on-surface-variant);
-      font-size: 0.95rem;
-      margin-top: 4px;
-    }
-
-    .action-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .action-card {
-      background: var(--md-sys-color-surface-container);
-      border-radius: var(--radius-card);
-      padding: 20px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.04);
-      transition: transform 0.15s ease;
-    }
-
-    .action-card:active {
-      transform: scale(0.97);
-    }
-
-    .action-icon {
-      font-size: 24px;
-      background: var(--md-sys-color-background);
-      width: 44px;
-      height: 44px;
       border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      display: grid;
+      place-items: center;
     }
+    .action-card h3 { font-size: 0.95rem; font-weight: 600; }
+    .action-card span { font-size: 0.76rem; color: var(--text-sub); line-height: 1.2; }
+    .section-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-sub); font-weight: 700; margin-bottom: -8px; }
+    .file-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
+    .empty-state { padding: 28px 16px; text-align: center; background: var(--surface-c); border-radius: var(--radius-card); color: var(--text-sub); font-size: 0.85rem; }
+    .file-card { background: var(--surface-c); border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .file-card:active { background: var(--primary-c); color: var(--on-primary-c); }
+    .file-card-info { flex: 1; overflow: hidden; }
+    .file-card-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
+    .file-card-path { font-size: 0.72rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
-    .action-card h3 {
-      font-size: 0.98rem;
-      font-weight: 600;
-    }
-
-    .action-card span {
-      font-size: 0.78rem;
-      color: var(--md-sys-color-on-surface-variant);
-      line-height: 1.2;
-    }
-
-    .section-title {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--md-sys-color-on-surface-variant);
-      font-weight: 700;
-      margin-bottom: -10px;
-    }
-
-    .file-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding-bottom: 20px;
-    }
-
-    .empty-state {
-      padding: 30px 20px;
-      text-align: center;
-      background: var(--md-sys-color-surface-container);
-      border-radius: var(--radius-card);
-      color: var(--md-sys-color-on-surface-variant);
-      font-size: 0.88rem;
-      line-height: 1.4;
-    }
-
-    .file-card {
-      background: var(--md-sys-color-surface-container);
-      border-radius: 20px;
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      cursor: pointer;
-      transition: transform 0.15s ease;
-    }
-
-    .file-card:active {
-      transform: scale(0.98);
-      background: var(--md-sys-color-primary-container);
-    }
-
-    .file-card-info {
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .file-card-name {
-      font-weight: 600;
-      font-size: 0.92rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .file-card-path {
-      font-size: 0.75rem;
-      color: var(--md-sys-color-on-surface-variant);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: 2px;
-    }
-
-    #view-runner {
-      position: fixed;
-      inset: 0;
-      background: var(--md-sys-color-background);
-      z-index: 1000;
-      display: none;
-      flex-direction: column;
-    }
-
-    #view-runner.open {
-      display: flex;
-    }
-
+    #view-runner { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: none; flex-direction: column; }
+    #view-runner.open { display: flex; }
     .runner-shade {
-      background: var(--shade-bg);
+      background: var(--shade);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--md-sys-color-outline-variant);
-      padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 10px 12px;
+      border-bottom: 1px solid var(--outline);
+      padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px;
       display: grid;
-      grid-template-columns: 42px 1fr 42px;
+      grid-template-columns: 40px 1fr 40px;
       align-items: center;
       z-index: 1100;
     }
+    .shade-btn { width: 38px; height: 38px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text); display: grid; place-items: center; border: none; cursor: pointer; }
+    .shade-btn:active { transform: scale(0.9); }
+    #shade-search-btn { justify-self: end; visibility: hidden; pointer-events: none; }
+    #shade-search-btn.visible { visibility: visible; pointer-events: auto; }
+    .shade-center { display: flex; justify-content: center; align-items: center; }
+    .shade-segmented { display: inline-flex; background: var(--surface-h); border-radius: var(--radius-pill); padding: 3px; }
+    .shade-tab { border: none; background: transparent; padding: 6px 14px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 600; color: var(--text-sub); cursor: pointer; }
+    .shade-tab.active { background: var(--primary); color: var(--on-primary); }
 
-    .shade-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: var(--radius-pill);
-      background: var(--md-sys-color-surface-container);
-      color: var(--md-sys-color-on-surface);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      cursor: pointer;
-      transition: transform 0.15s ease;
-      justify-self: start;
-    }
+    #search-bar { display: none; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface-c); border-bottom: 1px solid var(--outline); }
+    #search-bar.active { display: flex; }
+    .search-input-box { flex: 1; display: flex; align-items: center; background: var(--bg); border-radius: var(--radius-pill); padding: 0 12px; border: 1px solid var(--outline); }
+    #search-input { flex: 1; border: none; background: transparent; padding: 7px 0; outline: none; font-size: 0.82rem; color: var(--text); user-select: text; -webkit-user-select: text; }
+    #search-count { font-size: 0.72rem; color: var(--text-sub); font-weight: 600; padding-left: 6px; }
+    .search-nav-btn { width: 32px; height: 32px; border-radius: var(--radius-pill); border: none; background: var(--surface-h); color: var(--text); display: grid; place-items: center; cursor: pointer; }
 
-    .shade-btn:active {
-      transform: scale(0.9);
-    }
-
-    .shade-btn svg {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
-    }
-
-    #shade-search-btn {
-      justify-self: end;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    #shade-search-btn.visible {
-      visibility: visible;
-      pointer-events: auto;
-    }
-
-    .shade-center {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .shade-segmented {
-      display: inline-flex;
-      background: var(--md-sys-color-surface-container-high);
-      border-radius: var(--radius-pill);
-      padding: 3px;
-    }
-
-    .shade-tab {
-      border: none;
-      background: transparent;
-      padding: 6px 14px;
-      border-radius: var(--radius-pill);
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--md-sys-color-on-surface-variant);
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-    }
-
-    .shade-tab.active {
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-
-    #search-bar {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      background: var(--md-sys-color-surface-container);
-      border-bottom: 1px solid var(--md-sys-color-outline-variant);
-      z-index: 1050;
-    }
-
-    #search-bar.active {
-      display: flex;
-    }
-
-    .search-input-box {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      background: var(--md-sys-color-background);
-      border-radius: var(--radius-pill);
-      padding: 0 12px;
-      border: 1px solid var(--md-sys-color-outline-variant);
-    }
-
-    #search-input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      padding: 8px 0;
-      outline: none;
-      font-size: 0.85rem;
-      color: var(--md-sys-color-on-surface);
-      user-select: text;
-      -webkit-user-select: text;
-    }
-
-    #search-count {
-      font-size: 0.75rem;
-      color: var(--md-sys-color-on-surface-variant);
-      font-weight: 600;
-      padding-left: 6px;
-    }
-
-    .search-nav-btn {
-      width: 34px;
-      height: 34px;
-      border-radius: var(--radius-pill);
-      border: none;
-      background: var(--md-sys-color-surface-container-high);
-      color: var(--md-sys-color-on-surface);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-
-    .search-nav-btn:active {
-      transform: scale(0.9);
-    }
-
-    .runner-body {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-    }
-
-    iframe#app-frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #ffffff;
-      display: block;
-    }
-
-    #editor-pane {
-      position: absolute;
-      inset: 0;
-      background: var(--editor-bg);
-      display: none;
-      flex-direction: column;
-    }
-
-    #editor-pane.active {
-      display: flex;
-    }
-
-    .editor-toolbar {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      padding: 6px 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      z-index: 10;
-      width: 100%;
-    }
-
-    .toolbar-row {
-      display: flex;
-      width: 100%;
-      gap: 5px;
-      align-items: center;
-    }
-
+    .runner-body { flex: 1; position: relative; overflow: hidden; }
+    iframe#app-frame { width: 100%; height: 100%; border: none; background: #ffffff; display: block; }
+    #editor-pane { position: absolute; inset: 0; background: var(--editor-bg); display: none; flex-direction: column; }
+    #editor-pane.active { display: flex; }
+    .editor-toolbar { display: flex; flex-direction: column; gap: 5px; padding: 6px 8px; background: rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.08); width: 100%; }
+    .toolbar-row { display: flex; width: 100%; gap: 5px; align-items: center; }
     .tool-btn {
       flex: 1;
       background: rgba(255, 255, 255, 0.12);
@@ -503,251 +184,38 @@
       font-size: 0.72rem;
       font-weight: 600;
       cursor: pointer;
-      text-align: center;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s ease;
-      white-space: nowrap;
-    }
-
-    .tool-btn:active {
-      background: rgba(255, 255, 255, 0.25);
-    }
-
-    .tool-btn.active-state {
-      background: var(--md-sys-color-primary) !important;
-      color: var(--md-sys-color-on-primary) !important;
-    }
-
-    .tool-btn-primary {
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-      flex: 1.1;
-    }
-
-    .tool-btn-sub {
-      background: rgba(255, 255, 255, 0.08);
-      color: #e0dced;
-    }
-
-    /* Indicateur de sauvegarde automatique (iCloud / Local) */
-    .save-indicator {
-      font-size: 0.68rem;
-      color: #a49fc0;
-      font-weight: 500;
-      padding-left: 6px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: flex;
-      align-items: center;
       gap: 5px;
+      white-space: nowrap;
     }
+    .tool-btn:active { background: rgba(255, 255, 255, 0.25); }
+    .tool-btn.active-state { background: var(--primary) !important; color: var(--on-primary) !important; }
+    .tool-btn-primary { background: var(--primary); color: var(--on-primary); flex: 1.1; }
+    .tool-btn-sub { background: rgba(255, 255, 255, 0.08); color: #e0dced; }
+    .save-indicator { font-size: 0.68rem; color: #a49fc0; font-weight: 500; padding-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
+    .save-indicator-dot { width: 6px; height: 6px; border-radius: 50%; background: #4caf50; display: inline-block; flex-shrink: 0; }
+    .save-indicator-dot.syncing { background: #ff9800; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 
-    .save-indicator-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #4caf50;
-      display: inline-block;
-      flex-shrink: 0;
-    }
-
-    .save-indicator-dot.syncing {
-      background: #ff9800;
-      animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.4; }
-      50% { opacity: 1; }
-      100% { opacity: 0.4; }
-    }
-
-    .editor-workspace {
-      flex: 1;
-      display: flex;
-      position: relative;
-      overflow: hidden;
-      background: var(--editor-bg);
-    }
-
-    #gutter-bar {
-      width: 44px;
-      background: var(--gutter-bg);
-      border-right: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      flex-direction: column;
-      padding: 16px 0;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: none;
-      overflow: hidden;
-      z-index: 5;
-      flex-shrink: 0;
-    }
-
-    .gutter-num {
-      height: 22px;
-      line-height: 22px;
-      text-align: right;
-      padding-right: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.78rem;
-      color: var(--gutter-fg);
-      cursor: pointer;
-      transition: background-color 0.1s ease, color 0.1s ease;
-    }
-
-    .gutter-num.selected {
-      background-color: var(--gutter-active-bg);
-      color: var(--gutter-active-fg);
-      font-weight: 700;
-    }
-
-    .editor-container {
-      flex: 1;
-      position: relative;
-      overflow: auto;
-      background: transparent;
-      padding: 16px 16px 16px 12px;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    #code-area {
-      min-height: 100%;
-      outline: none;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      line-height: 22px;
-      color: var(--editor-fg);
-      white-space: pre;
-      word-break: normal;
-      overflow-wrap: normal;
-      user-select: text;
-      -webkit-user-select: text;
-      display: inline-block;
-      min-width: 100%;
-      cursor: text;
-    }
-
-    #code-area[contenteditable="false"] {
-      cursor: default;
-    }
-
-    mark.code-match {
-      background-color: var(--hl-match);
-      color: inherit;
-      border-radius: 3px;
-      padding: 1px 0;
-    }
-
-    mark.code-match-active {
-      background-color: var(--hl-active);
-      color: var(--hl-active-text);
-      font-weight: 700;
-      border-radius: 4px;
-      padding: 1px 3px;
-      box-shadow: 0 0 0 1px var(--hl-active-border);
-    }
-
-    .dialog-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      justify-content: center;
-      align-items: flex-end;
-      z-index: 2000;
-      padding: 16px;
-    }
-
-    .dialog {
-      background: var(--md-sys-color-surface);
-      border-radius: var(--radius-card);
-      padding: 24px;
-      width: 100%;
-      max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 12px 36px rgba(0,0,0,0.25);
-      margin-bottom: env(safe-area-inset-bottom, 8px);
-    }
-
-    .dialog h3 {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--md-sys-color-on-surface);
-    }
-
-    .dialog p {
-      font-size: 0.9rem;
-      color: var(--md-sys-color-on-surface-variant);
-      line-height: 1.4;
-    }
-
-    .theme-options {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .theme-option {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 18px;
-      border-radius: 18px;
-      background: var(--md-sys-color-surface-container);
-      color: var(--md-sys-color-on-surface);
-      cursor: pointer;
-      font-size: 0.95rem;
-      font-weight: 500;
-    }
-
-    .theme-option.active {
-      background: var(--md-sys-color-primary-container);
-      color: var(--md-sys-color-on-primary-container);
-      font-weight: 700;
-    }
-
-    .dialog-buttons {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 4px;
-    }
-
-    .btn {
-      padding: 10px 20px;
-      border-radius: var(--radius-pill);
-      border: none;
-      font-size: 0.88rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .btn-tonal {
-      background: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
-    }
-
-    .btn-filled {
-      background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-    }
+    .editor-workspace { flex: 1; display: flex; position: relative; overflow: hidden; background: var(--editor-bg); }
+    #gutter-bar { width: 44px; background: var(--gutter-bg); border-right: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-direction: column; padding: 16px 0; touch-action: none; overflow: hidden; flex-shrink: 0; }
+    .gutter-num { height: 22px; line-height: 22px; text-align: right; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--gutter-fg); cursor: pointer; }
+    .gutter-num.selected { background-color: var(--gutter-act-bg); color: var(--gutter-act-fg); font-weight: 700; }
+    .editor-container { flex: 1; position: relative; overflow: auto; background: transparent; padding: 16px 16px 16px 12px; -webkit-overflow-scrolling: touch; }
+    #code-area { min-height: 100%; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 22px; color: var(--editor-fg); white-space: pre; user-select: text; -webkit-user-select: text; display: inline-block; min-width: 100%; cursor: text; }
+    #code-area[contenteditable="false"] { cursor: default; }
+    mark.code-match { background-color: var(--hl-match); color: inherit; border-radius: 3px; }
+    mark.code-match-active { background-color: var(--hl-act); color: #000; font-weight: 700; border-radius: 3px; }
 
     #toast-msg {
       position: fixed;
       bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
       left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: var(--md-sys-color-on-surface);
-      color: var(--md-sys-color-surface);
+      background: var(--text);
+      color: var(--bg);
       padding: 10px 18px;
       border-radius: var(--radius-pill);
       font-size: 0.8rem;
@@ -757,11 +225,7 @@
       transition: all 0.25s ease;
       pointer-events: none;
     }
-
-    #toast-msg.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
+    #toast-msg.show { transform: translateX(-50%) translateY(0); opacity: 1; }
   </style>
 </head>
 <body>
@@ -769,51 +233,54 @@
   <input type="file" id="filePicker" style="display: none;" accept=".html,.htm,.txt,.js,.css">
   <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
 
-  <!-- Page d'accueil -->
+  <!-- Page d'accueil Material You -->
   <main id="view-home">
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
-      <div class="top-bar-right">
-        <span class="app-version-badge">v1.5.2</span>
-        <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
+      <div class="top-actions">
+        <span class="version-badge">v1.6.0</span>
+        <!-- Bascule directe thème à 1 clic -->
+        <button class="icon-btn" id="btn-theme-toggle" aria-label="Changer de thème">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/></svg>
+        </button>
       </div>
     </div>
 
     <div class="header-text">
       <h1>Web Studio</h1>
-      <p>Éditeur & Runner 100% Smartphone</p>
+      <p>Éditeur & Runner Smartphone</p>
     </div>
 
     <div class="action-grid">
       <div class="action-card" id="btn-import-file">
-        <div class="action-icon">📄</div>
-        <h3>Importer fichier</h3>
-        <span>iCloud / Local (Auto-save)</span>
+        <div class="action-icon">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        </div>
+        <h3>Fichier</h3>
+        <span>iCloud / Local</span>
       </div>
 
       <div class="action-card" id="btn-import-folder">
-        <div class="action-icon">📁</div>
-        <h3>Importer dossier</h3>
-        <span>Arborescence complète</span>
+        <div class="action-icon">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+        </div>
+        <h3>Dossier</h3>
+        <span>Arborescence</span>
       </div>
     </div>
 
-    <div class="section-title">Fichiers & Projets Smartphone</div>
+    <div class="section-title">Fichiers récents</div>
 
     <div class="file-list" id="fileList">
-      <div class="empty-state" id="empty-state-msg">
-        Aucun projet chargé pour le moment.<br>Importe un fichier HTML ou un dossier pour commencer.
-      </div>
+      <div class="empty-state" id="empty-state-msg">Importez un fichier ou un dossier pour commencer.</div>
     </div>
   </main>
 
   <!-- Runner / Éditeur Plein Écran -->
   <section id="view-runner">
     <header class="runner-shade">
-      <button class="shade-btn" id="shade-back-btn" aria-label="Retour au menu">
-        <svg viewBox="0 0 24 24">
-          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-        </svg>
+      <button class="shade-btn" id="shade-back-btn" aria-label="Retour">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
       </button>
 
       <div class="shade-center">
@@ -824,41 +291,46 @@
       </div>
 
       <button class="shade-btn" id="shade-search-btn" aria-label="Rechercher">
-        <svg viewBox="0 0 24 24">
-          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-        </svg>
+        <svg class="icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
       </button>
     </header>
 
-    <!-- Barre de recherche -->
     <div id="search-bar">
       <div class="search-input-box">
-        <input type="text" id="search-input" placeholder="Rechercher dans le code…" autocomplete="off" autocapitalize="off">
+        <input type="text" id="search-input" placeholder="Rechercher…" autocomplete="off" autocapitalize="off">
         <span id="search-count">0/0</span>
       </div>
-      <button class="search-nav-btn" id="search-prev" aria-label="Précédent">▲</button>
-      <button class="search-nav-btn" id="search-next" aria-label="Suivant">▼</button>
-      <button class="search-nav-btn" id="search-close" aria-label="Fermer">✕</button>
+      <button class="search-nav-btn" id="search-prev" aria-label="Précédent">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+      </button>
+      <button class="search-nav-btn" id="search-next" aria-label="Suivant">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+      </button>
+      <button class="search-nav-btn" id="search-close" aria-label="Fermer">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
     </div>
 
-    <!-- Zone principale -->
     <div class="runner-body">
       <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
 
       <div id="editor-pane">
-        <!-- Barre d'outils 2 lignes -->
         <div class="editor-toolbar">
-          <!-- Rangée 1 -->
           <div class="toolbar-row">
-            <button class="tool-btn" id="btn-toggle-keyboard">⌨️ Clavier</button>
+            <button class="tool-btn" id="btn-toggle-keyboard">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
+              <span>Clavier</span>
+            </button>
             <button class="tool-btn" id="btn-select-all">Tout</button>
             <button class="tool-btn" id="btn-copy">Copier</button>
             <button class="tool-btn" id="btn-paste">Coller</button>
-            <button class="tool-btn tool-btn-primary" id="btn-save">💾 Sauveg.</button>
+            <button class="tool-btn tool-btn-primary" id="btn-save">Sauveg.</button>
           </div>
-          <!-- Rangée 2 : Annuler + Statut Auto-Save iCloud / Cache -->
           <div class="toolbar-row">
-            <button class="tool-btn tool-btn-sub" id="btn-undo">↩ Annuler</button>
+            <button class="tool-btn tool-btn-sub" id="btn-undo">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+              <span>Annuler</span>
+            </button>
             <div class="save-indicator">
               <span class="save-indicator-dot" id="save-status-dot"></span>
               <span id="save-status-text">Synchronisé</span>
@@ -876,892 +348,528 @@
     </div>
   </section>
 
-  <!-- Modale Conversion TXT -->
-  <div class="dialog-backdrop" id="modal-convert">
-    <div class="dialog">
-      <h3>Format texte détecté</h3>
-      <p id="modal-text">Ce fichier texte brut (.txt) va être converti pour s'exécuter comme une application <strong>HTML</strong> smartphone.</p>
-      <div class="dialog-buttons">
-        <button class="btn btn-tonal" id="btn-modal-cancel">Annuler</button>
-        <button class="btn btn-filled" id="btn-modal-confirm">Ouvrir en .html</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modale Paramètres Thème -->
-  <div class="dialog-backdrop" id="modal-settings">
-    <div class="dialog">
-      <h3>Paramètres d'affichage</h3>
-      <p>Choisis le thème graphique de ton studio :</p>
-      <div class="theme-options">
-        <div class="theme-option" data-set-theme="light">
-          <span>Clair</span>
-          <span>☀️</span>
-        </div>
-        <div class="theme-option" data-set-theme="dark">
-          <span>Sombre</span>
-          <span>🌙</span>
-        </div>
-        <div class="theme-option" data-set-theme="auto">
-          <span>Automatique (Système)</span>
-          <span>⚙️</span>
-        </div>
-      </div>
-      <div class="dialog-buttons">
-        <button class="btn btn-filled" id="btn-close-settings">Terminé</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Message -->
-  <div id="toast-msg">Action effectuée ✓</div>
+  <div id="toast-msg">Action effectuée</div>
 
   <script>
+    const $ = id => document.getElementById(id);
     const fileStore = new Map();
-    let currentActiveFileId = null;
-    let pendingTxtData = null;
-    let rawCodeBuffer = "";
-    let isKeyboardEnabled = false;
+    let curFileId = null, rawCode = "", isKeyboard = false;
+    let autoSaveTimer = null, isAllSelected = false, selRange = null;
+    const undoHist = [];
 
-    // Pile d'historique Undo
-    const undoHistory = [];
-    let isAllSelectedFlag = false;
-    let selectedLineRange = null;
+    // DOM Refs
+    const viewRunner = $('view-runner'), appFrame = $('app-frame'), editorPane = $('editor-pane');
+    const codeArea = $('code-area'), gutterBar = $('gutter-bar'), scrollBox = $('editor-scroll-box');
+    const fileList = $('fileList'), emptyMsg = $('empty-state-msg');
+    const tabCode = $('tab-code'), tabPreview = $('tab-preview'), searchBtn = $('shade-search-btn');
+    const btnKb = $('btn-toggle-keyboard'), saveDot = $('save-status-dot'), saveTxt = $('save-status-text');
+    const toast = $('toast-msg');
 
-    // Timer Auto-Save
-    let autoSaveDebounceTimer = null;
+    // Thème (Auto ⇄ Sombre ⇄ Clair en 1 tap direct)
+    let curTheme = localStorage.getItem('app_theme') || 'auto';
+    applyTheme(curTheme);
 
-    const viewHome = document.getElementById('view-home');
-    const viewRunner = document.getElementById('view-runner');
-    const appFrame = document.getElementById('app-frame');
-    const editorPane = document.getElementById('editor-pane');
-    const codeArea = document.getElementById('code-area');
-    const gutterBar = document.getElementById('gutter-bar');
-    const editorScrollBox = document.getElementById('editor-scroll-box');
-    const fileList = document.getElementById('fileList');
-    const emptyStateMsg = document.getElementById('empty-state-msg');
-    const filePicker = document.getElementById('filePicker');
-    const folderPicker = document.getElementById('folderPicker');
-    const shadeBackBtn = document.getElementById('shade-back-btn');
-    const shadeSearchBtn = document.getElementById('shade-search-btn');
-    const tabCode = document.getElementById('tab-code');
-    const tabPreview = document.getElementById('tab-preview');
-    const btnToggleKeyboard = document.getElementById('btn-toggle-keyboard');
-    const btnSelectAll = document.getElementById('btn-select-all');
-    const btnCopy = document.getElementById('btn-copy');
-    const btnPaste = document.getElementById('btn-paste');
-    const btnSave = document.getElementById('btn-save');
-    const btnUndo = document.getElementById('btn-undo');
-    const saveStatusDot = document.getElementById('save-status-dot');
-    const saveStatusText = document.getElementById('save-status-text');
-    const modalConvert = document.getElementById('modal-convert');
-    const modalText = document.getElementById('modal-text');
-    const btnModalCancel = document.getElementById('btn-modal-cancel');
-    const btnModalConfirm = document.getElementById('btn-modal-confirm');
-    const modalSettings = document.getElementById('modal-settings');
-    const btnOpenSettings = document.getElementById('btn-open-settings');
-    const btnCloseSettings = document.getElementById('btn-close-settings');
-    const toastMsg = document.getElementById('toast-msg');
-
-    const searchBar = document.getElementById('search-bar');
-    const searchInput = document.getElementById('search-input');
-    const searchCount = document.getElementById('search-count');
-    const searchPrev = document.getElementById('search-prev');
-    const searchNext = document.getElementById('search-next');
-    const searchClose = document.getElementById('search-close');
-
-    let totalMatches = 0;
-    let currentMatchIndex = 0;
-
-    editorScrollBox.addEventListener('scroll', () => {
-      gutterBar.scrollTop = editorScrollBox.scrollTop;
-    });
-
-    const currentTheme = localStorage.getItem('theme_preference') || 'auto';
-    applyTheme(currentTheme);
-
-    function applyTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('theme_preference', theme);
-      document.querySelectorAll('.theme-option').forEach(opt => {
-        if (opt.getAttribute('data-set-theme') === theme) {
-          opt.classList.add('active');
-        } else {
-          opt.classList.remove('active');
-        }
-      });
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('app_theme', t);
+      curTheme = t;
     }
 
-    btnOpenSettings.addEventListener('click', () => modalSettings.style.display = 'flex');
-    btnCloseSettings.addEventListener('click', () => modalSettings.style.display = 'none');
-    document.querySelectorAll('.theme-option').forEach(opt => {
-      opt.addEventListener('click', () => applyTheme(opt.getAttribute('data-set-theme')));
-    });
+    $('btn-theme-toggle').onclick = () => {
+      const nextTheme = curTheme === 'auto' ? 'dark' : (curTheme === 'dark' ? 'light' : 'auto');
+      applyTheme(nextTheme);
+      showToast(`Thème : ${nextTheme.toUpperCase()}`);
+    };
 
-    // IMPORT DE FICHIER : Tente d'abord l'API moderne File System Access (iCloud direct)
-    document.getElementById('btn-import-file').addEventListener('click', async () => {
+    // Scroll synchronisé gutter
+    scrollBox.onscroll = () => { gutterBar.scrollTop = scrollBox.scrollTop; };
+
+    // File Import Handlers
+    $('btn-import-file').onclick = async () => {
       if (window.showOpenFilePicker) {
         try {
           const [handle] = await window.showOpenFilePicker({
-            types: [{
-              description: 'Documents Web',
-              accept: {
-                'text/html': ['.html', '.htm'],
-                'text/plain': ['.txt'],
-                'text/css': ['.css'],
-                'text/javascript': ['.js']
-              }
-            }],
-            multiple: false
+            types: [{ description: 'Web', accept: { 'text/*': ['.html', '.htm', '.txt', '.css', '.js'] } }]
           });
-
           if (handle) {
-            const file = await handle.getFile();
-            await registerAndHandleFile(file, file.name, true, handle);
+            const f = await handle.getFile();
+            await processFile(f, f.name, true, handle);
             return;
           }
-        } catch (err) {
-          if (err.name === 'AbortError') return;
-        }
+        } catch (e) { if (e.name === 'AbortError') return; }
       }
-      // Fallback classique
-      filePicker.click();
-    });
+      $('filePicker').click();
+    };
 
-    document.getElementById('btn-import-folder').addEventListener('click', () => folderPicker.click());
+    $('btn-import-folder').onclick = () =>$('folderPicker').click();
 
-    filePicker.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      await registerAndHandleFile(file, file.name, true, null);
-      filePicker.value = '';
-    });
+    $('filePicker').onchange = async e => {
+      const f = e.target.files[0];
+      if (f) await processFile(f, f.name, true);
+      e.target.value = '';
+    };
 
-    folderPicker.addEventListener('change', async (e) => {
+    $('folderPicker').onchange = async e => {
       const files = Array.from(e.target.files);
       if (!files.length) return;
-
       fileList.innerHTML = '';
       fileStore.clear();
 
-      for (const file of files) {
-        if (file.name.startsWith('.')) continue;
-        const fullPath = file.webkitRelativePath || file.name;
-        await registerAndHandleFile(file, fullPath, false, null);
+      let targetId = null;
+      for (const f of files) {
+        if (f.name.startsWith('.')) continue;
+        const id = await processFile(f, f.webkitRelativePath || f.name, false);
+        if (!targetId && (f.name.endsWith('.html') || f.name.endsWith('.txt'))) targetId = id;
       }
-      folderPicker.value = '';
-    });
+      if (targetId) openFile(targetId);
+      e.target.value = '';
+    };
 
-    async function registerAndHandleFile(file, displayPath, autoOpen = true, fileHandle = null) {
-      if (emptyStateMsg) emptyStateMsg.style.display = 'none';
+    // Traitement transparent (KISS : convertit .txt en .html sans clic superflu)
+    async function processFile(file, path, autoOpen = true, handle = null) {
+      if (emptyMsg) emptyMsg.style.display = 'none';
+      let name = file.name;
+      const isTxt = name.endsWith('.txt');
+      if (isTxt) name = name.replace(/\.txt$/i, '.html');
 
-      // Vérifie si un cache local plus récent existe
-      const storageKey = 'cache_file_' + file.name;
-      const cachedContent = localStorage.getItem(storageKey);
-      const rawContent = await file.text();
-      const content = cachedContent !== null ? cachedContent : rawContent;
+      const storageKey = 'cache_' + name;
+      const cached = localStorage.getItem(storageKey);
+      const rawText = await file.text();
+      const content = cached !== null ? cached : rawText;
+      const id = 'f_' + Math.random().toString(36).slice(2, 9);
 
-      const ext = file.name.split('.').pop().toLowerCase();
-      const id = 'file_' + Math.random().toString(36).substr(2, 9);
-
-      fileStore.set(id, {
-        name: file.name,
-        path: displayPath,
-        content: content,
-        ext: ext,
-        handle: fileHandle, // Conserve le handle natif si disponible
-        storageKey: storageKey
-      });
+      fileStore.set(id, { name, path, content, handle, storageKey });
 
       const card = document.createElement('div');
       card.className = 'file-card';
       card.innerHTML = `
         <div class="file-card-info">
-          <div class="file-card-name">${ext === 'html' || ext === 'htm' ? '📄' : (ext === 'txt' ? '📝' : '⚙️')} ${file.name}</div>
-          <div class="file-card-path">${displayPath} ${cachedContent !== null ? '• Restauré du cache' : ''}</div>
+          <div class="file-card-name">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            ${name}
+          </div>
+          <div class="file-card-path">${path} ${isTxt ? '• Converti HTML' : ''}</div>
         </div>
       `;
+      card.onclick = () => openFile(id);
+      fileList.prepend(card);
 
-      card.addEventListener('click', () => openFile(id));
-      fileList.appendChild(card);
-
-      if (autoOpen) {
-        openFile(id);
-      }
-    }
-
-    function pushToUndoHistory(text) {
-      if (undoHistory.length > 25) undoHistory.shift();
-      undoHistory.push(text);
+      if (autoOpen) openFile(id);
+      return id;
     }
 
     function openFile(id) {
-      const fileData = fileStore.get(id);
-      if (!fileData) return;
+      const f = fileStore.get(id);
+      if (!f) return;
+      curFileId = id;
+      rawCode = f.content;
+      undoHist.length = 0;
+      pushUndo(rawCode);
 
-      if (fileData.ext === 'txt') {
-        pendingTxtData = { ...fileData, id };
-        modalText.innerHTML = `Le fichier <strong>${fileData.name}</strong> est en texte brut (.txt). Voulez-vous l'ouvrir et l'éditer sous le format <strong>.html</strong> ?`;
-        modalConvert.style.display = 'flex';
-        return;
-      }
-
-      currentActiveFileId = id;
-      rawCodeBuffer = fileData.content;
-      undoHistory.length = 0;
-      pushToUndoHistory(rawCodeBuffer);
-
-      codeArea.textContent = rawCodeBuffer;
-      disableKeyboard();
-      resetSelectionState();
+      codeArea.textContent = rawCode;
+      disableKb();
+      resetSel();
       renderGutter();
-      updateSaveIndicator("Prêt");
-      
-      showPreviewMode();
-      renderAppFrame(fileData.content);
+      setSaveStatus("Prêt");
+
+      showPreview();
+      renderFrame(rawCode);
       viewRunner.classList.add('open');
     }
 
-    btnModalCancel.addEventListener('click', () => {
-      modalConvert.style.display = 'none';
-      pendingTxtData = null;
-    });
+    // Tabs
+    tabCode.onclick = showCode;
+    tabPreview.onclick = () => { disableKb(); syncDOM(); showPreview(); };
 
-    btnModalConfirm.addEventListener('click', () => {
-      if (pendingTxtData) {
-        currentActiveFileId = pendingTxtData.id;
-        const newHtmlName = pendingTxtData.name.replace(/\.txt$/i, '.html');
-        pendingTxtData.name = newHtmlName;
-        rawCodeBuffer = pendingTxtData.content;
-        undoHistory.length = 0;
-        pushToUndoHistory(rawCodeBuffer);
-
-        codeArea.textContent = rawCodeBuffer;
-        disableKeyboard();
-        resetSelectionState();
-        renderGutter();
-        updateSaveIndicator("Prêt");
-
-        showPreviewMode();
-        renderAppFrame(pendingTxtData.content);
-        viewRunner.classList.add('open');
-
-        modalConvert.style.display = 'none';
-        pendingTxtData = null;
-      }
-    });
-
-    tabCode.addEventListener('click', showCodeMode);
-    tabPreview.addEventListener('click', () => {
-      disableKeyboard();
-      syncFromDOM();
-      showPreviewMode();
-    });
-
-    function showCodeMode() {
+    function showCode() {
       tabCode.classList.add('active');
       tabPreview.classList.remove('active');
       editorPane.classList.add('active');
       appFrame.style.display = 'none';
-      shadeSearchBtn.classList.add('visible');
-      disableKeyboard();
+      searchBtn.classList.add('visible');
+      disableKb();
       renderGutter();
     }
 
-    function showPreviewMode() {
+    function showPreview() {
       tabPreview.classList.add('active');
       tabCode.classList.remove('active');
       editorPane.classList.remove('active');
       appFrame.style.display = 'block';
-      shadeSearchBtn.classList.remove('visible');
-      disableKeyboard();
-      closeSearchBar();
+      searchBtn.classList.remove('visible');
+      disableKb();
+      closeSearch();
     }
 
-    function enableKeyboard() {
-      isKeyboardEnabled = true;
-      btnToggleKeyboard.classList.add('active-state');
-      btnToggleKeyboard.innerHTML = '✕ Fermer';
+    // Clavier réactif 1 tap
+    function enableKb() {
+      isKeyboard = true;
+      btnKb.classList.add('active-state');
+      btnKb.querySelector('span').textContent = 'Fermer';
       codeArea.setAttribute('contenteditable', 'true');
       codeArea.removeAttribute('inputmode');
       codeArea.focus();
-      showToast("Mode saisie activé");
     }
 
-    function disableKeyboard() {
-      isKeyboardEnabled = false;
-      btnToggleKeyboard.classList.remove('active-state');
-      btnToggleKeyboard.innerHTML = '⌨️ Clavier';
+    function disableKb() {
+      isKeyboard = false;
+      btnKb.classList.remove('active-state');
+      btnKb.querySelector('span').textContent = 'Clavier';
       codeArea.setAttribute('contenteditable', 'false');
       codeArea.setAttribute('inputmode', 'none');
-      if (document.activeElement) {
-        document.activeElement.blur();
-      }
+      if (document.activeElement) document.activeElement.blur();
     }
 
-    btnToggleKeyboard.addEventListener('click', (e) => {
+    btnKb.onclick = e => {
       e.preventDefault();
-      e.stopPropagation();
-      if (isKeyboardEnabled) {
-        disableKeyboard();
-      } else {
-        enableKeyboard();
-      }
-    });
+      isKeyboard ? disableKb() : enableKb();
+    };
 
-    codeArea.addEventListener('focus', (e) => {
-      if (!isKeyboardEnabled) {
-        e.preventDefault();
-        codeArea.blur();
-      }
-    });
+    codeArea.onfocus = e => { if (!isKeyboard) { e.preventDefault(); codeArea.blur(); } };
 
-    function resetSelectionState() {
-      isAllSelectedFlag = false;
-      selectedLineRange = null;
+    function resetSel() {
+      isAllSelected = false;
+      selRange = null;
       document.querySelectorAll('.gutter-num').forEach(el => el.classList.remove('selected'));
     }
 
     function renderGutter() {
-      const lines = rawCodeBuffer.split('\n');
-      const count = Math.max(1, lines.length);
-
+      const lines = rawCode.split('\n');
       let html = '';
-      for (let i = 1; i <= count; i++) {
-        html += `<div class="gutter-num" data-line="${i}">${i}</div>`;
-      }
+      for (let i = 1; i <= Math.max(1, lines.length); i++) html += `<div class="gutter-num" data-line="${i}">${i}</div>`;
       gutterBar.innerHTML = html;
-      gutterBar.scrollTop = editorScrollBox.scrollTop;
+      gutterBar.scrollTop = scrollBox.scrollTop;
     }
 
-    /* AUTO-SCROLL RAPIDE & PROGRESSIF */
-    let isGutterDragging = false;
-    let dragStartLine = null;
-    let autoScrollRaf = null;
-    let lastClientY = 0;
+    // Auto-Scroll dynamique & sélection native (algorithme inchangé)
+    let isDragging = false, dragStart = null, scrollRaf = null, touchY = 0;
 
     function startAutoScroll() {
-      if (autoScrollRaf) return;
-      function step() {
-        if (!isGutterDragging) {
-          autoScrollRaf = null;
-          return;
+      if (scrollRaf) return;
+      const step = () => {
+        if (!isDragging) { scrollRaf = null; return; }
+        const r = scrollBox.getBoundingClientRect();
+        const topTh = r.top + 95, botTh = r.bottom - 95;
+        let speed = 0;
+
+        if (touchY < topTh) {
+          const ratio = Math.max(0, Math.min(1.4, (topTh - touchY) / 85));
+          speed = -(8 + Math.pow(ratio, 2.2) * 65);
+        } else if (touchY > botTh) {
+          const ratio = Math.max(0, Math.min(1.4, (touchY - botTh) / 85));
+          speed = (8 + Math.pow(ratio, 2.2) * 65);
         }
 
-        const rect = editorScrollBox.getBoundingClientRect();
-        const topThreshold = rect.top + 95;
-        const bottomThreshold = rect.bottom - 95;
-        let scrollSpeed = 0;
-
-        if (lastClientY < topThreshold) {
-          const ratio = Math.max(0, Math.min(1.4, (topThreshold - lastClientY) / 85));
-          scrollSpeed = -(8 + Math.pow(ratio, 2.2) * 65);
-        } else if (lastClientY > bottomThreshold) {
-          const ratio = Math.max(0, Math.min(1.4, (lastClientY - bottomThreshold) / 85));
-          scrollSpeed = (8 + Math.pow(ratio, 2.2) * 65);
+        if (speed !== 0) {
+          scrollBox.scrollTop += speed;
+          gutterBar.scrollTop = scrollBox.scrollTop;
+          selectLines(dragStart, getLineFromY(touchY));
         }
-
-        if (scrollSpeed !== 0) {
-          editorScrollBox.scrollTop += scrollSpeed;
-          gutterBar.scrollTop = editorScrollBox.scrollTop;
-          const currentLine = getLineFromY(lastClientY);
-          selectLinesRange(dragStartLine, currentLine);
-        }
-
-        autoScrollRaf = requestAnimationFrame(step);
-      }
-      autoScrollRaf = requestAnimationFrame(step);
+        scrollRaf = requestAnimationFrame(step);
+      };
+      scrollRaf = requestAnimationFrame(step);
     }
 
-    function stopAutoScroll() {
-      if (autoScrollRaf) {
-        cancelAnimationFrame(autoScrollRaf);
-        autoScrollRaf = null;
-      }
+    function getLineFromY(y) {
+      const r = gutterBar.getBoundingClientRect();
+      const line = Math.floor(((y - r.top) + scrollBox.scrollTop - 16) / 22) + 1;
+      return Math.max(1, Math.min(line, rawCode.split('\n').length));
     }
 
-    function getLineFromY(clientY) {
-      const rect = gutterBar.getBoundingClientRect();
-      const relativeY = (clientY - rect.top) + editorScrollBox.scrollTop;
-      const lineNumber = Math.floor((relativeY - 16) / 22) + 1;
-      const maxLines = rawCodeBuffer.split('\n').length;
-      return Math.max(1, Math.min(lineNumber, maxLines));
-    }
-
-    function selectLinesRange(fromLine, toLine) {
-      const min = Math.min(fromLine, toLine);
-      const max = Math.max(fromLine, toLine);
-
-      isAllSelectedFlag = false;
-      selectedLineRange = { from: min, to: max };
+    function selectLines(from, to) {
+      const min = Math.min(from, to), max = Math.max(from, to);
+      isAllSelected = false;
+      selRange = { from: min, to: max };
 
       document.querySelectorAll('.gutter-num').forEach(el => {
-        const line = parseInt(el.getAttribute('data-line'), 10);
-        if (line >= min && line <= max) {
-          el.classList.add('selected');
-        } else {
-          el.classList.remove('selected');
-        }
+        const l = +el.dataset.line;
+        el.classList.toggle('selected', l >= min && l <= max);
       });
 
-      const lines = rawCodeBuffer.split('\n');
-      let startChar = 0;
-      for (let i = 0; i < min - 1; i++) {
-        startChar += lines[i].length + 1;
+      const lines = rawCode.split('\n');
+      let startChar = 0, endChar = 0;
+      for (let i = 0; i < min - 1; i++) startChar += lines[i].length + 1;
+      for (let i = 0; i < max; i++) endChar += lines[i].length + (i < lines.length - 1 ? 1 : 0);
+
+      const sel = window.getSelection(), range = document.createRange();
+      let curOffset = 0, sNode = null, sOff = 0, eNode = null, eOff = 0;
+      const walker = document.createTreeWalker(codeArea, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = walker.nextNode())) {
+        const next = curOffset + n.nodeValue.length;
+        if (!sNode && startChar >= curOffset && startChar <= next) { sNode = n; sOff = startChar - curOffset; }
+        if (!eNode && endChar >= curOffset && endChar <= next) { eNode = n; eOff = endChar - curOffset; break; }
+        curOffset = next;
       }
-
-      let endChar = 0;
-      for (let i = 0; i < max; i++) {
-        endChar += lines[i].length + (i < lines.length - 1 ? 1 : 0);
-      }
-
-      const range = document.createRange();
-      const sel = window.getSelection();
-
-      let currentOffset = 0;
-      let startNode = null, startNodeOffset = 0;
-      let endNode = null, endNodeOffset = 0;
-
-      const treeWalker = document.createTreeWalker(codeArea, NodeFilter.SHOW_TEXT, null, false);
-      let node;
-      while ((node = treeWalker.nextNode())) {
-        const nextOffset = currentOffset + node.nodeValue.length;
-        if (!startNode && startChar >= currentOffset && startChar <= nextOffset) {
-          startNode = node;
-          startNodeOffset = startChar - currentOffset;
-        }
-        if (!endNode && endChar >= currentOffset && endChar <= nextOffset) {
-          endNode = node;
-          endNodeOffset = endChar - currentOffset;
-          break;
-        }
-        currentOffset = nextOffset;
-      }
-
-      if (startNode && endNode) {
-        range.setStart(startNode, startNodeOffset);
-        range.setEnd(endNode, endNodeOffset);
+      if (sNode && eNode) {
+        range.setStart(sNode, sOff);
+        range.setEnd(eNode, eOff);
         sel.removeAllRanges();
         sel.addRange(range);
       }
     }
 
-    gutterBar.addEventListener('touchstart', (e) => {
-      isGutterDragging = true;
-      disableKeyboard();
-      const touch = e.touches[0];
-      lastClientY = touch.clientY;
-      dragStartLine = getLineFromY(lastClientY);
-      selectLinesRange(dragStartLine, dragStartLine);
+    gutterBar.addEventListener('touchstart', e => {
+      isDragging = true;
+      disableKb();
+      touchY = e.touches[0].clientY;
+      dragStart = getLineFromY(touchY);
+      selectLines(dragStart, dragStart);
       startAutoScroll();
     }, { passive: false });
 
-    gutterBar.addEventListener('touchmove', (e) => {
-      if (!isGutterDragging) return;
+    gutterBar.addEventListener('touchmove', e => {
+      if (!isDragging) return;
       e.preventDefault();
-      const touch = e.touches[0];
-      lastClientY = touch.clientY;
-      const currentLine = getLineFromY(lastClientY);
-      selectLinesRange(dragStartLine, currentLine);
+      touchY = e.touches[0].clientY;
+      selectLines(dragStart, getLineFromY(touchY));
     }, { passive: false });
 
-    gutterBar.addEventListener('touchend', () => {
-      isGutterDragging = false;
-      stopAutoScroll();
-    });
+    ['touchend', 'touchcancel'].forEach(ev => gutterBar.addEventListener(ev, () => {
+      isDragging = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = null;
+    }));
 
-    gutterBar.addEventListener('touchcancel', () => {
-      isGutterDragging = false;
-      stopAutoScroll();
-    });
-
-    btnSelectAll.addEventListener('click', () => {
-      disableKeyboard();
-      const range = document.createRange();
-      range.selectNodeContents(codeArea);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-
-      isAllSelectedFlag = true;
-      selectedLineRange = null;
-
+    // Actions Presse-Papier & Undo
+    $('btn-select-all').onclick = () => {
+      disableKb();
+      const r = document.createRange();
+      r.selectNodeContents(codeArea);
+      const s = window.getSelection();
+      s.removeAllRanges();
+      s.addRange(r);
+      isAllSelected = true;
+      selRange = null;
       document.querySelectorAll('.gutter-num').forEach(el => el.classList.add('selected'));
-      showToast("Code sélectionné");
-    });
+      showToast("Tout sélectionné");
+    };
 
-    btnCopy.addEventListener('click', async () => {
-      syncFromDOM();
-      const sel = window.getSelection();
-      const selectedText = sel.toString();
-      const textToCopy = selectedText && selectedText.length > 0 ? selectedText : rawCodeBuffer;
-
+    $('btn-copy').onclick = async () => {
+      syncDOM();
+      const s = window.getSelection().toString();
       try {
-        await navigator.clipboard.writeText(textToCopy);
-        showToast(selectedText ? "Lignes copiées ✓" : "Tout copié ✓");
-      } catch (err) {
-        showToast("Erreur de copie");
-      }
-    });
+        await navigator.clipboard.writeText(s || rawCode);
+        showToast(s ? "Lignes copiées" : "Tout copié");
+      } catch { showToast("Erreur de copie"); }
+    };
 
-    btnPaste.addEventListener('click', async () => {
-      let pastedText = "";
-      try {
-        pastedText = await navigator.clipboard.readText();
-      } catch (err) {
-        pastedText = prompt("Collez votre code ici :") || "";
-      }
+    $('btn-paste').onclick = async () => {
+      let t = "";
+      try { t = await navigator.clipboard.readText(); }
+      catch { t = prompt("Collez le code :") || ""; }
+      if (!t) return;
 
-      if (!pastedText) return;
-
-      pushToUndoHistory(rawCodeBuffer);
-
-      if (isAllSelectedFlag) {
-        rawCodeBuffer = pastedText;
-      } else if (selectedLineRange) {
-        const lines = rawCodeBuffer.split('\n');
-        const min = selectedLineRange.from;
-        const max = selectedLineRange.to;
-        const before = lines.slice(0, min - 1);
-        const after = lines.slice(max);
-        rawCodeBuffer = [...before, pastedText, ...after].join('\n');
+      pushUndo(rawCode);
+      if (isAllSelected) {
+        rawCode = t;
+      } else if (selRange) {
+        const l = rawCode.split('\n');
+        rawCode = [...l.slice(0, selRange.from - 1), t, ...l.slice(selRange.to)].join('\n');
       } else {
-        const sel = window.getSelection();
-        if (sel.rangeCount > 0 && !sel.isCollapsed) {
-          const range = sel.getRangeAt(0);
-          range.deleteContents();
-          const textNode = document.createTextNode(pastedText);
-          range.insertNode(textNode);
-          rawCodeBuffer = codeArea.innerText.replace(/\r\n/g, '\n');
+        const s = window.getSelection();
+        if (s.rangeCount > 0 && !s.isCollapsed) {
+          s.getRangeAt(0).deleteContents();
+          s.getRangeAt(0).insertNode(document.createTextNode(t));
+          rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
         } else {
-          rawCodeBuffer = pastedText;
+          rawCode = t;
         }
       }
-
-      codeArea.textContent = rawCodeBuffer;
-      resetSelectionState();
+      codeArea.textContent = rawCode;
+      resetSel();
       renderGutter();
-      syncFromDOM();
+      syncDOM();
       triggerAutoSave();
-      showToast("Code collé & sauvegardé ✓");
-    });
+      showToast("Code collé");
+    };
 
-    btnUndo.addEventListener('click', () => {
-      if (undoHistory.length > 1) {
-        undoHistory.pop();
-        const previousState = undoHistory[undoHistory.length - 1];
-        rawCodeBuffer = previousState;
-        codeArea.textContent = rawCodeBuffer;
-        resetSelectionState();
-        renderGutter();
-        syncFromDOM();
-        triggerAutoSave();
-        showToast("Action annulée ↩");
-      } else if (undoHistory.length === 1) {
-        rawCodeBuffer = undoHistory[0];
-        codeArea.textContent = rawCodeBuffer;
-        resetSelectionState();
-        renderGutter();
-        syncFromDOM();
-        triggerAutoSave();
-        showToast("Version initiale restaurée");
+    function pushUndo(txt) {
+      if (undoHist.length > 25) undoHist.shift();
+      undoHist.push(txt);
+    }
+
+    $('btn-undo').onclick = () => {
+      if (undoHist.length > 1) {
+        undoHist.pop();
+        rawCode = undoHist[undoHist.length - 1];
+      } else if (undoHist.length === 1) {
+        rawCode = undoHist[0];
       } else {
         showToast("Rien à annuler");
+        return;
       }
-    });
+      codeArea.textContent = rawCode;
+      resetSel();
+      renderGutter();
+      syncDOM();
+      triggerAutoSave();
+      showToast("Annulé");
+    };
 
-    /* AUTO-SAVE HYBRIDE : Écriture iCloud en tâche de fond + Cache Local */
-    function updateSaveIndicator(text, isSyncing = false) {
-      saveStatusText.textContent = text;
-      if (isSyncing) {
-        saveStatusDot.classList.add('syncing');
-      } else {
-        saveStatusDot.classList.remove('syncing');
-      }
+    // Auto-Save Hybride (iCloud / Local)
+    function setSaveStatus(txt, isSync = false) {
+      saveTxt.textContent = txt;
+      saveDot.classList.toggle('syncing', isSync);
     }
 
     function triggerAutoSave() {
-      if (!currentActiveFileId) return;
-      clearTimeout(autoSaveDebounceTimer);
-      updateSaveIndicator("Sauvegarde en cours…", true);
+      if (!curFileId) return;
+      clearTimeout(autoSaveTimer);
+      setSaveStatus("Sauvegarde…", true);
 
-      autoSaveDebounceTimer = setTimeout(async () => {
-        const fileData = fileStore.get(currentActiveFileId);
-        if (!fileData) return;
+      autoSaveTimer = setTimeout(async () => {
+        const f = fileStore.get(curFileId);
+        if (!f) return;
+        try { localStorage.setItem(f.storageKey, rawCode); } catch {}
 
-        // 1. Sauvegarde instantanée dans le cache LocalStorage
-        try {
-          localStorage.setItem(fileData.storageKey, rawCodeBuffer);
-        } catch (e) {
-          console.warn("LocalStorage plein ou restreint");
-        }
-
-        // 2. Écriture directe sur le fichier iCloud si handle disponible
-        if (fileData.handle && fileData.handle.createWritable) {
+        if (f.handle?.createWritable) {
           try {
-            const writable = await fileData.handle.createWritable();
-            await writable.write(rawCodeBuffer);
-            await writable.close();
-            updateSaveIndicator("Enregistré dans iCloud ✓");
+            const w = await f.handle.createWritable();
+            await w.write(rawCode);
+            await w.close();
+            setSaveStatus("iCloud à jour");
             return;
-          } catch (err) {
-            // Safari peut bloquer les écritures sans interaction directe
-            console.log("Écriture directe en arrière-plan non autorisée par le navigateur:", err);
-          }
+          } catch {}
         }
-
-        updateSaveIndicator("Sauvegardé en cache local ✓");
+        setSaveStatus("Cache local à jour");
       }, 700);
     }
 
-    btnSave.addEventListener('click', async () => {
-      syncFromDOM();
-      const code = rawCodeBuffer;
-      let filename = 'index.html';
-      const fileData = currentActiveFileId ? fileStore.get(currentActiveFileId) : null;
-      if (fileData && fileData.name) {
-        filename = fileData.name;
-      }
-      if (!filename.toLowerCase().endsWith('.html') && !filename.toLowerCase().endsWith('.htm')) {
-        filename += '.html';
-      }
+    $('btn-save').onclick = async () => {
+      syncDOM();
+      const f = curFileId ? fileStore.get(curFileId) : null;
+      const filename = f?.name || 'index.html';
 
-      // 1. Mise à jour cache immédiate
-      if (fileData) {
-        localStorage.setItem(fileData.storageKey, code);
-      }
-
-      // 2. Si on a le handle iCloud, on écrit dedans directement
-      if (fileData && fileData.handle && fileData.handle.createWritable) {
+      if (f?.handle?.createWritable) {
         try {
-          const writable = await fileData.handle.createWritable();
-          await writable.write(code);
-          await writable.close();
-          updateSaveIndicator("Enregistré dans iCloud ✓");
-          showToast("Fichier iCloud mis à jour ✓");
+          const w = await f.handle.createWritable();
+          await w.write(rawCode);
+          await w.close();
+          setSaveStatus("iCloud à jour");
+          showToast("Fichier iCloud enregistré");
           return;
-        } catch (e) {
-          console.warn(e);
-        }
+        } catch {}
       }
 
-      // 3. Fallback Share / Enregistrer sous
-      const file = new File([code], filename, { type: 'text/html;charset=utf-8' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      const fileObj = new File([rawCode], filename, { type: 'text/html;charset=utf-8' });
+      if (navigator.canShare?.({ files: [fileObj] })) {
         try {
-          await navigator.share({
-            files: [file],
-            title: filename
-          });
-          showToast("Fichier partagé / enregistré");
+          await navigator.share({ files: [fileObj], title: filename });
+          showToast("Fichier partagé");
           return;
-        } catch (e) {
-          if (e.name === 'AbortError') return;
-        }
+        } catch (e) { if (e.name === 'AbortError') return; }
       }
 
-      if (window.showSaveFilePicker) {
-        try {
-          const handle = await window.showSaveFilePicker({
-            suggestedName: filename,
-            types: [{
-              description: 'Document HTML',
-              accept: { 'text/html': ['.html'] }
-            }]
-          });
-          const writable = await handle.createWritable();
-          await writable.write(code);
-          await writable.close();
-          showToast("Fichier enregistré ✓");
-          return;
-        } catch (e) {
-          if (e.name === 'AbortError') return;
-        }
-      }
-
-      const blob = new Blob([code], { type: 'text/html;charset=utf-8' });
+      const blob = new Blob([rawCode], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
-      document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast("Téléchargé en .html");
-    });
+      showToast("Téléchargé");
+    };
 
-    let syncTimer = null;
-    codeArea.addEventListener('input', () => {
-      clearTimeout(syncTimer);
-      syncTimer = setTimeout(() => {
-        pushToUndoHistory(codeArea.innerText.replace(/\r\n/g, '\n'));
-        syncFromDOM();
+    let syncT = null;
+    codeArea.oninput = () => {
+      clearTimeout(syncT);
+      syncT = setTimeout(() => {
+        pushUndo(codeArea.innerText.replace(/\r\n/g, '\n'));
+        syncDOM();
         renderGutter();
         triggerAutoSave();
       }, 350);
-    });
+    };
 
-    function syncFromDOM() {
-      if (!currentActiveFileId) return;
-      rawCodeBuffer = codeArea.innerText.replace(/\r\n/g, '\n');
-
-      const fileData = fileStore.get(currentActiveFileId);
-      if (fileData) {
-        fileData.content = rawCodeBuffer;
-      }
-      renderAppFrame(rawCodeBuffer);
+    function syncDOM() {
+      if (!curFileId) return;
+      rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
+      const f = fileStore.get(curFileId);
+      if (f) f.content = rawCode;
+      renderFrame(rawCode);
     }
 
-    function renderAppFrame(rawHtml) {
-      let finalHtml = rawHtml;
-      if (!finalHtml.includes('viewport')) {
-        finalHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-          </head>
-          <body>
-            ${rawHtml}
-          </body>
-          </html>
-        `;
+    function renderFrame(h) {
+      if (!h.includes('viewport')) {
+        h = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"></head><body>${h}</body></html>`;
       }
-      appFrame.srcdoc = finalHtml;
+      appFrame.srcdoc = h;
     }
 
-    shadeSearchBtn.addEventListener('click', () => {
-      searchBar.classList.toggle('active');
-      if (searchBar.classList.contains('active')) {
-        searchInput.focus();
-        if (searchInput.value) performHighlight();
-      } else {
-        closeSearchBar();
-      }
-    });
+    // Moteur de recherche intégré
+    const sBar = $('search-bar'), sInput = $('search-input'), sCount =$('search-count');
+    let totalMatches = 0, matchIdx = 0;
 
-    searchClose.addEventListener('click', closeSearchBar);
+    searchBtn.onclick = () => {
+      sBar.classList.toggle('active');
+      if (sBar.classList.contains('active')) { sInput.focus(); if (sInput.value) searchCode(); }
+      else closeSearch();
+    };
 
-    function closeSearchBar() {
-      searchBar.classList.remove('active');
-      searchInput.value = '';
-      searchCount.textContent = '0/0';
+    $('search-close').onclick = closeSearch;
+
+    function closeSearch() {
+      sBar.classList.remove('active');
+      sInput.value = '';
+      sCount.textContent = '0/0';
       totalMatches = 0;
-      currentMatchIndex = 0;
-      clearHighlights();
-      searchInput.blur();
-    }
-
-    function clearHighlights() {
-      codeArea.textContent = rawCodeBuffer;
+      codeArea.textContent = rawCode;
       renderGutter();
+      sInput.blur();
     }
 
-    searchInput.addEventListener('input', () => {
-      currentMatchIndex = 0;
-      performHighlight();
-    });
+    sInput.oninput = () => { matchIdx = 0; searchCode(); };
+    sInput.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); navSearch(1); } };
+    $('search-next').onclick = () => navSearch(1);$('search-prev').onclick = () => navSearch(-1);
 
-    searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        navigateSearch(1);
-      }
-    });
+    function searchCode() {
+      const q = sInput.value;
+      if (!q) { codeArea.textContent = rawCode; sCount.textContent = '0/0'; totalMatches = 0; renderGutter(); return; }
 
-    searchNext.addEventListener('click', () => navigateSearch(1));
-    searchPrev.addEventListener('click', () => navigateSearch(-1));
-
-    function escapeRegExp(string) {
-      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    function performHighlight() {
-      const query = searchInput.value;
-      if (!query || query.length === 0) {
-        clearHighlights();
-        searchCount.textContent = '0/0';
-        totalMatches = 0;
-        return;
-      }
-
-      const regex = new RegExp(escapeRegExp(query), 'gi');
-      const matches = [...rawCodeBuffer.matchAll(regex)];
+      const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      const matches = [...rawCode.matchAll(regex)];
       totalMatches = matches.length;
+      if (!totalMatches) { codeArea.textContent = rawCode; sCount.textContent = '0/0'; renderGutter(); return; }
 
-      if (totalMatches === 0) {
-        clearHighlights();
-        searchCount.textContent = '0/0';
-        return;
-      }
+      matchIdx = ((matchIdx % totalMatches) + totalMatches) % totalMatches;
+      sCount.textContent = `${matchIdx + 1}/${totalMatches}`;
 
-      if (currentMatchIndex >= totalMatches) currentMatchIndex = 0;
-      if (currentMatchIndex < 0) currentMatchIndex = totalMatches - 1;
+      let html = '', last = 0;
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-      searchCount.textContent = `${currentMatchIndex + 1}/${totalMatches}`;
-
-      let html = '';
-      let lastIndex = 0;
-
-      matches.forEach((m, idx) => {
-        const start = m.index;
-        const end = start + m[0].length;
-
-        html += escapeHtml(rawCodeBuffer.substring(lastIndex, start));
-        const matchedText = escapeHtml(rawCodeBuffer.substring(start, end));
-
-        if (idx === currentMatchIndex) {
-          html += `<mark class="code-match code-match-active" id="active-search-match">${matchedText}</mark>`;
-        } else {
-          html += `<mark class="code-match">${matchedText}</mark>`;
-        }
-
-        lastIndex = end;
+      matches.forEach((m, i) => {
+        html += esc(rawCode.slice(last, m.index));
+        const matched = esc(rawCode.slice(m.index, m.index + m[0].length));
+        html += `<mark class="code-match ${i === matchIdx ? 'code-match-active' : ''}" ${i === matchIdx ? 'id="cur-match"' : ''}>${matched}</mark>`;
+        last = m.index + m[0].length;
       });
-
-      html += escapeHtml(rawCodeBuffer.substring(lastIndex));
+      html += esc(rawCode.slice(last));
       codeArea.innerHTML = html;
       renderGutter();
 
-      const activeEl = document.getElementById('active-search-match');
-      if (activeEl) {
-        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      }
+      const activeEl = $('cur-match');
+      if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    function navigateSearch(direction) {
-      if (totalMatches === 0) return;
-
-      searchInput.blur();
-      if (document.activeElement) document.activeElement.blur();
-
-      currentMatchIndex += direction;
-      if (currentMatchIndex >= totalMatches) currentMatchIndex = 0;
-      if (currentMatchIndex < 0) currentMatchIndex = totalMatches - 1;
-
-      performHighlight();
+    function navSearch(d) {
+      if (!totalMatches) return;
+      matchIdx += d;
+      searchCode();
     }
 
-    function showToast(text) {
-      toastMsg.textContent = text;
-      toastMsg.classList.add('show');
-      setTimeout(() => toastMsg.classList.remove('show'), 2000);
+    function showToast(m) {
+      toast.textContent = m;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
-    shadeBackBtn.addEventListener('click', () => {
-      disableKeyboard();
+    $('shade-back-btn').onclick = () => {
+      disableKb();
       viewRunner.classList.remove('open');
-      closeSearchBar();
-      setTimeout(() => {
-        appFrame.srcdoc = '';
-      }, 150);
-    });
+      closeSearch();
+      setTimeout(() => { appFrame.srcdoc = ''; }, 150);
+    };
   </script>
 </body>
 </html>
