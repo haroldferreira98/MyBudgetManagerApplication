@@ -25,6 +25,10 @@
       --shade-bg: rgba(247, 242, 250, 0.94);
       --editor-bg: #1e1e24;
       --editor-fg: #f5f2f8;
+      --gutter-bg: #16161b;
+      --gutter-fg: #757182;
+      --gutter-active-bg: rgba(103, 80, 164, 0.35);
+      --gutter-active-fg: #eaddff;
       --hl-match: rgba(33, 150, 243, 0.2);
       --hl-active: rgba(33, 150, 243, 0.85);
       --hl-active-border: #1976d2;
@@ -50,6 +54,10 @@
       --shade-bg: rgba(29, 27, 32, 0.94);
       --editor-bg: #0f0e13;
       --editor-fg: #ece6f0;
+      --gutter-bg: #09080c;
+      --gutter-fg: #605d68;
+      --gutter-active-bg: rgba(208, 188, 255, 0.25);
+      --gutter-active-fg: #d0bcff;
       --hl-match: rgba(255, 235, 59, 0.25);
       --hl-active: #ffeb3b;
       --hl-active-border: #fbc02d;
@@ -74,6 +82,10 @@
         --shade-bg: rgba(29, 27, 32, 0.94);
         --editor-bg: #0f0e13;
         --editor-fg: #ece6f0;
+        --gutter-bg: #09080c;
+        --gutter-fg: #605d68;
+        --gutter-active-bg: rgba(208, 188, 255, 0.25);
+        --gutter-active-fg: #d0bcff;
         --hl-match: rgba(255, 235, 59, 0.25);
         --hl-active: #ffeb3b;
         --hl-active-border: #fbc02d;
@@ -513,13 +525,56 @@
       color: var(--md-sys-color-on-primary);
     }
 
-    /* Éditeur de code natif scrollable */
+    /* Conteneur principal de l'éditeur avec gouttière à gauche */
+    .editor-workspace {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+      background: var(--editor-bg);
+    }
+
+    /* Gouttière des numéros de ligne tactile */
+    #gutter-bar {
+      width: 44px;
+      background: var(--gutter-bg);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none; /* capture le swipe sans conflit */
+      overflow: hidden;
+      z-index: 5;
+      flex-shrink: 0;
+    }
+
+    .gutter-num {
+      height: 22px;
+      line-height: 22px;
+      text-align: right;
+      padding-right: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--gutter-fg);
+      cursor: pointer;
+      transition: background-color 0.1s ease, color 0.1s ease;
+    }
+
+    .gutter-num.selected {
+      background-color: var(--gutter-active-bg);
+      color: var(--gutter-active-fg);
+      font-weight: 700;
+    }
+
+    /* Zone de code scrollable */
     .editor-container {
       flex: 1;
       position: relative;
       overflow: auto;
       background: transparent;
-      padding: 16px;
+      padding: 16px 16px 16px 12px;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -528,7 +583,7 @@
       outline: none;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.85rem;
-      line-height: 1.55;
+      line-height: 22px; /* Hauteur de ligne strictement calée sur la gouttière */
       color: var(--editor-fg);
       white-space: pre;
       word-break: normal;
@@ -539,7 +594,6 @@
       min-width: 100%;
     }
 
-    /* Styles de surlignage épurés et chirurgicaux */
     mark.code-match {
       background-color: var(--hl-match);
       color: inherit;
@@ -678,7 +732,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-bar-right">
-        <span class="app-version-badge">v1.4.6</span>
+        <span class="app-version-badge">v1.4.7</span>
         <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
       </div>
     </div>
@@ -760,8 +814,14 @@
           </div>
         </div>
 
-        <div class="editor-container" id="editor-scroll-box">
-          <pre id="code-area" contenteditable="true" spellcheck="false"></pre>
+        <div class="editor-workspace">
+          <!-- Colonne des numéros de ligne -->
+          <div id="gutter-bar"></div>
+
+          <!-- Zone de code scrollable -->
+          <div class="editor-container" id="editor-scroll-box">
+            <pre id="code-area" contenteditable="true" spellcheck="false"></pre>
+          </div>
         </div>
       </div>
     </div>
@@ -818,6 +878,7 @@
     const appFrame = document.getElementById('app-frame');
     const editorPane = document.getElementById('editor-pane');
     const codeArea = document.getElementById('code-area');
+    const gutterBar = document.getElementById('gutter-bar');
     const editorScrollBox = document.getElementById('editor-scroll-box');
     const editorFileName = document.getElementById('editor-file-name');
     const fileList = document.getElementById('fileList');
@@ -850,6 +911,11 @@
 
     let totalMatches = 0;
     let currentMatchIndex = 0;
+
+    // Synchronisation du scroll vertical entre le code et la gouttière
+    editorScrollBox.addEventListener('scroll', () => {
+      gutterBar.scrollTop = editorScrollBox.scrollTop;
+    });
 
     const currentTheme = localStorage.getItem('theme_preference') || 'auto';
     applyTheme(currentTheme);
@@ -943,6 +1009,7 @@
       editorFileName.textContent = fileData.name;
       rawCodeBuffer = fileData.content;
       codeArea.textContent = rawCodeBuffer;
+      renderGutter();
       
       showPreviewMode();
       renderAppFrame(fileData.content);
@@ -962,6 +1029,7 @@
         pendingTxtData.name = newHtmlName;
         rawCodeBuffer = pendingTxtData.content;
         codeArea.textContent = rawCodeBuffer;
+        renderGutter();
 
         showPreviewMode();
         renderAppFrame(pendingTxtData.content);
@@ -984,6 +1052,7 @@
       editorPane.classList.add('active');
       appFrame.style.display = 'none';
       shadeSearchBtn.classList.add('visible');
+      renderGutter();
     }
 
     function showPreviewMode() {
@@ -995,20 +1064,134 @@
       closeSearchBar();
     }
 
+    /* Rendu et génération de la gouttière des numéros de ligne */
+    function renderGutter() {
+      const lines = rawCodeBuffer.split('\n');
+      const count = Math.max(1, lines.length);
+
+      let html = '';
+      for (let i = 1; i <= count; i++) {
+        html += `<div class="gutter-num" data-line="${i}">${i}</div>`;
+      }
+      gutterBar.innerHTML = html;
+      gutterBar.scrollTop = editorScrollBox.scrollTop;
+    }
+
+    /* Gestion tactile du tap et du glisser / scroll sur la gouttière */
+    let isGutterDragging = false;
+    let dragStartLine = null;
+
+    function getLineFromY(clientY) {
+      const rect = gutterBar.getBoundingClientRect();
+      const relativeY = (clientY - rect.top) + editorScrollBox.scrollTop;
+      const lineNumber = Math.floor((relativeY - 16) / 22) + 1; // 16px padding, 22px hauteur ligne
+      const maxLines = rawCodeBuffer.split('\n').length;
+      return Math.max(1, Math.min(lineNumber, maxLines));
+    }
+
+    function selectLinesRange(fromLine, toLine) {
+      const min = Math.min(fromLine, toLine);
+      const max = Math.max(fromLine, toLine);
+
+      // Met à jour la surbrillance des numéros dans la gouttière
+      document.querySelectorAll('.gutter-num').forEach(el => {
+        const line = parseInt(el.getAttribute('data-line'), 10);
+        if (line >= min && line <= max) {
+          el.classList.add('selected');
+        } else {
+          el.classList.remove('selected');
+        }
+      });
+
+      // Calcule les indices de caractères dans le code brut
+      const lines = rawCodeBuffer.split('\n');
+      let startChar = 0;
+      for (let i = 0; i < min - 1; i++) {
+        startChar += lines[i].length + 1;
+      }
+
+      let endChar = 0;
+      for (let i = 0; i < max; i++) {
+        endChar += lines[i].length + (i < lines.length - 1 ? 1 : 0);
+      }
+
+      // Sélectionne nativement la plage dans le code
+      const range = document.createRange();
+      const sel = window.getSelection();
+
+      // Trouver le text node correspondant
+      let currentOffset = 0;
+      let startNode = null, startNodeOffset = 0;
+      let endNode = null, endNodeOffset = 0;
+
+      const treeWalker = document.createTreeWalker(codeArea, NodeFilter.SHOW_TEXT, null, false);
+      let node;
+      while ((node = treeWalker.nextNode())) {
+        const nextOffset = currentOffset + node.nodeValue.length;
+        if (!startNode && startChar >= currentOffset && startChar <= nextOffset) {
+          startNode = node;
+          startNodeOffset = startChar - currentOffset;
+        }
+        if (!endNode && endChar >= currentOffset && endChar <= nextOffset) {
+          endNode = node;
+          endNodeOffset = endChar - currentOffset;
+          break;
+        }
+        currentOffset = nextOffset;
+      }
+
+      if (startNode && endNode) {
+        range.setStart(startNode, startNodeOffset);
+        range.setEnd(endNode, endNodeOffset);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+
+    // Événements Touch Mobile sur la gouttière
+    gutterBar.addEventListener('touchstart', (e) => {
+      isGutterDragging = true;
+      const touch = e.touches[0];
+      dragStartLine = getLineFromY(touch.clientY);
+      selectLinesRange(dragStartLine, dragStartLine);
+    }, { passive: false });
+
+    gutterBar.addEventListener('touchmove', (e) => {
+      if (!isGutterDragging) return;
+      e.preventDefault(); // évite les saccades de scroll global
+      const touch = e.touches[0];
+      const currentLine = getLineFromY(touch.clientY);
+      selectLinesRange(dragStartLine, currentLine);
+    }, { passive: false });
+
+    gutterBar.addEventListener('touchend', () => {
+      isGutterDragging = false;
+      showToast("Lignes sélectionnées");
+    });
+
+    gutterBar.addEventListener('touchcancel', () => {
+      isGutterDragging = false;
+    });
+
     btnSelectAll.addEventListener('click', () => {
       const range = document.createRange();
       range.selectNodeContents(codeArea);
       const sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
+      document.querySelectorAll('.gutter-num').forEach(el => el.classList.add('selected'));
       showToast("Code sélectionné");
     });
 
     btnCopy.addEventListener('click', async () => {
       syncFromDOM();
+      const sel = window.getSelection();
+      const selectedText = sel.toString();
+      const textToCopy = selectedText && selectedText.length > 0 ? selectedText : rawCodeBuffer;
+
       try {
-        await navigator.clipboard.writeText(rawCodeBuffer);
-        showToast("Code copié");
+        await navigator.clipboard.writeText(textToCopy);
+        showToast(selectedText ? "Lignes sélectionnées copiées ✓" : "Tout le code copié ✓");
       } catch (err) {
         showToast("Erreur de copie");
       }
@@ -1020,6 +1203,7 @@
         if (text) {
           document.execCommand('insertText', false, text);
           syncFromDOM();
+          renderGutter();
           showToast("Code collé");
         }
       } catch (err) {
@@ -1081,12 +1265,12 @@
       showToast("Fichier téléchargé en .html");
     });
 
-    // Synchronisation depuis le code édité
     let syncTimer = null;
     codeArea.addEventListener('input', () => {
       clearTimeout(syncTimer);
       syncTimer = setTimeout(() => {
         syncFromDOM();
+        renderGutter();
       }, 350);
     });
 
@@ -1143,8 +1327,8 @@
     }
 
     function clearHighlights() {
-      // Restaure le texte brut sans balises mark
       codeArea.textContent = rawCodeBuffer;
+      renderGutter();
     }
 
     searchInput.addEventListener('input', () => {
@@ -1194,7 +1378,6 @@
 
       searchCount.textContent = `${currentMatchIndex + 1}/${totalMatches}`;
 
-      // Construction du HTML annoté avec de vrais éléments <mark>
       let html = '';
       let lastIndex = 0;
 
@@ -1216,8 +1399,8 @@
 
       html += escapeHtml(rawCodeBuffer.substring(lastIndex));
       codeArea.innerHTML = html;
+      renderGutter();
 
-      // Défilement garanti au centre
       const activeEl = document.getElementById('active-search-match');
       if (activeEl) {
         activeEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
@@ -1227,7 +1410,6 @@
     function navigateSearch(direction) {
       if (totalMatches === 0) return;
 
-      // Fermeture immédiate du clavier
       searchInput.blur();
       if (document.activeElement) document.activeElement.blur();
 
