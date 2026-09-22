@@ -33,6 +33,15 @@
       --hl-act: #2196f3;
       --radius-card: 24px;
       --radius-pill: 9999px;
+
+      /* Palette Coloration Syntaxique Material */
+      --syn-keyword: #ff7b72;
+      --syn-tag: #7ee787;
+      --syn-attr: #79c0ff;
+      --syn-string: #a5d6ff;
+      --syn-comment: #8b949e;
+      --syn-number: #ffa657;
+      --syn-prop: #d2a8ff;
     }
     [data-theme="dark"], @media (prefers-color-scheme: dark) {
       [data-theme="auto"] {
@@ -133,11 +142,29 @@
     .section-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-sub); font-weight: 700; margin-bottom: -8px; }
     .file-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
     .empty-state { padding: 28px 16px; text-align: center; background: var(--surface-c); border-radius: var(--radius-card); color: var(--text-sub); font-size: 0.85rem; }
+    
     .file-card { background: var(--surface-c); border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
     .file-card:active { background: var(--primary-c); color: var(--on-primary-c); }
     .file-card-info { flex: 1; overflow: hidden; }
     .file-card-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
     .file-card-path { font-size: 0.72rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+    /* Badge d'extension stylisé par type */
+    .ext-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .ext-html { background: rgba(255, 87, 34, 0.16); color: #ff5722; }
+    .ext-css  { background: rgba(33, 150, 243, 0.16); color: #2196f3; }
+    .ext-js   { background: rgba(255, 193, 7, 0.2); color: #ffb300; }
+    .ext-py   { background: rgba(76, 175, 80, 0.16); color: #4caf50; }
+    .ext-cpp  { background: rgba(156, 39, 176, 0.16); color: #ab47bc; }
+    .ext-json { background: rgba(0, 150, 136, 0.16); color: #009688; }
+    .ext-txt  { background: rgba(158, 158, 158, 0.16); color: #9e9e9e; }
 
     #view-runner { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: none; flex-direction: column; }
     #view-runner.open { display: flex; }
@@ -204,8 +231,19 @@
     .gutter-num { height: 22px; line-height: 22px; text-align: right; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--gutter-fg); cursor: pointer; }
     .gutter-num.selected { background-color: var(--gutter-act-bg); color: var(--gutter-act-fg); font-weight: 700; }
     .editor-container { flex: 1; position: relative; overflow: auto; background: transparent; padding: 16px 16px 16px 12px; -webkit-overflow-scrolling: touch; }
+    
     #code-area { min-height: 100%; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 22px; color: var(--editor-fg); white-space: pre; user-select: text; -webkit-user-select: text; display: inline-block; min-width: 100%; cursor: text; }
     #code-area[contenteditable="false"] { cursor: default; }
+    
+    /* Classes de Coloration Syntaxique */
+    .syn-k { color: var(--syn-keyword); font-weight: 600; }
+    .syn-t { color: var(--syn-tag); }
+    .syn-a { color: var(--syn-attr); }
+    .syn-s { color: var(--syn-string); }
+    .syn-c { color: var(--syn-comment); font-style: italic; }
+    .syn-n { color: var(--syn-number); }
+    .syn-p { color: var(--syn-prop); }
+
     mark.code-match { background-color: var(--hl-match); color: inherit; border-radius: 3px; }
     mark.code-match-active { background-color: var(--hl-act); color: #000; font-weight: 700; border-radius: 3px; }
 
@@ -230,7 +268,7 @@
 </head>
 <body>
 
-  <input type="file" id="filePicker" style="display: none;" accept=".html,.htm,.txt,.js,.css">
+  <input type="file" id="filePicker" style="display: none;" accept=".html,.htm,.txt,.js,.css,.py,.cpp,.c,.json">
   <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
 
   <!-- Page d'accueil Material You -->
@@ -238,8 +276,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-actions">
-        <span class="version-badge">v1.6.0</span>
-        <!-- Bascule directe thème à 1 clic -->
+        <span class="version-badge">v1.7.0</span>
         <button class="icon-btn" id="btn-theme-toggle" aria-label="Changer de thème">
           <svg class="icon" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/></svg>
         </button>
@@ -248,7 +285,7 @@
 
     <div class="header-text">
       <h1>Web Studio</h1>
-      <p>Éditeur & Runner Smartphone</p>
+      <p>Éditeur & Runner Smartphone Multi-Langages</p>
     </div>
 
     <div class="action-grid">
@@ -357,7 +394,6 @@
     let autoSaveTimer = null, isAllSelected = false, selRange = null;
     const undoHist = [];
 
-    // DOM Refs
     const viewRunner = $('view-runner'), appFrame = $('app-frame'), editorPane = $('editor-pane');
     const codeArea = $('code-area'), gutterBar = $('gutter-bar'), scrollBox = $('editor-scroll-box');
     const fileList = $('fileList'), emptyMsg = $('empty-state-msg');
@@ -365,7 +401,7 @@
     const btnKb = $('btn-toggle-keyboard'), saveDot = $('save-status-dot'), saveTxt = $('save-status-text');
     const toast = $('toast-msg');
 
-    // Thème (Auto ⇄ Sombre ⇄ Clair en 1 tap direct)
+    // Thème (Auto ⇄ Sombre ⇄ Clair en 1 clic)
     let curTheme = localStorage.getItem('app_theme') || 'auto';
     applyTheme(curTheme);
 
@@ -381,7 +417,6 @@
       showToast(`Thème : ${nextTheme.toUpperCase()}`);
     };
 
-    // Scroll synchronisé gutter
     scrollBox.onscroll = () => { gutterBar.scrollTop = scrollBox.scrollTop; };
 
     // File Import Handlers
@@ -389,7 +424,7 @@
       if (window.showOpenFilePicker) {
         try {
           const [handle] = await window.showOpenFilePicker({
-            types: [{ description: 'Web', accept: { 'text/*': ['.html', '.htm', '.txt', '.css', '.js'] } }]
+            types: [{ description: 'Fichiers Code', accept: { 'text/*': ['.html', '.htm', '.txt', '.css', '.js', '.py', '.cpp', '.c', '.json'] } }]
           });
           if (handle) {
             const f = await handle.getFile();
@@ -401,7 +436,7 @@
       $('filePicker').click();
     };
 
-    $('btn-import-folder').onclick = () =>$('folderPicker').click();
+    $('btn-import-folder').onclick = () => $('folderPicker').click();
 
     $('filePicker').onchange = async e => {
       const f = e.target.files[0];
@@ -425,30 +460,40 @@
       e.target.value = '';
     };
 
-    // Traitement transparent (KISS : convertit .txt en .html sans clic superflu)
+    function getExtClass(ext) {
+      switch (ext) {
+        case 'html': case 'htm': return 'ext-html';
+        case 'css': return 'ext-css';
+        case 'js': case 'jsx': case 'ts': return 'ext-js';
+        case 'py': return 'ext-py';
+        case 'cpp': case 'c': case 'h': case 'hpp': return 'ext-cpp';
+        case 'json': return 'ext-json';
+        default: return 'ext-txt';
+      }
+    }
+
     async function processFile(file, path, autoOpen = true, handle = null) {
       if (emptyMsg) emptyMsg.style.display = 'none';
       let name = file.name;
       const isTxt = name.endsWith('.txt');
       if (isTxt) name = name.replace(/\.txt$/i, '.html');
 
+      const ext = name.split('.').pop().toLowerCase();
       const storageKey = 'cache_' + name;
       const cached = localStorage.getItem(storageKey);
       const rawText = await file.text();
       const content = cached !== null ? cached : rawText;
       const id = 'f_' + Math.random().toString(36).slice(2, 9);
 
-      fileStore.set(id, { name, path, content, handle, storageKey });
+      fileStore.set(id, { name, ext, path, content, handle, storageKey });
 
       const card = document.createElement('div');
       card.className = 'file-card';
       card.innerHTML = `
+        <span class="ext-badge ${getExtClass(ext)}">${ext}</span>
         <div class="file-card-info">
-          <div class="file-card-name">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-            ${name}
-          </div>
-          <div class="file-card-path">${path} ${isTxt ? '• Converti HTML' : ''}</div>
+          <div class="file-card-name">${name}</div>
+          <div class="file-card-path">${path}${isTxt ? '• Converti HTML' : ''}</div>
         </div>
       `;
       card.onclick = () => openFile(id);
@@ -466,9 +511,9 @@
       undoHist.length = 0;
       pushUndo(rawCode);
 
-      codeArea.textContent = rawCode;
       disableKb();
       resetSel();
+      applySyntaxHighlighting();
       renderGutter();
       setSaveStatus("Prêt");
 
@@ -488,6 +533,7 @@
       appFrame.style.display = 'none';
       searchBtn.classList.add('visible');
       disableKb();
+      applySyntaxHighlighting();
       renderGutter();
     }
 
@@ -506,6 +552,7 @@
       isKeyboard = true;
       btnKb.classList.add('active-state');
       btnKb.querySelector('span').textContent = 'Fermer';
+      codeArea.textContent = rawCode; // Mode texte brut fluide pour saisie
       codeArea.setAttribute('contenteditable', 'true');
       codeArea.removeAttribute('inputmode');
       codeArea.focus();
@@ -518,6 +565,7 @@
       codeArea.setAttribute('contenteditable', 'false');
       codeArea.setAttribute('inputmode', 'none');
       if (document.activeElement) document.activeElement.blur();
+      applySyntaxHighlighting();
     }
 
     btnKb.onclick = e => {
@@ -541,7 +589,64 @@
       gutterBar.scrollTop = scrollBox.scrollTop;
     }
 
-    // Auto-Scroll dynamique & sélection native (algorithme inchangé)
+    /* MOTEUR DE COLORATION SYNTAXIQUE LÉGER (HTML, CSS, JS, Python, C++, C, JSON) */
+    function applySyntaxHighlighting() {
+      if (isKeyboard) return; // Reste en texte brut pendant la frappe active pour éviter les artefacts de curseur
+      const f = curFileId ? fileStore.get(curFileId) : null;
+      const ext = f?.ext || 'html';
+      codeArea.innerHTML = highlightCode(rawCode, ext);
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function highlightCode(code, ext) {
+      if (!code) return '';
+
+      // 1. HTML
+      if (ext === 'html' || ext === 'htm') {
+        return code.replace(/(<!--[\s\S]*?-->)|(<\/?[a-zA-Z0-9\-]+)|(\s+[a-zA-Z\-:]+(?=\=))|("[^"]*"|'[^']*')|(&[a-zA-Z0-9#]+;)/g, (m, c, t, a, s, e) => {
+          if (c) return `<span class="syn-c">${escapeHtml(c)}</span>`;
+          if (t) return `<span class="syn-t">${escapeHtml(t)}</span>`;
+          if (a) return `<span class="syn-a">${escapeHtml(a)}</span>`;
+          if (s) return `<span class="syn-s">${escapeHtml(s)}</span>`;
+          if (e) return `<span class="syn-p">${escapeHtml(e)}</span>`;
+          return escapeHtml(m);
+        });
+      }
+
+      // 2. CSS
+      if (ext === 'css') {
+        return code.replace(/(\/\*[\s\S]*?\*\/)|([.#][\w-]+(?=[^{]*\{))|([\w-]+(?=\s*:))|("[^"]*"|'[^']*')|(#[\da-fA-F]{3,8}\b|\b\d+(?:px|rem|em|vh|vw|%)?)/g, (m, c, sel, prop, s, num) => {
+          if (c) return `<span class="syn-c">${escapeHtml(c)}</span>`;
+          if (sel) return `<span class="syn-k">${escapeHtml(sel)}</span>`;
+          if (prop) return `<span class="syn-p">${escapeHtml(prop)}</span>`;
+          if (s) return `<span class="syn-s">${escapeHtml(s)}</span>`;
+          if (num) return `<span class="syn-n">${escapeHtml(num)}</span>`;
+          return escapeHtml(m);
+        });
+      }
+
+      // 3. JS, Python, C++, C, JSON
+      const jsKw = /\b(const|let|var|function|return|if|else|for|while|import|export|from|class|new|async|await|try|catch|typeof)\b/g;
+      const pyKw = /\b(def|return|if|elif|else|for|while|import|from|class|try|except|with|as|pass|in|is|not|and|or|lambda)\b/g;
+      const cppKw = /\b(int|float|double|char|bool|void|class|struct|public|private|protected|template|typename|return|if|else|for|while|include)\b/g;
+
+      let kw = jsKw;
+      if (ext === 'py') kw = pyKw;
+      if (ext === 'cpp' || ext === 'c' || ext === 'h' || ext === 'hpp') kw = cppKw;
+
+      let safe = escapeHtml(code);
+      // Commentaires & chaînes
+      safe = safe.replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/|#.*)/g, '<span class="syn-c">$1</span>');
+      safe = safe.replace(/("[^"]*"|'[^']*'|`[^`]*`)/g, '<span class="syn-s">$1</span>');
+      safe = safe.replace(kw, '<span class="syn-k">$1</span>');
+      safe = safe.replace(/\b(\d+)\b/g, '<span class="syn-n">$1</span>');
+      return safe;
+    }
+
+    // Auto-Scroll dynamique & sélection native (inchangé)
     let isDragging = false, dragStart = null, scrollRaf = null, touchY = 0;
 
     function startAutoScroll() {
@@ -631,7 +736,7 @@
       scrollRaf = null;
     }));
 
-    // Actions Presse-Papier & Undo
+    // Presse-Papier & Undo
     $('btn-select-all').onclick = () => {
       disableKb();
       const r = document.createRange();
@@ -676,7 +781,7 @@
           rawCode = t;
         }
       }
-      codeArea.textContent = rawCode;
+      applySyntaxHighlighting();
       resetSel();
       renderGutter();
       syncDOM();
@@ -699,7 +804,7 @@
         showToast("Rien à annuler");
         return;
       }
-      codeArea.textContent = rawCode;
+      applySyntaxHighlighting();
       resetSel();
       renderGutter();
       syncDOM();
@@ -775,7 +880,8 @@
     codeArea.oninput = () => {
       clearTimeout(syncT);
       syncT = setTimeout(() => {
-        pushUndo(codeArea.innerText.replace(/\r\n/g, '\n'));
+        rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
+        pushUndo(rawCode);
         syncDOM();
         renderGutter();
         triggerAutoSave();
@@ -797,7 +903,7 @@
       appFrame.srcdoc = h;
     }
 
-    // Moteur de recherche intégré
+    // Moteur de recherche
     const sBar = $('search-bar'), sInput = $('search-input'), sCount =$('search-count');
     let totalMatches = 0, matchIdx = 0;
 
@@ -814,7 +920,7 @@
       sInput.value = '';
       sCount.textContent = '0/0';
       totalMatches = 0;
-      codeArea.textContent = rawCode;
+      applySyntaxHighlighting();
       renderGutter();
       sInput.blur();
     }
@@ -825,12 +931,12 @@
 
     function searchCode() {
       const q = sInput.value;
-      if (!q) { codeArea.textContent = rawCode; sCount.textContent = '0/0'; totalMatches = 0; renderGutter(); return; }
+      if (!q) { applySyntaxHighlighting(); sCount.textContent = '0/0'; totalMatches = 0; renderGutter(); return; }
 
       const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
       const matches = [...rawCode.matchAll(regex)];
       totalMatches = matches.length;
-      if (!totalMatches) { codeArea.textContent = rawCode; sCount.textContent = '0/0'; renderGutter(); return; }
+      if (!totalMatches) { applySyntaxHighlighting(); sCount.textContent = '0/0'; renderGutter(); return; }
 
       matchIdx = ((matchIdx % totalMatches) + totalMatches) % totalMatches;
       sCount.textContent = `${matchIdx + 1}/${totalMatches}`;
