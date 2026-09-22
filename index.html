@@ -42,6 +42,7 @@
       --syn-comment: #8b949e;
       --syn-number: #ffa657;
       --syn-prop: #d2a8ff;
+      --syn-bool: #ff7b72;
     }
     [data-theme="dark"], @media (prefers-color-scheme: dark) {
       [data-theme="auto"] {
@@ -149,21 +150,14 @@
     .file-card-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
     .file-card-path { font-size: 0.72rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
-    /* Badge d'extension stylisé par type */
-    .ext-badge {
-      font-size: 0.68rem;
-      font-weight: 700;
-      padding: 3px 7px;
-      border-radius: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
+    /* Badges d'extension */
+    .ext-badge { font-size: 0.68rem; font-weight: 700; padding: 3px 7px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
     .ext-html { background: rgba(255, 87, 34, 0.16); color: #ff5722; }
+    .ext-json { background: rgba(255, 179, 0, 0.2); color: #ff8f00; }
     .ext-css  { background: rgba(33, 150, 243, 0.16); color: #2196f3; }
-    .ext-js   { background: rgba(255, 193, 7, 0.2); color: #ffb300; }
+    .ext-js   { background: rgba(255, 235, 59, 0.2); color: #fbc02d; }
     .ext-py   { background: rgba(76, 175, 80, 0.16); color: #4caf50; }
     .ext-cpp  { background: rgba(156, 39, 176, 0.16); color: #ab47bc; }
-    .ext-json { background: rgba(0, 150, 136, 0.16); color: #009688; }
     .ext-txt  { background: rgba(158, 158, 158, 0.16); color: #9e9e9e; }
 
     #view-runner { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: none; flex-direction: column; }
@@ -235,7 +229,7 @@
     #code-area { min-height: 100%; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 22px; color: var(--editor-fg); white-space: pre; user-select: text; -webkit-user-select: text; display: inline-block; min-width: 100%; cursor: text; }
     #code-area[contenteditable="false"] { cursor: default; }
     
-    /* Classes de Coloration Syntaxique */
+    /* Classes de Coloration */
     .syn-k { color: var(--syn-keyword); font-weight: 600; }
     .syn-t { color: var(--syn-tag); }
     .syn-a { color: var(--syn-attr); }
@@ -243,6 +237,7 @@
     .syn-c { color: var(--syn-comment); font-style: italic; }
     .syn-n { color: var(--syn-number); }
     .syn-p { color: var(--syn-prop); }
+    .syn-b { color: var(--syn-bool); font-weight: 600; }
 
     mark.code-match { background-color: var(--hl-match); color: inherit; border-radius: 3px; }
     mark.code-match-active { background-color: var(--hl-act); color: #000; font-weight: 700; border-radius: 3px; }
@@ -268,15 +263,16 @@
 </head>
 <body>
 
-  <input type="file" id="filePicker" style="display: none;" accept=".html,.htm,.txt,.js,.css,.py,.cpp,.c,.json">
+  <!-- Accept universel : accepte tout sans rien bloquer sur iPhone/iCloud -->
+  <input type="file" id="filePicker" style="display: none;" accept="*/*">
   <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
 
-  <!-- Page d'accueil Material You -->
+  <!-- Page d'accueil -->
   <main id="view-home">
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-actions">
-        <span class="version-badge">v1.7.0</span>
+        <span class="version-badge">v1.8.0</span>
         <button class="icon-btn" id="btn-theme-toggle" aria-label="Changer de thème">
           <svg class="icon" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/></svg>
         </button>
@@ -285,7 +281,7 @@
 
     <div class="header-text">
       <h1>Web Studio</h1>
-      <p>Éditeur & Runner Smartphone Multi-Langages</p>
+      <p>Éditeur & Viewer Universel (HTML, JSON, Code)</p>
     </div>
 
     <div class="action-grid">
@@ -294,7 +290,7 @@
           <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
         </div>
         <h3>Fichier</h3>
-        <span>iCloud / Local</span>
+        <span>HTML, JSON, Scripts…</span>
       </div>
 
       <div class="action-card" id="btn-import-folder">
@@ -401,7 +397,6 @@
     const btnKb = $('btn-toggle-keyboard'), saveDot = $('save-status-dot'), saveTxt = $('save-status-text');
     const toast = $('toast-msg');
 
-    // Thème (Auto ⇄ Sombre ⇄ Clair en 1 clic)
     let curTheme = localStorage.getItem('app_theme') || 'auto';
     applyTheme(curTheme);
 
@@ -419,13 +414,11 @@
 
     scrollBox.onscroll = () => { gutterBar.scrollTop = scrollBox.scrollTop; };
 
-    // File Import Handlers
+    // File Import : supporte tous formats sans restriction
     $('btn-import-file').onclick = async () => {
       if (window.showOpenFilePicker) {
         try {
-          const [handle] = await window.showOpenFilePicker({
-            types: [{ description: 'Fichiers Code', accept: { 'text/*': ['.html', '.htm', '.txt', '.css', '.js', '.py', '.cpp', '.c', '.json'] } }]
-          });
+          const [handle] = await window.showOpenFilePicker({ multiple: false });
           if (handle) {
             const f = await handle.getFile();
             await processFile(f, f.name, true, handle);
@@ -454,7 +447,7 @@
       for (const f of files) {
         if (f.name.startsWith('.')) continue;
         const id = await processFile(f, f.webkitRelativePath || f.name, false);
-        if (!targetId && (f.name.endsWith('.html') || f.name.endsWith('.txt'))) targetId = id;
+        if (!targetId && (f.name.endsWith('.html') || f.name.endsWith('.json') || f.name.endsWith('.txt'))) targetId = id;
       }
       if (targetId) openFile(targetId);
       e.target.value = '';
@@ -463,11 +456,11 @@
     function getExtClass(ext) {
       switch (ext) {
         case 'html': case 'htm': return 'ext-html';
+        case 'json': return 'ext-json';
         case 'css': return 'ext-css';
         case 'js': case 'jsx': case 'ts': return 'ext-js';
         case 'py': return 'ext-py';
         case 'cpp': case 'c': case 'h': case 'hpp': return 'ext-cpp';
-        case 'json': return 'ext-json';
         default: return 'ext-txt';
       }
     }
@@ -481,7 +474,16 @@
       const ext = name.split('.').pop().toLowerCase();
       const storageKey = 'cache_' + name;
       const cached = localStorage.getItem(storageKey);
-      const rawText = await file.text();
+      let rawText = await file.text();
+
+      // Formatage JSON propre si JSON compressé
+      if (ext === 'json') {
+        try {
+          const parsed = JSON.parse(cached !== null ? cached : rawText);
+          rawText = JSON.stringify(parsed, null, 2);
+        } catch {}
+      }
+
       const content = cached !== null ? cached : rawText;
       const id = 'f_' + Math.random().toString(36).slice(2, 9);
 
@@ -493,7 +495,7 @@
         <span class="ext-badge ${getExtClass(ext)}">${ext}</span>
         <div class="file-card-info">
           <div class="file-card-name">${name}</div>
-          <div class="file-card-path">${path}${isTxt ? '• Converti HTML' : ''}</div>
+          <div class="file-card-path">${path}</div>
         </div>
       `;
       card.onclick = () => openFile(id);
@@ -518,13 +520,19 @@
       setSaveStatus("Prêt");
 
       showPreview();
-      renderFrame(rawCode);
+      renderPreview(rawCode, f.ext, f.name);
       viewRunner.classList.add('open');
     }
 
     // Tabs
     tabCode.onclick = showCode;
-    tabPreview.onclick = () => { disableKb(); syncDOM(); showPreview(); };
+    tabPreview.onclick = () => {
+      disableKb();
+      syncDOM();
+      const f = curFileId ? fileStore.get(curFileId) : null;
+      renderPreview(rawCode, f?.ext || 'html', f?.name || '');
+      showPreview();
+    };
 
     function showCode() {
       tabCode.classList.add('active');
@@ -547,12 +555,11 @@
       closeSearch();
     }
 
-    // Clavier réactif 1 tap
     function enableKb() {
       isKeyboard = true;
       btnKb.classList.add('active-state');
       btnKb.querySelector('span').textContent = 'Fermer';
-      codeArea.textContent = rawCode; // Mode texte brut fluide pour saisie
+      codeArea.textContent = rawCode;
       codeArea.setAttribute('contenteditable', 'true');
       codeArea.removeAttribute('inputmode');
       codeArea.focus();
@@ -589,9 +596,9 @@
       gutterBar.scrollTop = scrollBox.scrollTop;
     }
 
-    /* MOTEUR DE COLORATION SYNTAXIQUE LÉGER (HTML, CSS, JS, Python, C++, C, JSON) */
+    /* MOTEUR DE COLORATION SYNTAXIQUE (HTML, JSON, CSS, JS, PY, CPP) */
     function applySyntaxHighlighting() {
-      if (isKeyboard) return; // Reste en texte brut pendant la frappe active pour éviter les artefacts de curseur
+      if (isKeyboard) return;
       const f = curFileId ? fileStore.get(curFileId) : null;
       const ext = f?.ext || 'html';
       codeArea.innerHTML = highlightCode(rawCode, ext);
@@ -604,7 +611,23 @@
     function highlightCode(code, ext) {
       if (!code) return '';
 
-      // 1. HTML
+      // 1. JSON
+      if (ext === 'json') {
+        const safe = escapeHtml(code);
+        return safe.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+          let cls = 'syn-n';
+          if (/^"/.test(match)) {
+            cls = /:$/.test(match) ? 'syn-p' : 'syn-s';
+          } else if (/true|false/.test(match)) {
+            cls = 'syn-b';
+          } else if (/null/.test(match)) {
+            cls = 'syn-k';
+          }
+          return `<span class="${cls}">${match}</span>`;
+        });
+      }
+
+      // 2. HTML
       if (ext === 'html' || ext === 'htm') {
         return code.replace(/(<!--[\s\S]*?-->)|(<\/?[a-zA-Z0-9\-]+)|(\s+[a-zA-Z\-:]+(?=\=))|("[^"]*"|'[^']*')|(&[a-zA-Z0-9#]+;)/g, (m, c, t, a, s, e) => {
           if (c) return `<span class="syn-c">${escapeHtml(c)}</span>`;
@@ -616,7 +639,7 @@
         });
       }
 
-      // 2. CSS
+      // 3. CSS
       if (ext === 'css') {
         return code.replace(/(\/\*[\s\S]*?\*\/)|([.#][\w-]+(?=[^{]*\{))|([\w-]+(?=\s*:))|("[^"]*"|'[^']*')|(#[\da-fA-F]{3,8}\b|\b\d+(?:px|rem|em|vh|vw|%)?)/g, (m, c, sel, prop, s, num) => {
           if (c) return `<span class="syn-c">${escapeHtml(c)}</span>`;
@@ -628,7 +651,7 @@
         });
       }
 
-      // 3. JS, Python, C++, C, JSON
+      // 4. JS, Python, C++, etc.
       const jsKw = /\b(const|let|var|function|return|if|else|for|while|import|export|from|class|new|async|await|try|catch|typeof)\b/g;
       const pyKw = /\b(def|return|if|elif|else|for|while|import|from|class|try|except|with|as|pass|in|is|not|and|or|lambda)\b/g;
       const cppKw = /\b(int|float|double|char|bool|void|class|struct|public|private|protected|template|typename|return|if|else|for|while|include)\b/g;
@@ -638,12 +661,72 @@
       if (ext === 'cpp' || ext === 'c' || ext === 'h' || ext === 'hpp') kw = cppKw;
 
       let safe = escapeHtml(code);
-      // Commentaires & chaînes
       safe = safe.replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/|#.*)/g, '<span class="syn-c">$1</span>');
       safe = safe.replace(/("[^"]*"|'[^']*'|`[^`]*`)/g, '<span class="syn-s">$1</span>');
       safe = safe.replace(kw, '<span class="syn-k">$1</span>');
       safe = safe.replace(/\b(\d+)\b/g, '<span class="syn-n">$1</span>');
       return safe;
+    }
+
+    /* RENDU D'APERÇU INTELLIGENT (HTML = APP, JSON = VIEWER MATERIAL PIXEL) */
+    function renderPreview(content, ext, filename) {
+      if (ext === 'html' || ext === 'htm') {
+        let h = content;
+        if (!h.includes('viewport')) {
+          h = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"></head><body>${h}</body></html>`;
+        }
+        appFrame.srcdoc = h;
+        return;
+      }
+
+      // Viewer Universel Material You pour JSON
+      if (ext === 'json') {
+        let parsed = null, err = null;
+        try { parsed = JSON.parse(content); } catch (e) { err = e.message; }
+
+        const jsonViewerHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+            <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+            <style>
+              body { font-family: 'Google Sans', sans-serif; background: #fdf8fd; color: #1d1b20; margin: 0; padding: 20px; }
+              @media (prefers-color-scheme: dark) { body { background: #141218; color: #e6e1e5; } }
+              .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+              .badge { background: #eaddff; color: #21005d; padding: 6px 12px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; }
+              .card { background: #ede7f6; border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+              @media (prefers-color-scheme: dark) { .card { background: #2b2930; } }
+              .key { font-weight: 700; color: #6750a4; font-size: 0.88rem; font-family: 'JetBrains Mono', monospace; }
+              @media (prefers-color-scheme: dark) { .key { color: #d0bcff; } }
+              .val { font-size: 0.88rem; margin-top: 4px; word-break: break-all; }
+              pre { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; white-space: pre-wrap; line-height: 1.5; margin: 0; }
+              .err { background: #fce8e6; color: #c5221f; padding: 12px; border-radius: 14px; font-weight: 500; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h2>${filename}</h2>
+              <span class="badge">Visualiseur JSON</span>
+            </div>
+            ${err ? `<div class="err">JSON invalide : ${err}</div>` : ''}
+            <div class="card">
+              <pre>${escapeHtml(JSON.stringify(parsed, null, 2))}</pre>
+            </div>
+          </body>
+          </html>
+        `;
+        appFrame.srcdoc = jsonViewerHtml;
+        return;
+      }
+
+      // Autre fichier script / texte
+      appFrame.srcdoc = `
+        <!DOCTYPE html><html><body style="font-family:sans-serif;padding:20px;background:#fdf8fd;color:#1d1b20;">
+          <h3>Fichier ${ext.toUpperCase()}</h3>
+          <p>Ce fichier est un script/donnée. Modifiez-le dans l'onglet <strong>Coder</strong>.</p>
+        </body></html>
+      `;
     }
 
     // Auto-Scroll dynamique & sélection native (inchangé)
@@ -844,7 +927,7 @@
     $('btn-save').onclick = async () => {
       syncDOM();
       const f = curFileId ? fileStore.get(curFileId) : null;
-      const filename = f?.name || 'index.html';
+      const filename = f?.name || 'document.html';
 
       if (f?.handle?.createWritable) {
         try {
@@ -857,7 +940,8 @@
         } catch {}
       }
 
-      const fileObj = new File([rawCode], filename, { type: 'text/html;charset=utf-8' });
+      const mimeType = f?.ext === 'json' ? 'application/json' : 'text/html;charset=utf-8';
+      const fileObj = new File([rawCode], filename, { type: mimeType });
       if (navigator.canShare?.({ files: [fileObj] })) {
         try {
           await navigator.share({ files: [fileObj], title: filename });
@@ -866,7 +950,7 @@
         } catch (e) { if (e.name === 'AbortError') return; }
       }
 
-      const blob = new Blob([rawCode], { type: 'text/html;charset=utf-8' });
+      const blob = new Blob([rawCode], { type: mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -892,15 +976,10 @@
       if (!curFileId) return;
       rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
       const f = fileStore.get(curFileId);
-      if (f) f.content = rawCode;
-      renderFrame(rawCode);
-    }
-
-    function renderFrame(h) {
-      if (!h.includes('viewport')) {
-        h = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"></head><body>${h}</body></html>`;
+      if (f) {
+        f.content = rawCode;
+        renderPreview(rawCode, f.ext, f.name);
       }
-      appFrame.srcdoc = h;
     }
 
     // Moteur de recherche
