@@ -475,10 +475,11 @@
       display: flex;
     }
 
-    /* Barre d'outils optimisée : 100% largeur écran sans débordement */
+    /* Barre d'outils multi-lignes */
     .editor-toolbar {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      gap: 5px;
       padding: 6px 8px;
       background: rgba(255, 255, 255, 0.05);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -486,7 +487,7 @@
       width: 100%;
     }
 
-    .editor-actions {
+    .toolbar-row {
       display: flex;
       width: 100%;
       gap: 5px;
@@ -523,6 +524,11 @@
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
       flex: 1.1;
+    }
+
+    .tool-btn-sub {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e0dced;
     }
 
     .editor-workspace {
@@ -734,7 +740,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-bar-right">
-        <span class="app-version-badge">v1.5.0</span>
+        <span class="app-version-badge">v1.5.1</span>
         <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
       </div>
     </div>
@@ -806,13 +812,20 @@
       <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
 
       <div id="editor-pane">
+        <!-- Barre d'outils 2 lignes -->
         <div class="editor-toolbar">
-          <div class="editor-actions">
+          <!-- Rangée 1 -->
+          <div class="toolbar-row">
             <button class="tool-btn" id="btn-toggle-keyboard">⌨️ Clavier</button>
             <button class="tool-btn" id="btn-select-all">Tout</button>
             <button class="tool-btn" id="btn-copy">Copier</button>
             <button class="tool-btn" id="btn-paste">Coller</button>
             <button class="tool-btn tool-btn-primary" id="btn-save">💾 Sauveg.</button>
+          </div>
+          <!-- Rangée 2 : Annuler juste en dessous de Clavier -->
+          <div class="toolbar-row">
+            <button class="tool-btn tool-btn-sub" id="btn-undo">↩ Annuler</button>
+            <div style="flex: 4;"></div>
           </div>
         </div>
 
@@ -873,6 +886,11 @@
     let rawCodeBuffer = "";
     let isKeyboardEnabled = false;
 
+    // Pile d'historique pour le bouton Annuler (Undo)
+    const undoHistory = [];
+    let isAllSelectedFlag = false;
+    let selectedLineRange = null; // { from, to }
+
     const viewHome = document.getElementById('view-home');
     const viewRunner = document.getElementById('view-runner');
     const appFrame = document.getElementById('app-frame');
@@ -893,6 +911,7 @@
     const btnCopy = document.getElementById('btn-copy');
     const btnPaste = document.getElementById('btn-paste');
     const btnSave = document.getElementById('btn-save');
+    const btnUndo = document.getElementById('btn-undo');
     const modalConvert = document.getElementById('modal-convert');
     const modalText = document.getElementById('modal-text');
     const btnModalCancel = document.getElementById('btn-modal-cancel');
@@ -993,6 +1012,11 @@
       }
     }
 
+    function pushToUndoHistory(text) {
+      if (undoHistory.length > 25) undoHistory.shift();
+      undoHistory.push(text);
+    }
+
     function openFile(id) {
       const fileData = fileStore.get(id);
       if (!fileData) return;
@@ -1006,8 +1030,12 @@
 
       currentActiveFileId = id;
       rawCodeBuffer = fileData.content;
+      undoHistory.length = 0;
+      pushToUndoHistory(rawCodeBuffer);
+
       codeArea.textContent = rawCodeBuffer;
       disableKeyboard();
+      resetSelectionState();
       renderGutter();
       
       showPreviewMode();
@@ -1026,8 +1054,12 @@
         const newHtmlName = pendingTxtData.name.replace(/\.txt$/i, '.html');
         pendingTxtData.name = newHtmlName;
         rawCodeBuffer = pendingTxtData.content;
+        undoHistory.length = 0;
+        pushToUndoHistory(rawCodeBuffer);
+
         codeArea.textContent = rawCodeBuffer;
         disableKeyboard();
+        resetSelectionState();
         renderGutter();
 
         showPreviewMode();
@@ -1104,6 +1136,12 @@
       }
     });
 
+    function resetSelectionState() {
+      isAllSelectedFlag = false;
+      selectedLineRange = null;
+      document.querySelectorAll('.gutter-num').forEach(el => el.classList.remove('selected'));
+    }
+
     function renderGutter() {
       const lines = rawCodeBuffer.split('\n');
       const count = Math.max(1, lines.length);
@@ -1116,7 +1154,7 @@
       gutterBar.scrollTop = editorScrollBox.scrollTop;
     }
 
-    /* AUTO-SCROLL ULTRA PROGRESSIF ET ULTRA RAPIDE */
+    /* AUTO-SCROLL RAPIDE & PROGRESSIF */
     let isGutterDragging = false;
     let dragStartLine = null;
     let autoScrollRaf = null;
@@ -1136,14 +1174,10 @@
         let scrollSpeed = 0;
 
         if (lastClientY < topThreshold) {
-          // Ratio de proximité vers le haut (0 = seuil, 1 = tout en haut de l'écran)
           const ratio = Math.max(0, Math.min(1.4, (topThreshold - lastClientY) / 85));
-          // Vitesse quadratique : douce au début, fulgurante tout en haut (jusqu'à 75px / frame)
           scrollSpeed = -(8 + Math.pow(ratio, 2.2) * 65);
         } else if (lastClientY > bottomThreshold) {
-          // Ratio de proximité vers le bas (0 = seuil, 1 = tout en bas de l'écran)
           const ratio = Math.max(0, Math.min(1.4, (lastClientY - bottomThreshold) / 85));
-          // Vitesse quadratique : douce au début, fulgurante tout en bas
           scrollSpeed = (8 + Math.pow(ratio, 2.2) * 65);
         }
 
@@ -1177,6 +1211,9 @@
     function selectLinesRange(fromLine, toLine) {
       const min = Math.min(fromLine, toLine);
       const max = Math.max(fromLine, toLine);
+
+      isAllSelectedFlag = false;
+      selectedLineRange = { from: min, to: max };
 
       document.querySelectorAll('.gutter-num').forEach(el => {
         const line = parseInt(el.getAttribute('data-line'), 10);
@@ -1258,6 +1295,7 @@
       stopAutoScroll();
     });
 
+    // TOUT SÉLECTIONNER
     btnSelectAll.addEventListener('click', () => {
       disableKeyboard();
       const range = document.createRange();
@@ -1265,10 +1303,15 @@
       const sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
+
+      isAllSelectedFlag = true;
+      selectedLineRange = null;
+
       document.querySelectorAll('.gutter-num').forEach(el => el.classList.add('selected'));
       showToast("Code sélectionné");
     });
 
+    // COPIER
     btnCopy.addEventListener('click', async () => {
       syncFromDOM();
       const sel = window.getSelection();
@@ -1283,24 +1326,79 @@
       }
     });
 
+    // COLLER ROBUSTE (Remplace la sélection active ou tout le document)
     btnPaste.addEventListener('click', async () => {
+      let pastedText = "";
       try {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-          codeArea.setAttribute('contenteditable', 'true');
-          document.execCommand('insertText', false, text);
-          if (!isKeyboardEnabled) {
-            codeArea.setAttribute('contenteditable', 'false');
-          }
-          syncFromDOM();
-          renderGutter();
-          showToast("Code collé");
-        }
+        pastedText = await navigator.clipboard.readText();
       } catch (err) {
-        showToast("Autorisation requise");
+        // Fallback prompt si le navigateur bloque readText
+        pastedText = prompt("Collez votre code ici :") || "";
+      }
+
+      if (!pastedText) return;
+
+      pushToUndoHistory(rawCodeBuffer);
+
+      if (isAllSelectedFlag) {
+        // Remplacement de 100% du document
+        rawCodeBuffer = pastedText;
+      } else if (selectedLineRange) {
+        // Remplacement d'une tranche de lignes ciblée
+        const lines = rawCodeBuffer.split('\n');
+        const min = selectedLineRange.from;
+        const max = selectedLineRange.to;
+
+        const before = lines.slice(0, min - 1);
+        const after = lines.slice(max);
+        rawCodeBuffer = [...before, pastedText, ...after].join('\n');
+      } else {
+        // Remplacement de la sélection native ou ajout à la fin
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0 && !sel.isCollapsed) {
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          const textNode = document.createTextNode(pastedText);
+          range.insertNode(textNode);
+          rawCodeBuffer = codeArea.innerText.replace(/\r\n/g, '\n');
+        } else {
+          // Si rien de sélectionné, remplace tout pour faciliter le swap de fichier
+          rawCodeBuffer = pastedText;
+        }
+      }
+
+      codeArea.textContent = rawCodeBuffer;
+      resetSelectionState();
+      renderGutter();
+      syncFromDOM();
+      showToast("Code collé avec succès ✓");
+    });
+
+    // BOUTON ANNULER (UNDO)
+    btnUndo.addEventListener('click', () => {
+      if (undoHistory.length > 1) {
+        // Retire l'état actuel et restaure le précédent
+        undoHistory.pop();
+        const previousState = undoHistory[undoHistory.length - 1];
+        rawCodeBuffer = previousState;
+        codeArea.textContent = rawCodeBuffer;
+        resetSelectionState();
+        renderGutter();
+        syncFromDOM();
+        showToast("Action annulée ↩");
+      } else if (undoHistory.length === 1) {
+        rawCodeBuffer = undoHistory[0];
+        codeArea.textContent = rawCodeBuffer;
+        resetSelectionState();
+        renderGutter();
+        syncFromDOM();
+        showToast("Retour à la version initiale");
+      } else {
+        showToast("Rien à annuler");
       }
     });
 
+    // SAUVEGARDE
     btnSave.addEventListener('click', async () => {
       syncFromDOM();
       const code = rawCodeBuffer;
@@ -1363,6 +1461,7 @@
     codeArea.addEventListener('input', () => {
       clearTimeout(syncTimer);
       syncTimer = setTimeout(() => {
+        pushToUndoHistory(codeArea.innerText.replace(/\r\n/g, '\n'));
         syncFromDOM();
         renderGutter();
       }, 350);
