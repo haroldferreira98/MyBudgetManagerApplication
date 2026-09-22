@@ -34,7 +34,6 @@
       --radius-card: 24px;
       --radius-pill: 9999px;
 
-      /* Palette Coloration Syntaxique Material */
       --syn-keyword: #ff7b72;
       --syn-tag: #7ee787;
       --syn-attr: #79c0ff;
@@ -228,7 +227,6 @@
     #code-area { min-height: 100%; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 22px; color: var(--editor-fg); white-space: pre; user-select: text; -webkit-user-select: text; display: inline-block; min-width: 100%; cursor: text; }
     #code-area[contenteditable="false"] { cursor: default; }
 
-    /* Barre de télémétrie en bas de l'éditeur */
     .editor-telemetry {
       display: flex;
       align-items: center;
@@ -247,7 +245,6 @@
       .telemetry-val { background: rgba(208, 188, 255, 0.2); color: #d0bcff; }
     }
     
-    /* Classes de Coloration */
     .syn-k { color: var(--syn-keyword); font-weight: 600; }
     .syn-t { color: var(--syn-tag); }
     .syn-a { color: var(--syn-attr); }
@@ -284,12 +281,11 @@
   <input type="file" id="filePicker" style="display: none;" accept="*/*">
   <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
 
-  <!-- Page d'accueil -->
   <main id="view-home">
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-actions">
-        <span class="version-badge">v1.9.0</span>
+        <span class="version-badge">v1.9.1</span>
         <button class="icon-btn" id="btn-theme-toggle" aria-label="Changer de thème">
           <svg class="icon" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/></svg>
         </button>
@@ -326,7 +322,6 @@
     </div>
   </main>
 
-  <!-- Runner / Éditeur Plein Écran -->
   <section id="view-runner">
     <header class="runner-shade">
       <button class="shade-btn" id="shade-back-btn" aria-label="Retour">
@@ -395,7 +390,6 @@
           </div>
         </div>
 
-        <!-- Télémétrie en bas du volet Coder -->
         <footer class="editor-telemetry">
           <div class="telemetry-item">
             <span>Total :</span>
@@ -426,7 +420,6 @@
     const btnKb = $('btn-toggle-keyboard'), saveDot = $('save-status-dot'), saveTxt = $('save-status-text');
     const toast = $('toast-msg');
 
-    // Télémétrie DOM
     const telTotal = $('telemetry-total');
     const telSelection = $('telemetry-selection');
 
@@ -442,9 +435,16 @@
     $('btn-theme-toggle').onclick = () => {
       const nextTheme = curTheme === 'auto' ? 'dark' : (curTheme === 'dark' ? 'light' : 'auto');
       applyTheme(nextTheme);
-      showToast(`Thème : ${nextTheme.toUpperCase()}`);     };      scrollBox.onscroll = () => { gutterBar.scrollTop = scrollBox.scrollTop; };      // Télémétrie : Calcul précis & dynamique     function updateTelemetry() {       // 1. Total caractères       const totalChars = rawCode.length;       telTotal.textContent = `${totalChars.toLocaleString('fr-FR')} car.`;
+      showToast('Thème : ' + nextTheme.toUpperCase());
+    };
 
-      // 2. Sélection
+    scrollBox.onscroll = () => { gutterBar.scrollTop = scrollBox.scrollTop; };
+
+    function updateTelemetry() {
+      if (!telTotal || !telSelection) return;
+      const totalChars = (rawCode || '').length;
+      telTotal.textContent = totalChars.toLocaleString('fr-FR') + ' car.';
+
       let selChars = 0;
       let selLines = 0;
 
@@ -465,17 +465,15 @@
         }
       }
 
-      telSelection.textContent = `${selChars.toLocaleString('fr-FR')} car. (${selLines} l.)`;
+      telSelection.textContent = selChars.toLocaleString('fr-FR') + ' car. (' + selLines + ' l.)';
     }
 
-    // Écoute de la sélection native
     document.addEventListener('selectionchange', () => {
-      if (editorPane.classList.contains('active')) {
+      if (editorPane && editorPane.classList.contains('active')) {
         updateTelemetry();
       }
     });
 
-    // File Import : supporte tous formats
     $('btn-import-file').onclick = async () => {
       if (window.showOpenFilePicker) {
         try {
@@ -569,7 +567,7 @@
       const f = fileStore.get(id);
       if (!f) return;
       curFileId = id;
-      rawCode = f.content;
+      rawCode = f.content || '';
       undoHist.length = 0;
       pushUndo(rawCode);
 
@@ -585,7 +583,6 @@
       viewRunner.classList.add('open');
     }
 
-    // Tabs
     tabCode.onclick = showCode;
     tabPreview.onclick = () => {
       disableKb();
@@ -669,7 +666,7 @@
     }
 
     function escapeHtml(s) {
-      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     function highlightCode(code, ext) {
@@ -677,7 +674,7 @@
 
       if (ext === 'json') {
         const safe = escapeHtml(code);
-        return safe.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+        return safe.replace(/("(?:\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, match => {
           let cls = 'syn-n';
           if (/^"/.test(match)) {
             cls = /:$/.test(match) ? 'syn-p' : 'syn-s';
@@ -691,7 +688,7 @@
       }
 
       if (ext === 'html' || ext === 'htm') {
-        return code.replace(/(<!--[\s\S]*?-->)|(<\/?[a-zA-Z0-9\-]+)|(\s+[a-zA-Z\-:]+(?=\=))|("[^"]*"|'[^']*')|(&[a-zA-Z0-9#]+;)/g, (m, c, t, a, s, e) => {
+        return code.replace(/(<!--[\s\S]*?-->)|(<\/?[a-zA-Z0-9-]+)|(\s+[a-zA-Z-]+(?=\=))|("[^"]*"|'[^']*')|(&[a-zA-Z0-9#]+;)/g, (m, c, t, a, s, e) => {
           if (c) return `<span class="syn-c">${escapeHtml(c)}</span>`;
           if (t) return `<span class="syn-t">${escapeHtml(t)}</span>`;
           if (a) return `<span class="syn-a">${escapeHtml(a)}</span>`;
@@ -730,7 +727,7 @@
 
     function renderPreview(content, ext, filename) {
       if (ext === 'html' || ext === 'htm') {
-        let h = content;
+        let h = content || '';
         if (!h.includes('viewport')) {
           h = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"></head><body>${h}</body></html>`;
         }
@@ -783,7 +780,6 @@
       `;
     }
 
-    // Auto-Scroll dynamique & sélection native (inchangé)
     let isDragging = false, dragStart = null, scrollRaf = null, touchY = 0;
 
     function startAutoScroll() {
@@ -874,7 +870,6 @@
       scrollRaf = null;
     }));
 
-    // Presse-Papier & Undo
     $('btn-select-all').onclick = () => {
       disableKb();
       const r = document.createRange();
@@ -953,7 +948,6 @@
       showToast("Annulé");
     };
 
-    // Auto-Save Hybride (iCloud / Local)
     function setSaveStatus(txt, isSync = false) {
       saveTxt.textContent = txt;
       saveDot.classList.toggle('syncing', isSync);
@@ -1042,7 +1036,6 @@
       updateTelemetry();
     }
 
-    // Moteur de recherche
     const sBar = $('search-bar'), sInput = $('search-input'), sCount =$('search-count');
     let totalMatches = 0, matchIdx = 0;
 
@@ -1081,7 +1074,7 @@
       sCount.textContent = `${matchIdx + 1}/${totalMatches}`;
 
       let html = '', last = 0;
-      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
       matches.forEach((m, i) => {
         html += esc(rawCode.slice(last, m.index));
