@@ -494,7 +494,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 90px;
+      max-width: 80px;
     }
 
     .editor-actions {
@@ -514,10 +514,19 @@
       cursor: pointer;
       white-space: nowrap;
       transition: background 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .tool-btn:active {
       background: rgba(255, 255, 255, 0.25);
+    }
+
+    .tool-btn.active-state {
+      background: var(--md-sys-color-primary) !important;
+      color: var(--md-sys-color-on-primary) !important;
+      box-shadow: 0 0 0 1px #fff;
     }
 
     .tool-btn-primary {
@@ -525,7 +534,6 @@
       color: var(--md-sys-color-on-primary);
     }
 
-    /* Conteneur principal de l'éditeur avec gouttière à gauche */
     .editor-workspace {
       flex: 1;
       display: flex;
@@ -534,7 +542,6 @@
       background: var(--editor-bg);
     }
 
-    /* Gouttière des numéros de ligne tactile */
     #gutter-bar {
       width: 44px;
       background: var(--gutter-bg);
@@ -544,7 +551,7 @@
       padding: 16px 0;
       user-select: none;
       -webkit-user-select: none;
-      touch-action: none; /* capture le swipe sans conflit */
+      touch-action: none;
       overflow: hidden;
       z-index: 5;
       flex-shrink: 0;
@@ -568,7 +575,6 @@
       font-weight: 700;
     }
 
-    /* Zone de code scrollable */
     .editor-container {
       flex: 1;
       position: relative;
@@ -583,7 +589,7 @@
       outline: none;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.85rem;
-      line-height: 22px; /* Hauteur de ligne strictement calée sur la gouttière */
+      line-height: 22px;
       color: var(--editor-fg);
       white-space: pre;
       word-break: normal;
@@ -592,6 +598,11 @@
       -webkit-user-select: text;
       display: inline-block;
       min-width: 100%;
+      cursor: text;
+    }
+
+    #code-area[contenteditable="false"] {
+      cursor: default;
     }
 
     mark.code-match {
@@ -732,7 +743,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-bar-right">
-        <span class="app-version-badge">v1.4.7</span>
+        <span class="app-version-badge">v1.4.8</span>
         <button class="icon-btn" id="btn-open-settings" aria-label="Paramètres">⚙️</button>
       </div>
     </div>
@@ -807,6 +818,8 @@
         <div class="editor-toolbar">
           <span class="meta-name" id="editor-file-name">index.html</span>
           <div class="editor-actions">
+            <!-- Bouton Émoticône Clavier -->
+            <button class="tool-btn" id="btn-toggle-keyboard">⌨️ Clavier</button>
             <button class="tool-btn" id="btn-select-all">Tout sélec.</button>
             <button class="tool-btn" id="btn-copy">Copier</button>
             <button class="tool-btn" id="btn-paste">Coller</button>
@@ -815,12 +828,10 @@
         </div>
 
         <div class="editor-workspace">
-          <!-- Colonne des numéros de ligne -->
           <div id="gutter-bar"></div>
-
-          <!-- Zone de code scrollable -->
           <div class="editor-container" id="editor-scroll-box">
-            <pre id="code-area" contenteditable="true" spellcheck="false"></pre>
+            <!-- Bloqué par défaut (false) : aucun clavier intempestif ni barre iOS -->
+            <pre id="code-area" contenteditable="false" spellcheck="false" inputmode="none"></pre>
           </div>
         </div>
       </div>
@@ -872,6 +883,7 @@
     let currentActiveFileId = null;
     let pendingTxtData = null;
     let rawCodeBuffer = "";
+    let isKeyboardEnabled = false;
 
     const viewHome = document.getElementById('view-home');
     const viewRunner = document.getElementById('view-runner');
@@ -889,6 +901,7 @@
     const shadeSearchBtn = document.getElementById('shade-search-btn');
     const tabCode = document.getElementById('tab-code');
     const tabPreview = document.getElementById('tab-preview');
+    const btnToggleKeyboard = document.getElementById('btn-toggle-keyboard');
     const btnSelectAll = document.getElementById('btn-select-all');
     const btnCopy = document.getElementById('btn-copy');
     const btnPaste = document.getElementById('btn-paste');
@@ -912,7 +925,6 @@
     let totalMatches = 0;
     let currentMatchIndex = 0;
 
-    // Synchronisation du scroll vertical entre le code et la gouttière
     editorScrollBox.addEventListener('scroll', () => {
       gutterBar.scrollTop = editorScrollBox.scrollTop;
     });
@@ -1009,6 +1021,7 @@
       editorFileName.textContent = fileData.name;
       rawCodeBuffer = fileData.content;
       codeArea.textContent = rawCodeBuffer;
+      disableKeyboard();
       renderGutter();
       
       showPreviewMode();
@@ -1029,6 +1042,7 @@
         pendingTxtData.name = newHtmlName;
         rawCodeBuffer = pendingTxtData.content;
         codeArea.textContent = rawCodeBuffer;
+        disableKeyboard();
         renderGutter();
 
         showPreviewMode();
@@ -1042,6 +1056,7 @@
 
     tabCode.addEventListener('click', showCodeMode);
     tabPreview.addEventListener('click', () => {
+      disableKeyboard();
       syncFromDOM();
       showPreviewMode();
     });
@@ -1052,6 +1067,7 @@
       editorPane.classList.add('active');
       appFrame.style.display = 'none';
       shadeSearchBtn.classList.add('visible');
+      disableKeyboard();
       renderGutter();
     }
 
@@ -1061,10 +1077,48 @@
       editorPane.classList.remove('active');
       appFrame.style.display = 'block';
       shadeSearchBtn.classList.remove('visible');
+      disableKeyboard();
       closeSearchBar();
     }
 
-    /* Rendu et génération de la gouttière des numéros de ligne */
+    /* GESTION VOLONTAIRE DU CLAVIER */
+    function enableKeyboard() {
+      isKeyboardEnabled = true;
+      btnToggleKeyboard.classList.add('active-state');
+      btnToggleKeyboard.innerHTML = '✕ Fermer';
+      codeArea.setAttribute('contenteditable', 'true');
+      codeArea.removeAttribute('inputmode');
+      codeArea.focus();
+      showToast("Mode saisie activé (Clavier ouvert)");
+    }
+
+    function disableKeyboard() {
+      isKeyboardEnabled = false;
+      btnToggleKeyboard.classList.remove('active-state');
+      btnToggleKeyboard.innerHTML = '⌨️ Clavier';
+      codeArea.setAttribute('contenteditable', 'false');
+      codeArea.setAttribute('inputmode', 'none');
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+    }
+
+    btnToggleKeyboard.addEventListener('click', () => {
+      if (isKeyboardEnabled) {
+        disableKeyboard();
+      } else {
+        enableKeyboard();
+      }
+    });
+
+    /* Empêcher tout focus involontaire sur le code si le clavier n'est pas activé */
+    codeArea.addEventListener('focus', (e) => {
+      if (!isKeyboardEnabled) {
+        e.preventDefault();
+        codeArea.blur();
+      }
+    });
+
     function renderGutter() {
       const lines = rawCodeBuffer.split('\n');
       const count = Math.max(1, lines.length);
@@ -1077,14 +1131,14 @@
       gutterBar.scrollTop = editorScrollBox.scrollTop;
     }
 
-    /* Gestion tactile du tap et du glisser / scroll sur la gouttière */
+    /* Sélection tactile sans aucun clavier */
     let isGutterDragging = false;
     let dragStartLine = null;
 
     function getLineFromY(clientY) {
       const rect = gutterBar.getBoundingClientRect();
       const relativeY = (clientY - rect.top) + editorScrollBox.scrollTop;
-      const lineNumber = Math.floor((relativeY - 16) / 22) + 1; // 16px padding, 22px hauteur ligne
+      const lineNumber = Math.floor((relativeY - 16) / 22) + 1;
       const maxLines = rawCodeBuffer.split('\n').length;
       return Math.max(1, Math.min(lineNumber, maxLines));
     }
@@ -1093,7 +1147,6 @@
       const min = Math.min(fromLine, toLine);
       const max = Math.max(fromLine, toLine);
 
-      // Met à jour la surbrillance des numéros dans la gouttière
       document.querySelectorAll('.gutter-num').forEach(el => {
         const line = parseInt(el.getAttribute('data-line'), 10);
         if (line >= min && line <= max) {
@@ -1103,7 +1156,6 @@
         }
       });
 
-      // Calcule les indices de caractères dans le code brut
       const lines = rawCodeBuffer.split('\n');
       let startChar = 0;
       for (let i = 0; i < min - 1; i++) {
@@ -1115,11 +1167,9 @@
         endChar += lines[i].length + (i < lines.length - 1 ? 1 : 0);
       }
 
-      // Sélectionne nativement la plage dans le code
       const range = document.createRange();
       const sel = window.getSelection();
 
-      // Trouver le text node correspondant
       let currentOffset = 0;
       let startNode = null, startNodeOffset = 0;
       let endNode = null, endNodeOffset = 0;
@@ -1148,9 +1198,9 @@
       }
     }
 
-    // Événements Touch Mobile sur la gouttière
     gutterBar.addEventListener('touchstart', (e) => {
       isGutterDragging = true;
+      disableKeyboard();
       const touch = e.touches[0];
       dragStartLine = getLineFromY(touch.clientY);
       selectLinesRange(dragStartLine, dragStartLine);
@@ -1158,7 +1208,7 @@
 
     gutterBar.addEventListener('touchmove', (e) => {
       if (!isGutterDragging) return;
-      e.preventDefault(); // évite les saccades de scroll global
+      e.preventDefault();
       const touch = e.touches[0];
       const currentLine = getLineFromY(touch.clientY);
       selectLinesRange(dragStartLine, currentLine);
@@ -1174,6 +1224,7 @@
     });
 
     btnSelectAll.addEventListener('click', () => {
+      disableKeyboard();
       const range = document.createRange();
       range.selectNodeContents(codeArea);
       const sel = window.getSelection();
@@ -1201,7 +1252,11 @@
       try {
         const text = await navigator.clipboard.readText();
         if (text) {
+          codeArea.setAttribute('contenteditable', 'true');
           document.execCommand('insertText', false, text);
+          if (!isKeyboardEnabled) {
+            codeArea.setAttribute('contenteditable', 'false');
+          }
           syncFromDOM();
           renderGutter();
           showToast("Code collé");
@@ -1303,7 +1358,6 @@
       appFrame.srcdoc = finalHtml;
     }
 
-    // Gestion Recherche
     shadeSearchBtn.addEventListener('click', () => {
       searchBar.classList.toggle('active');
       if (searchBar.classList.contains('active')) {
@@ -1410,6 +1464,7 @@
     function navigateSearch(direction) {
       if (totalMatches === 0) return;
 
+      // Ferme le clavier et annule tout focus
       searchInput.blur();
       if (document.activeElement) document.activeElement.blur();
 
@@ -1427,6 +1482,7 @@
     }
 
     shadeBackBtn.addEventListener('click', () => {
+      disableKeyboard();
       viewRunner.classList.remove('open');
       closeSearchBar();
       setTimeout(() => {
