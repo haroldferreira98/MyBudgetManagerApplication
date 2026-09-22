@@ -150,7 +150,6 @@
     .file-card-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
     .file-card-path { font-size: 0.72rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
-    /* Badges d'extension */
     .ext-badge { font-size: 0.68rem; font-weight: 700; padding: 3px 7px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
     .ext-html { background: rgba(255, 87, 34, 0.16); color: #ff5722; }
     .ext-json { background: rgba(255, 179, 0, 0.2); color: #ff8f00; }
@@ -228,6 +227,25 @@
     
     #code-area { min-height: 100%; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 22px; color: var(--editor-fg); white-space: pre; user-select: text; -webkit-user-select: text; display: inline-block; min-width: 100%; cursor: text; }
     #code-area[contenteditable="false"] { cursor: default; }
+
+    /* Barre de télémétrie en bas de l'éditeur */
+    .editor-telemetry {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px calc(env(safe-area-inset-bottom, 0px) + 6px);
+      background: var(--gutter-bg);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: #9e9ba8;
+      z-index: 10;
+    }
+    .telemetry-item { display: flex; align-items: center; gap: 6px; }
+    .telemetry-val { color: var(--on-primary-c); background: var(--primary-c); padding: 1px 6px; border-radius: 6px; font-weight: 700; }
+    [data-theme="dark"] .telemetry-val, @media (prefers-color-scheme: dark) {
+      .telemetry-val { background: rgba(208, 188, 255, 0.2); color: #d0bcff; }
+    }
     
     /* Classes de Coloration */
     .syn-k { color: var(--syn-keyword); font-weight: 600; }
@@ -244,7 +262,7 @@
 
     #toast-msg {
       position: fixed;
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
       left: 50%;
       transform: translateX(-50%) translateY(80px);
       background: var(--text);
@@ -263,7 +281,6 @@
 </head>
 <body>
 
-  <!-- Accept universel : accepte tout sans rien bloquer sur iPhone/iCloud -->
   <input type="file" id="filePicker" style="display: none;" accept="*/*">
   <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
 
@@ -272,7 +289,7 @@
     <div class="top-bar">
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-actions">
-        <span class="version-badge">v1.8.0</span>
+        <span class="version-badge">v1.9.0</span>
         <button class="icon-btn" id="btn-theme-toggle" aria-label="Changer de thème">
           <svg class="icon" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/></svg>
         </button>
@@ -281,7 +298,7 @@
 
     <div class="header-text">
       <h1>Web Studio</h1>
-      <p>Éditeur & Viewer Universel (HTML, JSON, Code)</p>
+      <p>Éditeur & Viewer Universel avec Télémétrie</p>
     </div>
 
     <div class="action-grid">
@@ -377,6 +394,18 @@
             <pre id="code-area" contenteditable="false" spellcheck="false" inputmode="none"></pre>
           </div>
         </div>
+
+        <!-- Télémétrie en bas du volet Coder -->
+        <footer class="editor-telemetry">
+          <div class="telemetry-item">
+            <span>Total :</span>
+            <span class="telemetry-val" id="telemetry-total">0 car.</span>
+          </div>
+          <div class="telemetry-item">
+            <span>Sélect. :</span>
+            <span class="telemetry-val" id="telemetry-selection">0 car. (0 l.)</span>
+          </div>
+        </footer>
       </div>
     </div>
   </section>
@@ -397,6 +426,10 @@
     const btnKb = $('btn-toggle-keyboard'), saveDot = $('save-status-dot'), saveTxt = $('save-status-text');
     const toast = $('toast-msg');
 
+    // Télémétrie DOM
+    const telTotal = $('telemetry-total');
+    const telSelection = $('telemetry-selection');
+
     let curTheme = localStorage.getItem('app_theme') || 'auto';
     applyTheme(curTheme);
 
@@ -409,12 +442,40 @@
     $('btn-theme-toggle').onclick = () => {
       const nextTheme = curTheme === 'auto' ? 'dark' : (curTheme === 'dark' ? 'light' : 'auto');
       applyTheme(nextTheme);
-      showToast(`Thème : ${nextTheme.toUpperCase()}`);
-    };
+      showToast(`Thème : ${nextTheme.toUpperCase()}`);     };      scrollBox.onscroll = () => { gutterBar.scrollTop = scrollBox.scrollTop; };      // Télémétrie : Calcul précis & dynamique     function updateTelemetry() {       // 1. Total caractères       const totalChars = rawCode.length;       telTotal.textContent = `${totalChars.toLocaleString('fr-FR')} car.`;
 
-    scrollBox.onscroll = () => { gutterBar.scrollTop = scrollBox.scrollTop; };
+      // 2. Sélection
+      let selChars = 0;
+      let selLines = 0;
 
-    // File Import : supporte tous formats sans restriction
+      if (isAllSelected) {
+        selChars = totalChars;
+        selLines = rawCode ? rawCode.split('\n').length : 0;
+      } else if (selRange) {
+        const lines = rawCode.split('\n');
+        const slice = lines.slice(selRange.from - 1, selRange.to);
+        selLines = slice.length;
+        selChars = slice.join('\n').length;
+      } else {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+          const str = sel.toString();
+          selChars = str.length;
+          selLines = str ? str.split('\n').length : 0;
+        }
+      }
+
+      telSelection.textContent = `${selChars.toLocaleString('fr-FR')} car. (${selLines} l.)`;
+    }
+
+    // Écoute de la sélection native
+    document.addEventListener('selectionchange', () => {
+      if (editorPane.classList.contains('active')) {
+        updateTelemetry();
+      }
+    });
+
+    // File Import : supporte tous formats
     $('btn-import-file').onclick = async () => {
       if (window.showOpenFilePicker) {
         try {
@@ -476,7 +537,6 @@
       const cached = localStorage.getItem(storageKey);
       let rawText = await file.text();
 
-      // Formatage JSON propre si JSON compressé
       if (ext === 'json') {
         try {
           const parsed = JSON.parse(cached !== null ? cached : rawText);
@@ -518,6 +578,7 @@
       applySyntaxHighlighting();
       renderGutter();
       setSaveStatus("Prêt");
+      updateTelemetry();
 
       showPreview();
       renderPreview(rawCode, f.ext, f.name);
@@ -543,6 +604,7 @@
       disableKb();
       applySyntaxHighlighting();
       renderGutter();
+      updateTelemetry();
     }
 
     function showPreview() {
@@ -563,6 +625,7 @@
       codeArea.setAttribute('contenteditable', 'true');
       codeArea.removeAttribute('inputmode');
       codeArea.focus();
+      updateTelemetry();
     }
 
     function disableKb() {
@@ -573,6 +636,7 @@
       codeArea.setAttribute('inputmode', 'none');
       if (document.activeElement) document.activeElement.blur();
       applySyntaxHighlighting();
+      updateTelemetry();
     }
 
     btnKb.onclick = e => {
@@ -586,6 +650,7 @@
       isAllSelected = false;
       selRange = null;
       document.querySelectorAll('.gutter-num').forEach(el => el.classList.remove('selected'));
+      updateTelemetry();
     }
 
     function renderGutter() {
@@ -596,7 +661,6 @@
       gutterBar.scrollTop = scrollBox.scrollTop;
     }
 
-    /* MOTEUR DE COLORATION SYNTAXIQUE (HTML, JSON, CSS, JS, PY, CPP) */
     function applySyntaxHighlighting() {
       if (isKeyboard) return;
       const f = curFileId ? fileStore.get(curFileId) : null;
@@ -611,7 +675,6 @@
     function highlightCode(code, ext) {
       if (!code) return '';
 
-      // 1. JSON
       if (ext === 'json') {
         const safe = escapeHtml(code);
         return safe.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
@@ -627,7 +690,6 @@
         });
       }
 
-      // 2. HTML
       if (ext === 'html' || ext === 'htm') {
         return code.replace(/(<!--[\s\S]*?-->)|(<\/?[a-zA-Z0-9\-]+)|(\s+[a-zA-Z\-:]+(?=\=))|("[^"]*"|'[^']*')|(&[a-zA-Z0-9#]+;)/g, (m, c, t, a, s, e) => {
           if (c) return `<span class="syn-c">${escapeHtml(c)}</span>`;
@@ -639,7 +701,6 @@
         });
       }
 
-      // 3. CSS
       if (ext === 'css') {
         return code.replace(/(\/\*[\s\S]*?\*\/)|([.#][\w-]+(?=[^{]*\{))|([\w-]+(?=\s*:))|("[^"]*"|'[^']*')|(#[\da-fA-F]{3,8}\b|\b\d+(?:px|rem|em|vh|vw|%)?)/g, (m, c, sel, prop, s, num) => {
           if (c) return `<span class="syn-c">${escapeHtml(c)}</span>`;
@@ -651,7 +712,6 @@
         });
       }
 
-      // 4. JS, Python, C++, etc.
       const jsKw = /\b(const|let|var|function|return|if|else|for|while|import|export|from|class|new|async|await|try|catch|typeof)\b/g;
       const pyKw = /\b(def|return|if|elif|else|for|while|import|from|class|try|except|with|as|pass|in|is|not|and|or|lambda)\b/g;
       const cppKw = /\b(int|float|double|char|bool|void|class|struct|public|private|protected|template|typename|return|if|else|for|while|include)\b/g;
@@ -668,7 +728,6 @@
       return safe;
     }
 
-    /* RENDU D'APERÇU INTELLIGENT (HTML = APP, JSON = VIEWER MATERIAL PIXEL) */
     function renderPreview(content, ext, filename) {
       if (ext === 'html' || ext === 'htm') {
         let h = content;
@@ -679,7 +738,6 @@
         return;
       }
 
-      // Viewer Universel Material You pour JSON
       if (ext === 'json') {
         let parsed = null, err = null;
         try { parsed = JSON.parse(content); } catch (e) { err = e.message; }
@@ -697,9 +755,6 @@
               .badge { background: #eaddff; color: #21005d; padding: 6px 12px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; }
               .card { background: #ede7f6; border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
               @media (prefers-color-scheme: dark) { .card { background: #2b2930; } }
-              .key { font-weight: 700; color: #6750a4; font-size: 0.88rem; font-family: 'JetBrains Mono', monospace; }
-              @media (prefers-color-scheme: dark) { .key { color: #d0bcff; } }
-              .val { font-size: 0.88rem; margin-top: 4px; word-break: break-all; }
               pre { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; white-space: pre-wrap; line-height: 1.5; margin: 0; }
               .err { background: #fce8e6; color: #c5221f; padding: 12px; border-radius: 14px; font-weight: 500; }
             </style>
@@ -720,7 +775,6 @@
         return;
       }
 
-      // Autre fichier script / texte
       appFrame.srcdoc = `
         <!DOCTYPE html><html><body style="font-family:sans-serif;padding:20px;background:#fdf8fd;color:#1d1b20;">
           <h3>Fichier ${ext.toUpperCase()}</h3>
@@ -795,6 +849,7 @@
         sel.removeAllRanges();
         sel.addRange(range);
       }
+      updateTelemetry();
     }
 
     gutterBar.addEventListener('touchstart', e => {
@@ -830,6 +885,7 @@
       isAllSelected = true;
       selRange = null;
       document.querySelectorAll('.gutter-num').forEach(el => el.classList.add('selected'));
+      updateTelemetry();
       showToast("Tout sélectionné");
     };
 
@@ -869,6 +925,7 @@
       renderGutter();
       syncDOM();
       triggerAutoSave();
+      updateTelemetry();
       showToast("Code collé");
     };
 
@@ -892,6 +949,7 @@
       renderGutter();
       syncDOM();
       triggerAutoSave();
+      updateTelemetry();
       showToast("Annulé");
     };
 
@@ -969,6 +1027,7 @@
         syncDOM();
         renderGutter();
         triggerAutoSave();
+        updateTelemetry();
       }, 350);
     };
 
@@ -980,6 +1039,7 @@
         f.content = rawCode;
         renderPreview(rawCode, f.ext, f.name);
       }
+      updateTelemetry();
     }
 
     // Moteur de recherche
