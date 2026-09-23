@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Web Studio Mobile</title>
+  <title>HTML Editor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -93,6 +93,30 @@
       --hl-match: rgba(255, 235, 59, 0.25);
       --hl-act: #ffeb3b;
     }
+    [data-theme="light"] {
+      --bg: #fdf8fd;
+      --surface: #f7f2fa;
+      --surface-c: #ede7f6;
+      --surface-h: #e6e0ee;
+      --primary: #6750a4;
+      --on-primary: #ffffff;
+      --primary-c: #eaddff;
+      --on-primary-c: #21005d;
+      --sec-c: #e8def8;
+      --on-sec-c: #1d192b;
+      --text: #1d1b20;
+      --text-sub: #49454f;
+      --outline: #cac4d0;
+      --shade: rgba(247, 242, 250, 0.94);
+      --editor-bg: #1e1e24;
+      --editor-fg: #f5f2f8;
+      --gutter-bg: #16161b;
+      --gutter-fg: #757182;
+      --gutter-act-bg: rgba(103, 80, 164, 0.35);
+      --gutter-act-fg: #eaddff;
+      --hl-match: rgba(33, 150, 243, 0.2);
+      --hl-act: #2196f3;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
     body {
       font-family: 'Google Sans', sans-serif;
@@ -108,8 +132,7 @@
     }
     svg.icon { width: 20px; height: 20px; fill: currentColor; display: block; flex-shrink: 0; }
     #view-home { flex: 1; display: flex; flex-direction: column; padding: 20px 20px 16px; overflow-y: auto; gap: 20px; }
-    .top-bar { display: flex; align-items: center; justify-content: space-between; }
-    .badge-chip { background: var(--primary-c); color: var(--on-primary-c); padding: 6px 14px; border-radius: var(--radius-pill); font-size: 0.78rem; font-weight: 500; }
+    .top-bar { display: flex; align-items: center; justify-content: flex-end; }
     .top-actions { display: flex; align-items: center; gap: 8px; }
     .version-badge { font-size: 0.72rem; font-weight: 700; padding: 6px 10px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text-sub); }
     .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text); display: grid; place-items: center; border: none; cursor: pointer; position: relative; overflow: hidden; }
@@ -143,11 +166,26 @@
     .file-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
     .empty-state { padding: 28px 16px; text-align: center; background: var(--surface-c); border-radius: var(--radius-card); color: var(--text-sub); font-size: 0.85rem; }
     
-    .file-card { background: var(--surface-c); border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
-    .file-card:active { background: var(--primary-c); color: var(--on-primary-c); }
+    .file-card { background: var(--surface-c); border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .file-card:active { background: var(--surface-h); }
     .file-card-info { flex: 1; overflow: hidden; }
     .file-card-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
     .file-card-path { font-size: 0.72rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+    .file-card-delete {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-pill);
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .file-card-delete:hover { background: rgba(255, 0, 0, 0.1); color: #d32f2f; }
+    .file-card-delete:active { transform: scale(0.9); }
 
     .ext-badge { font-size: 0.68rem; font-weight: 700; padding: 3px 7px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
     .ext-html { background: rgba(255, 87, 34, 0.16); color: #ff5722; }
@@ -283,7 +321,6 @@
 
   <main id="view-home">
     <div class="top-bar">
-      <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-actions">
         <span class="version-badge">v1.9.1</span>
 
@@ -295,14 +332,17 @@
           <img id="auth-avatar" style="display:none; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profil">
         </button>
 
+        <!-- Bouton Thème Tri-State (Auto / Sombre / Clair) -->
         <button class="icon-btn" id="btn-theme-toggle" aria-label="Changer de thème">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/></svg>
+          <svg class="icon" id="theme-icon" viewBox="0 0 24 24">
+            <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/>
+          </svg>
         </button>
       </div>
     </div>
 
     <div class="header-text">
-      <h1>Web Studio</h1>
+      <h1>HTML Editor</h1>
       <p>Éditeur & Viewer Universel avec Cloud & Télémétrie</p>
     </div>
 
@@ -415,7 +455,7 @@
 
   <div id="toast-msg">Action effectuée</div>
 
-  <!-- MODULE FIREBASE AUTH + FIRESTORE TEMPS RÉEL (onSnapshot) -->
+  <!-- MODULE FIREBASE AUTH + FIRESTORE TEMPS RÉEL -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
     import { 
@@ -430,6 +470,7 @@
       collection, 
       doc, 
       setDoc, 
+      deleteDoc,
       onSnapshot,
       query, 
       orderBy, 
@@ -481,7 +522,6 @@
         authAvatar.style.display = 'block';
         authAvatar.src = user.photoURL || '';
         btnAuth.title = `Connecté : ${user.displayName || user.email}`;
-        window.showToast("Connecté au Cloud");
         listenToUserCloud(user.uid);
       } else {
         if (unsubscribeSnapshot) {
@@ -491,22 +531,28 @@
         authIcon.style.display = 'block';
         authAvatar.style.display = 'none';
         btnAuth.title = "Se connecter avec Google";
-        window.showToast("Mode local");
       }
     });
 
-    // ÉCOUTEUR TEMPS RÉEL MULTI-APPAREILS
     function listenToUserCloud(uid) {
       if (unsubscribeSnapshot) unsubscribeSnapshot();
 
       const q = query(collection(db, "users", uid, "files"), orderBy("updatedAt", "desc"));
       unsubscribeSnapshot = onSnapshot(q, (snap) => {
-        if (snap.empty) return;
-
         const fileListEl = document.getElementById('fileList');
         const emptyMsg = document.getElementById('empty-state-msg');
-        if (emptyMsg) emptyMsg.style.display = 'none';
 
+        if (snap.empty) {
+          fileListEl.innerHTML = '';
+          if (emptyMsg) {
+            emptyMsg.style.display = 'block';
+            fileListEl.appendChild(emptyMsg);
+          }
+          window.fileStore.clear();
+          return;
+        }
+
+        if (emptyMsg) emptyMsg.style.display = 'none';
         fileListEl.innerHTML = '';
         window.fileStore.clear();
 
@@ -522,7 +568,6 @@
             storageKey: 'cache_' + data.name
           });
 
-          // Si le fichier actuellement ouvert a été modifié sur un autre appareil
           if (window.curFileId === id && document.activeElement !== document.getElementById('code-area')) {
             if (window.rawCode !== data.content) {
               window.rawCode = data.content;
@@ -531,28 +576,36 @@
               if (window.renderGutter) window.renderGutter();
               if (window.updateTelemetry) window.updateTelemetry();
               if (window.renderPreview) window.renderPreview(data.content, data.ext, data.name);
-              window.showToast("Synchronisé depuis un autre appareil");
             }
           }
 
-          const card = document.createElement('div');
-          card.className = 'file-card';
-          card.innerHTML = `
-            <span class="ext-badge ${window.getExtClass(data.ext)}">${data.ext}</span>
-            <div class="file-card-info">
-              <div class="file-card-name">${data.name}</div>
-              <div class="file-card-path">${data.path || data.name}</div>
-            </div>
-          `;
-          card.onclick = () => window.openFile(id);
-          fileListEl.appendChild(card);
+          renderFileCard(id, data.name, data.ext, data.path || data.name);
         });
       }, (error) => {
         console.error("Erreur d'écoute temps réel :", error);
       });
     }
 
-    // Sauvegarde Cloud
+    function renderFileCard(id, name, ext, path) {
+      const fileListEl = document.getElementById('fileList');
+      const card = document.createElement('div');
+      card.className = 'file-card';
+      card.innerHTML = `
+        <span class="ext-badge ${window.getExtClass(ext)}">${ext}</span>
+        <div class="file-card-info" onclick="window.openFile('${id}')">
+          <div class="file-card-name">${name}</div>
+          <div class="file-card-path">${path}</div>
+        </div>
+        <button class="file-card-delete" onclick="window.deleteRecentFile('${id}', event)" title="Supprimer de la liste">
+          <svg class="icon" style="width: 17px; height: 17px;" viewBox="0 0 24 24">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+        </button>
+      `;
+      fileListEl.appendChild(card);
+    }
+    window.renderFileCard = renderFileCard;
+
     window.saveToCloud = async (fileId, fileObj) => {
       if (!currentUser || !fileObj) return;
       try {
@@ -568,9 +621,18 @@
         console.error("Erreur sauvegarde cloud :", e);
       }
     };
+
+    window.deleteFromCloud = async (fileId) => {
+      if (!currentUser) return;
+      try {
+        await deleteDoc(doc(db, "users", currentUser.uid, "files", fileId));
+      } catch (e) {
+        console.error("Erreur suppression cloud :", e);
+      }
+    };
   </script>
 
-  <!-- LOGIQUE PRINCIPALE WEB STUDIO -->
+  <!-- LOGIQUE PRINCIPALE HTML EDITOR -->
   <script>
     const $ = id => document.getElementById(id);
     window.fileStore = new Map();
@@ -593,6 +655,7 @@
     const telTotal = $('telemetry-total');
     const telSelection = $('telemetry-selection');
 
+    // GESTION DU THÈME : AUTO PAR DÉFAUT (Tri-State : auto -> dark -> light)
     let curTheme = localStorage.getItem('app_theme') || 'auto';
     applyTheme(curTheme);
 
@@ -600,12 +663,51 @@
       document.documentElement.setAttribute('data-theme', t);
       localStorage.setItem('app_theme', t);
       curTheme = t;
+
+      const themeIcon = $('theme-icon');
+      if (!themeIcon) return;
+      if (t === 'auto') {
+        themeIcon.innerHTML = '<path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/>';
+      } else if (t === 'dark') {
+        themeIcon.innerHTML = '<path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>';
+      } else {
+        themeIcon.innerHTML = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z"/>';
+      }
     }
 
     $('btn-theme-toggle').onclick = () => {
       const nextTheme = curTheme === 'auto' ? 'dark' : (curTheme === 'dark' ? 'light' : 'auto');
       applyTheme(nextTheme);
       showToast('Thème : ' + nextTheme.toUpperCase());
+    };
+
+    // SUPPRESSION D'UN FICHIER RÉCENT
+    window.deleteRecentFile = function(id, event) {
+      if (event) event.stopPropagation();
+
+      const f = fileStore.get(id);
+      const name = f?.name || "ce fichier";
+
+      if (!confirm(`Supprimer « ${name} » des fichiers récents ?`)) return;
+
+      if (f?.storageKey) localStorage.removeItem(f.storageKey);
+      fileStore.delete(id);
+
+      if (window.deleteFromCloud) {
+        window.deleteFromCloud(id);
+      }
+
+      const allCards = fileList.querySelectorAll('.file-card');
+      allCards.forEach(c => {
+        if (c.querySelector(`[onclick*="${id}"]`)) c.remove();
+      });
+
+      if (fileStore.size === 0 && emptyMsg) {
+        emptyMsg.style.display = 'block';
+        fileList.appendChild(emptyMsg);
+      }
+
+      showToast("Fichier retiré");
     };
 
     scrollBox.onscroll = () => { gutterBar.scrollTop = scrollBox.scrollTop; };
@@ -719,17 +821,9 @@
       const fileObj = { name, ext, path, content, handle, storageKey };
       fileStore.set(id, fileObj);
 
-      const card = document.createElement('div');
-      card.className = 'file-card';
-      card.innerHTML = `
-        <span class="ext-badge ${window.getExtClass(ext)}">${ext}</span>
-        <div class="file-card-info">
-          <div class="file-card-name">${name}</div>
-          <div class="file-card-path">${path}</div>
-        </div>
-      `;
-      card.onclick = () => openFile(id);
-      fileList.prepend(card);
+      if (window.renderFileCard) {
+        window.renderFileCard(id, name, ext, path);
+      }
 
       if (window.saveToCloud) {
         window.saveToCloud(id, fileObj);
