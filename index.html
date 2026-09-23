@@ -166,7 +166,16 @@
     .file-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
     .empty-state { padding: 28px 16px; text-align: center; background: var(--surface-c); border-radius: var(--radius-card); color: var(--text-sub); font-size: 0.85rem; }
     
-    .file-card { background: var(--surface-c); border-radius: 18px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .file-card { 
+      background: var(--surface-c); 
+      border-radius: 18px; 
+      padding: 12px 14px; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      cursor: pointer;
+      transition: margin 0.2s ease;
+    }
     .file-card:active { background: var(--surface-h); }
     .file-card-info { flex: 1; overflow: hidden; }
     .file-card-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
@@ -456,7 +465,7 @@
 
   <div id="toast-msg">Action effectuée</div>
 
-  <!-- MODULE FIREBASE AUTH + FIRESTORE TEMPS RÉEL -->
+  <!-- MODULE FIREBASE AUTH + FIRESTORE TEMPS RÉEL AVEC TRI PAR CHEMIN -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
     import { 
@@ -538,7 +547,8 @@
     function listenToUserCloud(uid) {
       if (unsubscribeSnapshot) unsubscribeSnapshot();
 
-      const q = query(collection(db, "users", uid, "files"), orderBy("updatedAt", "desc"));
+      // Tri alphabétique direct sur Firestore par chemin
+      const q = query(collection(db, "users", uid, "files"), orderBy("path", "asc"));
       unsubscribeSnapshot = onSnapshot(q, (snap) => {
         const fileListEl = document.getElementById('fileList');
         const emptyMsg = document.getElementById('empty-state-msg');
@@ -557,9 +567,13 @@
         fileListEl.innerHTML = '';
         window.fileStore.clear();
 
-        snap.forEach(docSnap => {
-          const data = docSnap.data();
-          const id = docSnap.id;
+        // Récupérer et s'assurer du tri A-Z
+        const docs = [];
+        snap.forEach(d => docs.push({ id: d.id, ...d.data() }));
+        docs.sort((a, b) => (a.path || a.name).localeCompare(b.path || b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+        docs.forEach(data => {
+          const id = data.id;
 
           window.fileStore.set(id, {
             name: data.name,
@@ -580,32 +594,12 @@
             }
           }
 
-          renderFileCard(id, data.name, data.ext, data.path || data.name);
+          window.renderFileCard(id, data.name, data.ext, data.path || data.name);
         });
       }, (error) => {
         console.error("Erreur d'écoute temps réel :", error);
       });
     }
-
-    function renderFileCard(id, name, ext, path) {
-      const fileListEl = document.getElementById('fileList');
-      const card = document.createElement('div');
-      card.className = 'file-card';
-      card.innerHTML = `
-        <span class="ext-badge ${window.getExtClass(ext)}">${ext}</span>
-        <div class="file-card-info" onclick="window.openFile('${id}')">
-          <div class="file-card-name">${name}</div>
-          <div class="file-card-path">${path}</div>
-        </div>
-        <button class="file-card-delete" onclick="window.deleteRecentFile('${id}', event)" title="Supprimer de la liste">
-          <svg class="icon" style="width: 17px; height: 17px;" viewBox="0 0 24 24">
-            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-          </svg>
-        </button>
-      `;
-      fileListEl.appendChild(card);
-    }
-    window.renderFileCard = renderFileCard;
 
     window.saveToCloud = async (fileId, fileObj) => {
       if (!currentUser || !fileObj) return;
@@ -656,7 +650,6 @@
     const telTotal = $('telemetry-total');
     const telSelection = $('telemetry-selection');
 
-    // Thème auto par défaut
     let curTheme = localStorage.getItem('app_theme') || 'auto';
     applyTheme(curTheme);
 
@@ -769,11 +762,19 @@
       e.target.value = '';
     };
 
+    // IMPORT DE DOSSIER AVEC TRI ALPHABÉTIQUE / DOSSIER NATUREL
     $('folderPicker').onchange = async e => {
       const files = Array.from(e.target.files);
       if (!files.length) return;
       fileList.innerHTML = '';
       fileStore.clear();
+
+      // Tri strict par chemin d'accès (dossiers puis fichiers dans l'ordre)
+      files.sort((a, b) => {
+        const pathA = a.webkitRelativePath || a.name;
+        const pathB = b.webkitRelativePath || b.name;
+        return pathA.localeCompare(pathB, undefined, { numeric: true, sensitivity: 'base' });
+      });
 
       let targetId = null;
       for (const f of files) {
@@ -793,8 +794,44 @@
         case 'js': case 'jsx': case 'ts': return 'ext-js';
         case 'py': return 'ext-py';
         case 'cpp': case 'c': case 'h': case 'hpp': return 'ext-cpp';
+        case 'md': return 'ext-txt';
+        case 'yml': case 'yaml': return 'ext-json';
         default: return 'ext-txt';
       }
+    };
+
+    // RENDU VISUEL AVEC HIÉRARCHIE & INDENTATION
+    window.renderFileCard = function(id, name, ext, path) {
+      const fileListEl = document.getElementById('fileList');
+
+      // Calcul de la profondeur de l'arborescence
+      const segments = path.split('/');
+      // Si le fichier vient d'un dossier importé (ex: Racine/SousDossier/fichier.html)
+      const depth = Math.max(0, segments.length - 2); 
+      const folderPath = segments.length > 1 ? segments.slice(0, -1).join(' / ') : '';
+
+      const card = document.createElement('div');
+      card.className = 'file-card';
+      
+      // Indentation et repère vertical si dans un sous-dossier
+      if (depth > 0) {
+        card.style.marginLeft = `${depth * 14}px`;
+        card.style.borderLeft = '3px solid var(--outline)';
+      }
+
+      card.innerHTML = `
+        <span class="ext-badge ${window.getExtClass(ext)}">${ext}</span>
+        <div class="file-card-info" onclick="window.openFile('${id}')">
+          <div class="file-card-name">${name}</div>
+          <div class="file-card-path">${folderPath ? folderPath + ' /' : 'Racine'}</div>
+        </div>
+        <button class="file-card-delete" onclick="window.deleteRecentFile('${id}', event)" title="Supprimer de la liste">
+          <svg class="icon" style="width: 17px; height: 17px;" viewBox="0 0 24 24">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+        </button>
+      `;
+      fileListEl.appendChild(card);
     };
 
     async function processFile(file, path, autoOpen = true, handle = null) {
@@ -821,9 +858,7 @@
       const fileObj = { name, ext, path, content, handle, storageKey };
       fileStore.set(id, fileObj);
 
-      if (window.renderFileCard) {
-        window.renderFileCard(id, name, ext, path);
-      }
+      window.renderFileCard(id, name, ext, path);
 
       if (window.saveToCloud) {
         window.saveToCloud(id, fileObj);
@@ -944,7 +979,7 @@
     function highlightCode(code, ext) {
       if (!code) return '';
 
-      if (ext === 'json') {
+      if (ext === 'json' || ext === 'yml' || ext === 'yaml') {
         const safe = escapeHtml(code);
         return safe.replace(/("(?:\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, match => {
           let cls = 'syn-n';
@@ -997,7 +1032,6 @@
       return safe;
     }
 
-    // RENDER PREVIEW MIS À JOUR POUR OAUTH & ORIGINE DOMAINE VALIDE
     function renderPreview(content, ext, filename) {
       if (ext === 'html' || ext === 'htm') {
         let h = content || '';
@@ -1005,7 +1039,6 @@
           h = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"></head><body>${h}</body></html>`;
         }
 
-        // Supprimer l'attribut srcdoc pour éviter l'origine opaque (null)
         appFrame.removeAttribute('srcdoc');
 
         try {
@@ -1014,7 +1047,6 @@
           frameDoc.write(h);
           frameDoc.close();
         } catch (e) {
-          // Fallback avec blob si blocage d'accès au document
           const blob = new Blob([h], { type: 'text/html;charset=utf-8' });
           appFrame.src = URL.createObjectURL(blob);
         }
