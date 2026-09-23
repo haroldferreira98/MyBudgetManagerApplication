@@ -12,7 +12,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    /* Material 3 Expressive Dynamic Lilac Palette */
     :root {
       --md-sys-color-primary: #6750A4;
       --md-sys-color-on-primary: #FFFFFF;
@@ -47,7 +46,6 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* M3 Expressive Spring Interactive Items */
     .m3-btn {
       position: relative;
       overflow: hidden;
@@ -65,7 +63,6 @@
       transform: scale(0.96);
     }
 
-    /* Ripple wave effect */
     .ripple-wave {
       position: absolute;
       border-radius: 50%;
@@ -81,7 +78,6 @@
       }
     }
 
-    /* M3 Surface Card Hierarchy (No harsh 3D shadows, smooth tonal superposition) */
     .m3-card {
       border-radius: 32px;
       background-color: var(--md-sys-color-surface-container-lowest);
@@ -97,11 +93,56 @@
       background-color: var(--md-sys-color-surface-container-lowest);
     }
 
+    .editor-wrapper {
+      position: relative;
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .highlight-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: 0;
+      padding: 16px;
+      border: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.6;
+      white-space: pre;
+      overflow: hidden;
+      pointer-events: none;
+      color: transparent;
+      box-sizing: border-box;
+      tab-size: 2;
+      z-index: 1;
+    }
+
+    /* Standard blue highlight on all matches */
+    .search-highlight {
+      background-color: rgba(59, 130, 246, 0.35);
+      border-bottom: 2px solid #2563eb;
+      border-radius: 2px;
+      color: transparent;
+    }
+
+    /* Active blue highlight on current focused match */
+    .search-highlight.active-highlight {
+      background-color: #2563eb;
+      border-bottom: 2px solid #1d4ed8;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5);
+      color: transparent;
+    }
+
     .gutter {
       font-family: 'JetBrains Mono', monospace;
       color: #9D96A8;
       background-color: var(--md-sys-color-surface-container-high);
       user-select: none;
+      -webkit-user-select: none;
       text-align: right;
       padding: 16px 10px;
       line-height: 1.6;
@@ -109,10 +150,20 @@
       white-space: pre-line;
       box-sizing: border-box;
       border-right: 1px solid var(--md-sys-color-surface-container-highest);
-      min-width: 44px;
+      min-width: 48px;
+      touch-action: none;
+      cursor: ns-resize;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .gutter.is-scrolling {
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      font-weight: 700;
     }
 
     .code-area {
+      position: relative;
+      z-index: 2;
       width: 100%;
       height: 100%;
       padding: 16px;
@@ -139,13 +190,52 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+
+    /* Touch selection origin point and dynamic velocity HUD */
+    .touch-origin-marker {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--md-sys-color-primary);
+      box-shadow: 0 0 0 4px var(--md-sys-color-primary-container);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 30;
+      transition: transform 0.15s ease-out;
+    }
+    .touch-origin-marker::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1.5px dashed var(--md-sys-color-primary);
+      animation: spin 3s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .touch-hud {
+      position: fixed;
+      bottom: 68px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s var(--ease-spring);
+      z-index: 40;
+    }
+    .touch-hud.active {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
   </style>
 </head>
 <body class="h-full flex flex-col antialiased overflow-hidden">
 
   <header class="bg-[var(--md-sys-color-surface-container)] px-3 py-2.5 sm:px-6 flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0 z-20">
     <div class="flex items-center gap-3">
-      <!-- Clean 2D Material 3 Vector Badge (No 3D) -->
       <div class="w-10 h-10 rounded-[16px] bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center flex-shrink-0 m3-btn">
         <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
           <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
@@ -214,6 +304,14 @@
 
     <div class="h-4 w-[1px] bg-[var(--md-sys-color-outline-variant)] mx-1 flex-shrink-0"></div>
 
+    <!-- Mobile Touch Selection Velocity Tool -->
+    <button id="btnTouchSelect" class="m3-btn whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-primary)] border border-[var(--md-sys-color-primary)]/30" title="Activer la sélection tactile au doigt">
+      <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+        <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74a4.5 4.5 0 0 0-9 0c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.44-.72c-.1-.02-.21-.03-.31-.03-.41 0-.79.17-1.06.44l-.7.71 5.02 5.03c.36.36.86.57 1.39.57h6.74c.95 0 1.76-.67 1.94-1.61l.83-4.39c.14-.73-.18-1.46-.73-1.87z"/>
+      </svg>
+      <span id="touchSelectLabel">Sélection Doigt</span>
+    </button>
+
     <!-- Search & Replace Drawer toggle -->
     <button id="btnOpenSearch" class="m3-btn whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-secondary)]" title="Recherche globale (Ctrl+F)">
       <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
@@ -227,7 +325,7 @@
     </button>
 
     <!-- Chromebook / PC File Download -->
-    <button id="btnDownload" class="m3-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)]" title="Télécharger index.html sur votre PC ou Chromebook">
+    <button id="btnDownload" class="m3-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)]" title="Télécharger index.html">
       <svg class="w-4 h-4 fill-current text-[var(--md-sys-color-primary)]" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
       <span>Exporter .html</span>
     </button>
@@ -239,15 +337,30 @@
     </button>
   </nav>
 
-  <div id="searchBar" class="hidden bg-[var(--md-sys-color-surface-container-highest)] px-4 py-3 border-b border-[var(--md-sys-color-outline-variant)]/30 z-10 transition-all">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-2.5">
-      <div class="relative w-full md:w-1/3">
-        <input id="findInput" type="text" placeholder="Terme à rechercher (ex: Vibe)..." class="w-full pl-3 pr-10 py-2 text-xs rounded-full bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30 outline-none text-[var(--md-sys-color-on-surface)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]">
-        <span id="matchCount" class="absolute right-3 top-2.5 text-[11px] font-bold text-[var(--md-sys-color-secondary)]">0</span>
+  <div id="searchBar" class="hidden bg-[var(--md-sys-color-surface-container-highest)] px-4 py-2.5 border-b border-[var(--md-sys-color-outline-variant)]/30 z-10 transition-all">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-2">
+      <!-- Search Input with Chevron navigation & index display -->
+      <div class="relative w-full md:w-5/12 flex items-center">
+        <input id="findInput" type="text" placeholder="Terme à rechercher..." class="w-full pl-3 pr-28 py-2 text-xs rounded-full bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30 outline-none text-[var(--md-sys-color-on-surface)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]">
+        
+        <!-- Navigation Chevrons and Match Indicator -->
+        <div class="absolute right-1.5 flex items-center gap-1">
+          <span id="matchCount" class="text-[11px] font-bold text-[var(--md-sys-color-secondary)] px-1.5">0/0</span>
+          
+          <!-- Previous Match Chevron (Up) -->
+          <button id="btnPrevMatch" class="m3-btn w-6 h-6 rounded-full bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-surface)]" title="Occurrence précédente (Maj+Entrée)">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+          </button>
+          
+          <!-- Next Match Chevron (Down) -->
+          <button id="btnNextMatch" class="m3-btn w-6 h-6 rounded-full bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-surface)]" title="Occurrence suivante (Entrée)">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+          </button>
+        </div>
       </div>
 
-      <div class="w-full md:w-1/3">
-        <input id="replaceInput" type="text" placeholder="Remplacer par (ex: Pixel)..." class="w-full px-3 py-2 text-xs rounded-full bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30 outline-none text-[var(--md-sys-color-on-surface)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]">
+      <div class="w-full md:w-4/12">
+        <input id="replaceInput" type="text" placeholder="Remplacer par..." class="w-full px-3 py-2 text-xs rounded-full bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30 outline-none text-[var(--md-sys-color-on-surface)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]">
       </div>
 
       <div class="flex items-center gap-2 w-full md:w-auto justify-end">
@@ -268,31 +381,17 @@
     <section id="editorSection" class="flex-1 flex flex-col h-full relative transition-all duration-200">
       <div class="code-editor-container">
         <div id="gutter" class="gutter">1</div>
-        <textarea id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off" class="code-area" placeholder="Écris ton code HTML/CSS/JS ici..."></textarea>
-      </div>
-
-      <!-- Quick symbol bar -->
-      <div class="bg-[var(--md-sys-color-surface-container-high)] px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto hide-scrollbar border-t border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0">
-        <span class="text-[10px] font-bold text-[var(--md-sys-color-secondary)] uppercase tracking-wider pr-1">Symboles :</span>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">&lt;</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">&gt;</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">/</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">=</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">"</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">{</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">}</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">(</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">)</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">;</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">`</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">$</button>
-        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">#</button>
+        <div class="editor-wrapper">
+          <pre id="highlightLayer" class="highlight-layer" aria-hidden="true"></pre>
+          <div id="touchOriginMarker" class="touch-origin-marker hidden"></div>
+          <textarea id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off" class="code-area" placeholder="Colle ton code HTML/CSS/JS généré par l'IA ici..."></textarea>
+        </div>
       </div>
     </section>
 
-    <!-- Live Preview Sandbox Section -->
-    <section id="previewSection" class="hidden flex-1 flex-col h-full bg-[var(--md-sys-color-surface-container-lowest)] border-l border-[var(--md-sys-color-outline-variant)]/20 transition-all duration-200">
-      <div class="bg-[var(--md-sys-color-surface-container-high)] px-4 py-2 flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/20">
+    <!-- Live Preview Section (Ensuring flex display for zero height collapse) -->
+    <section id="previewSection" class="flex-1 flex flex-col h-full bg-white border-t md:border-t-0 md:border-l border-[var(--md-sys-color-outline-variant)]/30 transition-all duration-200">
+      <div class="bg-[var(--md-sys-color-surface-container-high)] px-4 py-2 flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
           <span class="text-xs font-bold text-[var(--md-sys-color-on-surface)]">Rendu Web Interactif</span>
@@ -301,8 +400,8 @@
           Actualiser ↺
         </button>
       </div>
-      <div class="flex-1 w-full h-full relative">
-        <iframe id="previewFrame" class="w-full h-full border-none" sandbox="allow-scripts allow-modals"></iframe>
+      <div class="flex-1 w-full h-full relative overflow-hidden bg-white">
+        <iframe id="previewFrame" class="w-full h-full border-0 block bg-white" sandbox="allow-scripts allow-same-origin allow-modals allow-forms"></iframe>
       </div>
     </section>
   </main>
@@ -314,9 +413,8 @@
       <span id="metricsIndicator" class="hidden sm:inline">0 caractères</span>
     </div>
 
-    <!-- Quick shortcuts indicator for PC / Chromebook -->
     <div class="flex items-center gap-2">
-      <span class="hidden lg:inline text-[11px] bg-[var(--md-sys-color-surface-container-high)] px-2 py-0.5 rounded-md font-mono">Ctrl+S Sauvegarder</span>
+      <span class="hidden lg:inline text-[11px] bg-[var(--md-sys-color-surface-container-high)] px-2 py-0.5 rounded-md font-mono">Entrée / Maj+Entrée Suiv/Préc</span>
       <span class="hidden lg:inline text-[11px] bg-[var(--md-sys-color-surface-container-high)] px-2 py-0.5 rounded-md font-mono">Ctrl+F Chercher</span>
       <span class="text-[11px] font-bold text-[var(--md-sys-color-primary)]">Material 3 Expressive</span>
     </div>
@@ -325,7 +423,20 @@
   <!-- Toast Notification System -->
   <div id="toastBox" class="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
 
-  <!-- Material 3 Expressive Confirmation Modal (No native confirm/alert) -->
+  <!-- Mobile Touch Selection HUD Overlay -->
+  <div id="touchHud" class="touch-hud">
+    <div class="m3-card px-4 py-2 bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-primary)]/40 flex items-center gap-3 shadow-2xl">
+      <div id="touchHudIcon" class="w-7 h-7 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center font-bold text-xs">
+        ⚡
+      </div>
+      <div>
+        <div id="touchHudSpeed" class="text-xs font-extrabold text-[var(--md-sys-color-on-surface)]">Vitesse 1x</div>
+        <div id="touchHudCount" class="text-[11px] text-[var(--md-sys-color-secondary)]">0 caractères sélectionnés</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Material 3 Expressive Confirmation Modal -->
   <div id="confirmModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div class="m3-card max-w-sm w-full p-6 bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30">
       <h3 class="text-base font-bold text-[var(--md-sys-color-on-surface)] mb-2">Déconnexion</h3>
@@ -342,45 +453,72 @@
   </div>
 
   <script>
-    /* Safe embedded HTML demo without premature inline script tag termination */
+    /* Robust tutorial code with autonomous styling to guarantee instant visual preview */
     const DEMO_HTML = '<!DOCTYPE html>\n' +
-'<html lang="fr" class="h-full">\n' +
+'<html lang="fr" style="height:100%;">\n' +
 '<head>\n' +
 '  <meta charset="UTF-8">\n' +
 '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
-'  <title>HTML Editor Preview</title>\n' +
-'  <' + 'script src="https://cdn.tailwindcss.com"><' + '/script>\n' +
-'  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">\n' +
+'  <title>Aperçu HTML Editor</title>\n' +
 '  <style>\n' +
+'    * { box-sizing: border-box; margin: 0; padding: 0; }\n' +
 '    body {\n' +
-'      font-family: "Google Sans", sans-serif;\n' +
+'      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;\n' +
 '      background: radial-gradient(circle at 50% 0%, #F3EDF7 0%, #FEF7FF 100%);\n' +
 '      color: #1D1B20;\n' +
+'      height: 100%;\n' +
+'      display: flex;\n' +
+'      align-items: center;\n' +
+'      justify-content: center;\n' +
+'      padding: 16px;\n' +
 '    }\n' +
-'    .preview-card {\n' +
+'    .card {\n' +
+'      background: #FFFFFF;\n' +
 '      border-radius: 28px;\n' +
+'      padding: 24px;\n' +
+'      max-width: 360px;\n' +
+'      width: 100%;\n' +
+'      text-align: center;\n' +
+'      box-shadow: 0 12px 30px rgba(103, 80, 164, 0.12);\n' +
+'      border: 1px solid #E6E0E9;\n' +
 '      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);\n' +
 '    }\n' +
-'    .preview-card:hover {\n' +
-'      transform: translateY(-2px) scale(1.01);\n' +
+'    .card:hover { transform: translateY(-3px) scale(1.02); }\n' +
+'    .icon-badge {\n' +
+'      width: 48px; height: 48px; margin: 0 auto 14px;\n' +
+'      border-radius: 16px; background: #EADDFF; color: #21005D;\n' +
+'      display: flex; align-items: center; justify-content: center;\n' +
+'      font-size: 22px;\n' +
 '    }\n' +
+'    h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }\n' +
+'    p { font-size: 13px; color: #625B71; margin-bottom: 18px; }\n' +
+'    .counter-box {\n' +
+'      background: #F3EDF7; border-radius: 20px; padding: 14px;\n' +
+'      margin-bottom: 16px; display: flex; align-items: center; justify-content: space-around;\n' +
+'    }\n' +
+'    .count-num { font-size: 26px; font-weight: 900; color: #6750A4; }\n' +
+'    .btn-action {\n' +
+'      background: #6750A4; color: #FFFFFF; border: none; outline: none;\n' +
+'      padding: 9px 18px; border-radius: 9999px; font-size: 12px;\n' +
+'      font-weight: 700; cursor: pointer; transition: transform 0.2s;\n' +
+'    }\n' +
+'    .btn-action:active { transform: scale(0.95); }\n' +
+'    .tag { font-size: 11px; font-weight: 700; background: #FFD8E4; color: #7D5260; padding: 6px 14px; border-radius: 9999px; display: inline-block; }\n' +
 '  </style>\n' +
 '</head>\n' +
-'<body class="h-full flex items-center justify-center p-4">\n' +
-'  <div class="preview-card bg-white p-6 max-w-sm w-full text-center shadow-lg border border-[#E6E0E9]">\n' +
-'    <div class="w-12 h-12 mx-auto rounded-2xl bg-[#EADDFF] text-[#21005D] flex items-center justify-center mb-3">\n' +
-'      <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>\n' +
-'    </div>\n' +
-'    <h2 class="text-xl font-extrabold text-[#1D1B20] mb-1">HTML Editor</h2>\n' +
-'    <p class="text-xs text-[#625B71] mb-4">Aperçu interactif et réactif en temps réel</p>\n' +
-'    <div class="bg-[#F3EDF7] rounded-2xl p-4 mb-4 flex items-center justify-around">\n' +
+'<body>\n' +
+'  <div class="card">\n' +
+'    <div class="icon-badge">✨</div>\n' +
+'    <h2>HTML Editor</h2>\n' +
+'    <p>Aperçu interactif et réactif en temps réel</p>\n' +
+'    <div class="counter-box">\n' +
 '      <div>\n' +
-'        <div id="counter" class="text-2xl font-black text-[#6750A4]">0</div>\n' +
-'        <div class="text-[11px] text-[#625B71] font-semibold">Clics</div>\n' +
+'        <div id="counter" class="count-num">0</div>\n' +
+'        <div style="font-size:11px; color:#625B71; font-weight:600;">Interactions</div>\n' +
 '      </div>\n' +
-'      <button onclick="addClick()" class="px-4 py-2 rounded-full bg-[#6750A4] text-white text-xs font-bold shadow hover:bg-[#523e85] active:scale-95 transition-all">Tester +1</button>\n' +
+'      <button class="btn-action" onclick="addClick()">Tester +1</button>\n' +
 '    </div>\n' +
-'    <div class="text-[11px] text-[#7D5260] bg-[#FFD8E4] py-1 px-3 rounded-full font-semibold">✨ Prêt pour le vibecoding</div>\n' +
+'    <div class="tag">🚀 Prêt pour le vibecoding</div>\n' +
 '  </div>\n' +
 '  <' + 'script>\n' +
 '    let count = 0;\n' +
@@ -393,6 +531,7 @@
 '</html>';
 
     const codeEditor = document.getElementById('codeEditor');
+    const highlightLayer = document.getElementById('highlightLayer');
     const gutter = document.getElementById('gutter');
     const previewFrame = document.getElementById('previewFrame');
     const editorSection = document.getElementById('editorSection');
@@ -417,12 +556,23 @@
     const replaceInput = document.getElementById('replaceInput');
     const btnExecuteReplaceAll = document.getElementById('btnExecuteReplaceAll');
     const matchCount = document.getElementById('matchCount');
+    const btnPrevMatch = document.getElementById('btnPrevMatch');
+    const btnNextMatch = document.getElementById('btnNextMatch');
+
+    const btnTouchSelect = document.getElementById('btnTouchSelect');
+    const touchSelectLabel = document.getElementById('touchSelectLabel');
+    const touchOriginMarker = document.getElementById('touchOriginMarker');
+    const touchHud = document.getElementById('touchHud');
+    const touchHudSpeed = document.getElementById('touchHudSpeed');
+    const touchHudCount = document.getElementById('touchHudCount');
 
     const posIndicator = document.getElementById('posIndicator');
     const metricsIndicator = document.getElementById('metricsIndicator');
     const toastBox = document.getElementById('toastBox');
 
     let previewTimer = null;
+    let matchPositions = [];
+    let currentMatchIndex = -1;
     const STORAGE_KEY = 'pixel_vibecode_content';
 
     function notify(message, symbol = '✓') {
@@ -462,42 +612,59 @@
       b.addEventListener('pointerdown', spawnRipple);
     });
 
+    function renderPreviewNow() {
+      const content = codeEditor.value;
+      if (!previewFrame) return;
+
+      try {
+        const frameDoc = previewFrame.contentDocument || (previewFrame.contentWindow && previewFrame.contentWindow.document);
+        if (frameDoc) {
+          frameDoc.open();
+          frameDoc.write(content);
+          frameDoc.close();
+          return;
+        }
+      } catch (e) {
+        // Fallback to srcdoc if document writing is restricted
+      }
+      previewFrame.srcdoc = content;
+    }
+
     function refreshEditor() {
       const content = codeEditor.value;
       const lines = content.split('\n');
       const lineCount = lines.length;
 
-      // Update gutter numbers
       let gutterHTML = '';
       for (let i = 1; i <= lineCount; i++) {
         gutterHTML += i + '<br>';
       }
       gutter.innerHTML = gutterHTML || '1';
 
-      // Update metrics
       metricsIndicator.innerText = `${content.length} caractères • ${lineCount} lignes`;
 
-      // Update line & column
       const cursorIndex = codeEditor.selectionStart;
       const textToCursor = content.substring(0, cursorIndex).split('\n');
       const currentLine = textToCursor.length;
       const currentCol = textToCursor[textToCursor.length - 1].length + 1;
       posIndicator.innerText = `Ligne ${currentLine}, Col ${currentCol}`;
 
-      // Save to localStorage
       try {
         localStorage.setItem(STORAGE_KEY, content);
       } catch (e) {}
 
-      // Auto-refresh preview instantaneously on any edit
+      if (!searchBar.classList.contains('hidden')) {
+        updateSearchMatches(true);
+      }
+
       clearTimeout(previewTimer);
-      previewTimer = setTimeout(() => {
-        previewFrame.srcdoc = codeEditor.value;
-      }, 100);
+      previewTimer = setTimeout(renderPreviewNow, 80);
     }
 
     codeEditor.addEventListener('scroll', () => {
       gutter.scrollTop = codeEditor.scrollTop;
+      highlightLayer.scrollTop = codeEditor.scrollTop;
+      highlightLayer.scrollLeft = codeEditor.scrollLeft;
     });
 
     codeEditor.addEventListener('input', refreshEditor);
@@ -505,8 +672,8 @@
     codeEditor.addEventListener('click', refreshEditor);
 
     document.getElementById('btnForceReloadPreview').addEventListener('click', () => {
-      previewFrame.srcdoc = codeEditor.value;
-      notify('Aperçu mis à jour');
+      renderPreviewNow();
+      notify('Aperçu actualisé');
     });
 
     function switchLayout(mode) {
@@ -517,17 +684,23 @@
       if (mode === 'code') {
         tabCode.className = 'm3-btn px-3.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]';
         editorSection.classList.remove('hidden');
+        editorSection.classList.add('flex');
         previewSection.classList.add('hidden');
+        previewSection.classList.remove('flex');
       } else if (mode === 'split') {
         tabSplit.className = 'm3-btn px-3.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]';
         editorSection.classList.remove('hidden');
+        editorSection.classList.add('flex');
         previewSection.classList.remove('hidden');
-        previewFrame.srcdoc = codeEditor.value;
+        previewSection.classList.add('flex');
+        renderPreviewNow();
       } else if (mode === 'preview') {
         tabPreview.className = 'm3-btn px-3.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center gap-1.5';
         editorSection.classList.add('hidden');
+        editorSection.classList.remove('flex');
         previewSection.classList.remove('hidden');
-        previewFrame.srcdoc = codeEditor.value;
+        previewSection.classList.add('flex');
+        renderPreviewNow();
       }
     }
 
@@ -574,18 +747,9 @@
           }
         } catch (err) {}
       }
-      notify('Utilisez Ctrl+V ou appui long pour coller', 'ℹ');
+      notify('Utilisez Ctrl+V pour coller', 'ℹ');
     });
 
-    // Touch symbols bar for Pixel & quick keys
-    document.querySelectorAll('.key-symbol').forEach(btn => {
-      btn.addEventListener('click', () => {
-        insertSnippet(btn.innerText);
-        codeEditor.focus();
-      });
-    });
-
-    // Auto-indentation formatter
     btnFormat.addEventListener('click', () => {
       try {
         const lines = codeEditor.value.split('\n');
@@ -610,7 +774,6 @@
       }
     });
 
-    // Chromebook & PC file export (.html)
     btnDownload.addEventListener('click', () => {
       const blob = new Blob([codeEditor.value], { type: 'text/html;charset=utf-8' });
       const a = document.createElement('a');
@@ -631,45 +794,434 @@
     btnReloadDemo.addEventListener('click', () => {
       codeEditor.value = DEMO_HTML;
       refreshEditor();
+      renderPreviewNow();
       notify('Tutoriel réinitialisé');
+    });
+
+    let isTouchSelectMode = false;
+    let isSelectingTouch = false;
+    let touchOrigin = { x: 0, y: 0, clientY: 0, index: 0 };
+    let currentTouchPos = { clientX: 0, clientY: 0 };
+    let velocityAnimId = null;
+    let charWidth = 8.1;
+    const lineHeight = 13.5 * 1.6; // ~21.6px
+    let longPressTimer = null;
+
+    // Measure exact monospace character width
+    function measureCharMetrics() {
+      const test = document.createElement('span');
+      test.style.fontFamily = "'JetBrains Mono', monospace";
+      test.style.fontSize = '13.5px';
+      test.style.lineHeight = '1.6';
+      test.style.visibility = 'hidden';
+      test.style.position = 'absolute';
+      test.textContent = 'WWWWWWWWWW';
+      document.body.appendChild(test);
+      charWidth = test.getBoundingClientRect().width / 10;
+      document.body.removeChild(test);
+    }
+    measureCharMetrics();
+
+    // Toggle button for explicit touch selection mode
+    btnTouchSelect.addEventListener('click', () => {
+      isTouchSelectMode = !isTouchSelectMode;
+      if (isTouchSelectMode) {
+        btnTouchSelect.classList.remove('bg-[var(--md-sys-color-surface-container-lowest)]', 'text-[var(--md-sys-color-primary)]');
+        btnTouchSelect.classList.add('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
+        touchSelectLabel.textContent = 'Sélection Active';
+        notify('Touchez et glissez votre doigt pour sélectionner', '👆');
+      } else {
+        btnTouchSelect.classList.add('bg-[var(--md-sys-color-surface-container-lowest)]', 'text-[var(--md-sys-color-primary)]');
+        btnTouchSelect.classList.remove('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
+        touchSelectLabel.textContent = 'Sélection Doigt';
+        stopTouchSelection();
+      }
+    });
+
+    // Convert pixel coordinate inside textarea to exact character index
+    function getCharIndexFromCoords(clientX, clientY) {
+      const rect = codeEditor.getBoundingClientRect();
+      const paddingLeft = 16;
+      const paddingTop = 16;
+
+      const relY = Math.max(0, clientY - rect.top + codeEditor.scrollTop - paddingTop);
+      const relX = Math.max(0, clientX - rect.left + codeEditor.scrollLeft - paddingLeft);
+
+      const targetLine = Math.floor(relY / lineHeight);
+      const targetCol = Math.max(0, Math.round(relX / charWidth));
+
+      const lines = codeEditor.value.split('\n');
+      let index = 0;
+
+      for (let i = 0; i < lines.length; i++) {
+        if (i === targetLine) {
+          index += Math.min(targetCol, lines[i].length);
+          return Math.min(index, codeEditor.value.length);
+        }
+        index += lines[i].length + 1; // +1 for the newline
+      }
+      return codeEditor.value.length;
+    }
+
+    function startTouchSelection(clientX, clientY) {
+      isSelectingTouch = true;
+      const editorRect = codeEditor.getBoundingClientRect();
+      const originChar = getCharIndexFromCoords(clientX, clientY);
+
+      touchOrigin = {
+        x: clientX - editorRect.left + codeEditor.scrollLeft,
+        y: clientY - editorRect.top + codeEditor.scrollTop,
+        clientY: clientY,
+        index: originChar
+      };
+      currentTouchPos = { clientX, clientY };
+
+      // Position origin point pin
+      touchOriginMarker.style.left = `${clientX - editorRect.left}px`;
+      touchOriginMarker.style.top = `${clientY - editorRect.top}px`;
+      touchOriginMarker.classList.remove('hidden');
+
+      touchHud.classList.add('active');
+      touchHudSpeed.textContent = 'Défilement stationnaire';
+      touchHudCount.textContent = '0 caractère';
+
+      if (navigator.vibrate) navigator.vibrate(15);
+      runVelocityScrollLoop();
+    }
+
+    function runVelocityScrollLoop() {
+      if (!isSelectingTouch) return;
+
+      const deltaY = currentTouchPos.clientY - touchOrigin.clientY;
+      const distance = Math.abs(deltaY);
+      const deadzone = 25; // Deadzone where no auto-scroll occurs
+
+      let scrollDelta = 0;
+      let speedLabel = 'Précis (fixe)';
+
+      if (distance > deadzone) {
+        const excess = distance - deadzone;
+        // Non-linear acceleration: further finger moves away from origin, faster it scrolls
+        const normalizedPower = Math.pow(excess / 40, 1.7);
+        const direction = deltaY > 0 ? 1 : -1;
+        scrollDelta = direction * Math.min(55, Math.max(2, normalizedPower * 2.5));
+
+        const level = Math.min(10, Math.max(1, Math.round(Math.abs(scrollDelta) / 4)));
+        const arrows = direction > 0 ? '▼'.repeat(Math.min(4, level)) : '▲'.repeat(Math.min(4, level));
+        speedLabel = `${arrows} Vitesse x${level}`;
+      }
+
+      if (scrollDelta !== 0) {
+        codeEditor.scrollTop += scrollDelta;
+        highlightLayer.scrollTop = codeEditor.scrollTop;
+        gutter.scrollTop = codeEditor.scrollTop;
+      }
+
+      // Update selection range from origin index to current touched character index
+      const currentChar = getCharIndexFromCoords(currentTouchPos.clientX, currentTouchPos.clientY);
+      const selStart = Math.min(touchOrigin.index, currentChar);
+      const selEnd = Math.max(touchOrigin.index, currentChar);
+
+      codeEditor.setSelectionRange(selStart, selEnd);
+      const count = selEnd - selStart;
+      touchHudSpeed.textContent = speedLabel;
+      touchHudCount.textContent = `${count} caractères sélectionnés`;
+
+      velocityAnimId = requestAnimationFrame(runVelocityScrollLoop);
+    }
+
+    function stopTouchSelection() {
+      isSelectingTouch = false;
+      if (velocityAnimId) cancelAnimationFrame(velocityAnimId);
+      touchOriginMarker.classList.add('hidden');
+      touchHud.classList.remove('active');
+      refreshEditor();
+    }
+
+    // Touch events on editor
+    codeEditor.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      // If explicit mode is toggled, start immediate selection
+      if (isTouchSelectMode) {
+        e.preventDefault();
+        startTouchSelection(touch.clientX, touch.clientY);
+        return;
+      }
+
+      // Long-press fallback (hold finger 350ms to start velocity selection)
+      longPressTimer = setTimeout(() => {
+        startTouchSelection(touch.clientX, touch.clientY);
+      }, 350);
+    }, { passive: false });
+
+    codeEditor.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      if (isSelectingTouch) {
+        e.preventDefault();
+        currentTouchPos = { clientX: touch.clientX, clientY: touch.clientY };
+      } else {
+        // If moving finger before long press completes, cancel long press
+        clearTimeout(longPressTimer);
+      }
+    }, { passive: false });
+
+    codeEditor.addEventListener('touchend', () => {
+      clearTimeout(longPressTimer);
+      if (isSelectingTouch) {
+        stopTouchSelection();
+      }
+    });
+
+    codeEditor.addEventListener('touchcancel', () => {
+      clearTimeout(longPressTimer);
+      if (isSelectingTouch) {
+        stopTouchSelection();
+      }
+    });
+
+    /* Défilement tactile direct via la colonne des numéros de ligne */
+    let isGutterScrolling = false;
+    let gutterStartY = 0;
+    let gutterLastY = 0;
+    let gutterVelocity = 0;
+    let gutterInertiaFrame = null;
+
+    function handleGutterTouchStart(e) {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      cancelAnimationFrame(gutterInertiaFrame);
+
+      isGutterScrolling = true;
+      gutter.classList.add('is-scrolling');
+      gutterStartY = e.touches[0].clientY;
+      gutterLastY = gutterStartY;
+      gutterVelocity = 0;
+
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function handleGutterTouchMove(e) {
+      if (!isGutterScrolling || e.touches.length !== 1) return;
+      e.preventDefault();
+
+      const currentY = e.touches[0].clientY;
+      const deltaY = gutterLastY - currentY;
+      gutterVelocity = deltaY;
+      gutterLastY = currentY;
+
+      // Défilement 1:1 sans sélection de texte
+      codeEditor.scrollTop += deltaY * 1.5;
+      highlightLayer.scrollTop = codeEditor.scrollTop;
+      gutter.scrollTop = codeEditor.scrollTop;
+
+      // Mise à jour de l'indicateur de position
+      const currentScrollLine = Math.floor(codeEditor.scrollTop / lineHeight) + 1;
+      posIndicator.innerText = `Défilement ligne ~${currentScrollLine}`;
+    }
+
+    function handleGutterTouchEnd() {
+      if (!isGutterScrolling) return;
+      isGutterScrolling = false;
+      gutter.classList.remove('is-scrolling');
+
+      // Effet d'inertie fluide
+      function applyInertia() {
+        if (Math.abs(gutterVelocity) > 0.5) {
+          codeEditor.scrollTop += gutterVelocity;
+          highlightLayer.scrollTop = codeEditor.scrollTop;
+          gutter.scrollTop = codeEditor.scrollTop;
+          gutterVelocity *= 0.92;
+          gutterInertiaFrame = requestAnimationFrame(applyInertia);
+        } else {
+          refreshEditor();
+        }
+      }
+      gutterInertiaFrame = requestAnimationFrame(applyInertia);
+    }
+
+    gutter.addEventListener('touchstart', handleGutterTouchStart, { passive: false });
+    gutter.addEventListener('touchmove', handleGutterTouchMove, { passive: false });
+    gutter.addEventListener('touchend', handleGutterTouchEnd);
+    gutter.addEventListener('touchcancel', handleGutterTouchEnd);
+
+    // Support du glisser à la souris sur Chromebook / PC
+    gutter.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      isGutterScrolling = true;
+      gutter.classList.add('is-scrolling');
+      gutterLastY = e.clientY;
+
+      const onMouseMove = (moveEvent) => {
+        if (!isGutterScrolling) return;
+        const delta = gutterLastY - moveEvent.clientY;
+        gutterLastY = moveEvent.clientY;
+        codeEditor.scrollTop += delta * 1.5;
+        highlightLayer.scrollTop = codeEditor.scrollTop;
+        gutter.scrollTop = codeEditor.scrollTop;
+      };
+
+      const onMouseUp = () => {
+        isGutterScrolling = false;
+        gutter.classList.remove('is-scrolling');
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+        refreshEditor();
+      };
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
     });
 
     function escapeRegExp(string) {
       return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
-    function checkMatches() {
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[m]));
+    }
+
+    function renderHighlightsAndNavigate(shouldScroll = false) {
       const query = findInput.value;
-      if (!query) {
-        matchCount.innerText = '0';
+      const text = codeEditor.value;
+
+      if (!query || matchPositions.length === 0) {
+        highlightLayer.innerHTML = '';
+        matchCount.innerText = '0/0';
         return;
       }
-      try {
-        const rx = new RegExp(escapeRegExp(query), 'g');
-        const matches = (codeEditor.value.match(rx) || []).length;
-        matchCount.innerText = `${matches} trouvé${matches > 1 ? 's' : ''}`;
-      } catch (e) {
-        matchCount.innerText = '0';
+
+      let html = '';
+      let lastIndex = 0;
+
+      matchPositions.forEach((match, idx) => {
+        html += escapeHTML(text.substring(lastIndex, match.start));
+        const isActive = idx === currentMatchIndex;
+        html += `<mark class="search-highlight ${isActive ? 'active-highlight' : ''}">${escapeHTML(text.substring(match.start, match.end))}</mark>`;
+        lastIndex = match.end;
+      });
+
+      html += escapeHTML(text.substring(lastIndex));
+      if (text.endsWith('\n')) html += '\n';
+      highlightLayer.innerHTML = html;
+
+      matchCount.innerText = `${currentMatchIndex + 1}/${matchPositions.length}`;
+
+      if (shouldScroll && currentMatchIndex >= 0 && currentMatchIndex < matchPositions.length) {
+        const cur = matchPositions[currentMatchIndex];
+        codeEditor.focus();
+        codeEditor.setSelectionRange(cur.start, cur.end);
+
+        // Smooth scroll textarea to match line
+        const textBefore = text.substring(0, cur.start);
+        const lineIndex = textBefore.split('\n').length - 1;
+        const lineHeight = 13.5 * 1.6;
+        const targetScroll = Math.max(0, (lineIndex * lineHeight) - 80);
+        codeEditor.scrollTop = targetScroll;
+        highlightLayer.scrollTop = targetScroll;
+        gutter.scrollTop = targetScroll;
       }
     }
+
+    function updateSearchMatches(keepIndex = false) {
+      const query = findInput.value;
+      matchPositions = [];
+
+      if (!query) {
+        matchCount.innerText = '0/0';
+        currentMatchIndex = -1;
+        highlightLayer.innerHTML = '';
+        return;
+      }
+
+      const text = codeEditor.value;
+      try {
+        const rx = new RegExp(escapeRegExp(query), 'gi');
+        let m;
+        while ((m = rx.exec(text)) !== null) {
+          matchPositions.push({ start: m.index, end: m.index + m[0].length });
+          if (rx.lastIndex === m.index) rx.lastIndex++;
+        }
+
+        const total = matchPositions.length;
+        if (total === 0) {
+          matchCount.innerText = '0/0';
+          currentMatchIndex = -1;
+          highlightLayer.innerHTML = '';
+          return;
+        }
+
+        if (!keepIndex || currentMatchIndex < 0 || currentMatchIndex >= total) {
+          const cursor = codeEditor.selectionStart || 0;
+          let nextIdx = matchPositions.findIndex(p => p.start >= cursor);
+          currentMatchIndex = nextIdx !== -1 ? nextIdx : 0;
+        }
+
+        renderHighlightsAndNavigate(false);
+      } catch (e) {
+        matchCount.innerText = '0/0';
+        currentMatchIndex = -1;
+        highlightLayer.innerHTML = '';
+      }
+    }
+
+    /* Chevron next match (Down) */
+    function nextMatch() {
+      if (matchPositions.length === 0) return;
+      currentMatchIndex = (currentMatchIndex + 1) % matchPositions.length;
+      renderHighlightsAndNavigate(true);
+    }
+
+    /* Chevron previous match (Up) */
+    function prevMatch() {
+      if (matchPositions.length === 0) return;
+      currentMatchIndex = (currentMatchIndex - 1 + matchPositions.length) % matchPositions.length;
+      renderHighlightsAndNavigate(true);
+    }
+
+    btnNextMatch.addEventListener('click', nextMatch);
+    btnPrevMatch.addEventListener('click', prevMatch);
+
+    findInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          prevMatch();
+        } else {
+          nextMatch();
+        }
+      }
+    });
+
+    findInput.addEventListener('input', () => updateSearchMatches(false));
 
     btnOpenSearch.addEventListener('click', () => {
       const isHidden = searchBar.classList.contains('hidden');
       if (isHidden) {
         searchBar.classList.remove('hidden');
         findInput.focus();
-        checkMatches();
+        updateSearchMatches(false);
       } else {
         searchBar.classList.add('hidden');
+        highlightLayer.innerHTML = '';
       }
     });
 
     btnCloseSearchBar.addEventListener('click', () => {
       searchBar.classList.add('hidden');
+      highlightLayer.innerHTML = '';
     });
 
-    findInput.addEventListener('input', checkMatches);
-
+    /* Replace All logic with immediate refresh */
     btnExecuteReplaceAll.addEventListener('click', () => {
       const searchVal = findInput.value;
       const replaceVal = replaceInput.value;
@@ -678,7 +1230,7 @@
         return;
       }
 
-      const rx = new RegExp(escapeRegExp(searchVal), 'g');
+      const rx = new RegExp(escapeRegExp(searchVal), 'gi');
       const count = (codeEditor.value.match(rx) || []).length;
 
       if (count === 0) {
@@ -688,12 +1240,13 @@
 
       codeEditor.value = codeEditor.value.replace(rx, replaceVal);
       refreshEditor();
-      checkMatches();
+      updateSearchMatches(false);
+      renderPreviewNow();
       notify(`${count} occurrence(s) remplacée(s) !`);
     });
 
+    /* Keyboard shortcuts */
     codeEditor.addEventListener('keydown', (e) => {
-      // Ctrl+S or Cmd+S : Quick save notification
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         try {
@@ -703,23 +1256,20 @@
         return;
       }
 
-      // Ctrl+F or Cmd+F : Toggle search
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         searchBar.classList.remove('hidden');
         findInput.focus();
-        checkMatches();
+        updateSearchMatches(false);
         return;
       }
 
-      // Tab indentation
       if (e.key === 'Tab') {
         e.preventDefault();
         insertSnippet('  ');
       }
     });
 
-    // Expose helpers and stores globally for Firebase module integration
     window.fileStore = new Map();
     window.curFileId = 'index_html';
     window.showToast = notify;
@@ -750,17 +1300,14 @@
     window.addEventListener('DOMContentLoaded', () => {
       const cached = localStorage.getItem(STORAGE_KEY);
       codeEditor.value = cached && cached.trim().length > 0 ? cached : DEMO_HTML;
-      refreshEditor();
       
-      // Force initial preview render
-      previewFrame.srcdoc = codeEditor.value;
+      // Default to Split view so preview is immediately visible
+      switchLayout('split');
+      refreshEditor();
+      renderPreviewNow();
 
-      // Automatically choose Split on desktop screen sizes
-      if (window.innerWidth >= 820) {
-        switchLayout('split');
-      } else {
-        switchLayout('code');
-      }
+      // Ensure iframe is loaded after iframe finishes parsing
+      setTimeout(renderPreviewNow, 200);
     });
   </script>
 
@@ -856,7 +1403,6 @@
       unsubscribeSnapshot = onSnapshot(q, (snap) => {
         if (snap.empty) {
           window.fileStore.clear();
-          // Initialize default cloud document if none exists
           window.saveToCloud(window.curFileId, {
             name: "index.html",
             ext: "html",
@@ -880,7 +1426,6 @@
             storageKey: 'cache_' + data.name
           });
 
-          // Sync into the active editor if modified externally
           if (window.curFileId === id && document.activeElement !== document.getElementById('codeEditor')) {
             const editor = document.getElementById('codeEditor');
             if (editor.value !== data.content) {
@@ -921,7 +1466,6 @@
       }
     };
 
-    // Auto-save debounced cloud trigger whenever typing occurs
     document.getElementById('codeEditor').addEventListener('input', () => {
       if (!currentUser) return;
       clearTimeout(cloudSyncTimeout);
