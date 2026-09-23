@@ -165,25 +165,84 @@
     .section-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-sub); font-weight: 700; margin-bottom: -8px; }
     .file-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
     .empty-state { padding: 28px 16px; text-align: center; background: var(--surface-c); border-radius: var(--radius-card); color: var(--text-sub); font-size: 0.85rem; }
+
+    /* Cartes Dossiers Dépliables (Accordéon) */
+    .folder-group {
+      background: var(--surface-c);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .folder-header {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .folder-header:active { background: var(--surface-h); }
+    .folder-chevron {
+      transition: transform 0.2s ease;
+      display: grid;
+      place-items: center;
+      color: var(--text-sub);
+    }
+    .folder-group.open .folder-chevron {
+      transform: rotate(90deg);
+    }
+    .folder-icon {
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+    }
+    .folder-name {
+      font-weight: 600;
+      font-size: 0.88rem;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .folder-count {
+      font-size: 0.72rem;
+      color: var(--text-sub);
+      background: var(--bg);
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      font-weight: 700;
+    }
+    .folder-body {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      padding: 4px 10px 10px 18px;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      background: rgba(0, 0, 0, 0.03);
+    }
+    .folder-group.open .folder-body {
+      display: flex;
+    }
     
     .file-card { 
       background: var(--surface-c); 
-      border-radius: 18px; 
-      padding: 12px 14px; 
+      border-radius: 16px; 
+      padding: 10px 12px; 
       display: flex; 
       align-items: center; 
       gap: 12px; 
       cursor: pointer;
-      transition: margin 0.2s ease;
     }
     .file-card:active { background: var(--surface-h); }
     .file-card-info { flex: 1; overflow: hidden; }
-    .file-card-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
-    .file-card-path { font-size: 0.72rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .file-card-name { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
+    .file-card-path { font-size: 0.7rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
     .file-card-delete {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: var(--radius-pill);
       border: none;
       background: transparent;
@@ -415,7 +474,6 @@
     </div>
 
     <div class="runner-body">
-      <!-- IFRAME AVEC POPUPS ESCAPING DU SANDBOX -->
       <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
 
       <div id="editor-pane">
@@ -465,7 +523,7 @@
 
   <div id="toast-msg">Action effectuée</div>
 
-  <!-- MODULE FIREBASE AUTH + FIRESTORE TEMPS RÉEL AVEC TRI PAR CHEMIN -->
+  <!-- MODULE FIREBASE AUTH + FIRESTORE TEMPS RÉEL -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
     import { 
@@ -547,33 +605,21 @@
     function listenToUserCloud(uid) {
       if (unsubscribeSnapshot) unsubscribeSnapshot();
 
-      // Tri alphabétique direct sur Firestore par chemin
       const q = query(collection(db, "users", uid, "files"), orderBy("path", "asc"));
       unsubscribeSnapshot = onSnapshot(q, (snap) => {
-        const fileListEl = document.getElementById('fileList');
         const emptyMsg = document.getElementById('empty-state-msg');
 
         if (snap.empty) {
-          fileListEl.innerHTML = '';
-          if (emptyMsg) {
-            emptyMsg.style.display = 'block';
-            fileListEl.appendChild(emptyMsg);
-          }
           window.fileStore.clear();
+          if (window.renderAllFiles) window.renderAllFiles();
           return;
         }
 
-        if (emptyMsg) emptyMsg.style.display = 'none';
-        fileListEl.innerHTML = '';
         window.fileStore.clear();
 
-        // Récupérer et s'assurer du tri A-Z
-        const docs = [];
-        snap.forEach(d => docs.push({ id: d.id, ...d.data() }));
-        docs.sort((a, b) => (a.path || a.name).localeCompare(b.path || b.name, undefined, { numeric: true, sensitivity: 'base' }));
-
-        docs.forEach(data => {
-          const id = data.id;
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          const id = docSnap.id;
 
           window.fileStore.set(id, {
             name: data.name,
@@ -593,9 +639,11 @@
               if (window.renderPreview) window.renderPreview(data.content, data.ext, data.name);
             }
           }
-
-          window.renderFileCard(id, data.name, data.ext, data.path || data.name);
         });
+
+        if (window.renderAllFiles) {
+          window.renderAllFiles();
+        }
       }, (error) => {
         console.error("Erreur d'écoute temps réel :", error);
       });
@@ -675,6 +723,7 @@
       showToast('Thème : ' + nextTheme.toUpperCase());
     };
 
+    // SUPPRESSION DE FICHIER RÉCENT
     window.deleteRecentFile = function(id, event) {
       if (event) event.stopPropagation();
 
@@ -690,16 +739,7 @@
         window.deleteFromCloud(id);
       }
 
-      const allCards = fileList.querySelectorAll('.file-card');
-      allCards.forEach(c => {
-        if (c.querySelector(`[onclick*="${id}"]`)) c.remove();
-      });
-
-      if (fileStore.size === 0 && emptyMsg) {
-        emptyMsg.style.display = 'block';
-        fileList.appendChild(emptyMsg);
-      }
-
+      window.renderAllFiles();
       showToast("Fichier retiré");
     };
 
@@ -762,14 +802,12 @@
       e.target.value = '';
     };
 
-    // IMPORT DE DOSSIER AVEC TRI ALPHABÉTIQUE / DOSSIER NATUREL
+    // IMPORT DOSSIER AVEC TRI A-Z
     $('folderPicker').onchange = async e => {
       const files = Array.from(e.target.files);
       if (!files.length) return;
-      fileList.innerHTML = '';
       fileStore.clear();
 
-      // Tri strict par chemin d'accès (dossiers puis fichiers dans l'ordre)
       files.sort((a, b) => {
         const pathA = a.webkitRelativePath || a.name;
         const pathB = b.webkitRelativePath || b.name;
@@ -800,38 +838,81 @@
       }
     };
 
-    // RENDU VISUEL AVEC HIÉRARCHIE & INDENTATION
-    window.renderFileCard = function(id, name, ext, path) {
-      const fileListEl = document.getElementById('fileList');
-
-      // Calcul de la profondeur de l'arborescence
-      const segments = path.split('/');
-      // Si le fichier vient d'un dossier importé (ex: Racine/SousDossier/fichier.html)
-      const depth = Math.max(0, segments.length - 2); 
-      const folderPath = segments.length > 1 ? segments.slice(0, -1).join(' / ') : '';
-
+    // CRÉATION D'UNE LIGNE FICHIER
+    function createFileItem(f) {
       const card = document.createElement('div');
       card.className = 'file-card';
-      
-      // Indentation et repère vertical si dans un sous-dossier
-      if (depth > 0) {
-        card.style.marginLeft = `${depth * 14}px`;
-        card.style.borderLeft = '3px solid var(--outline)';
-      }
-
       card.innerHTML = `
-        <span class="ext-badge ${window.getExtClass(ext)}">${ext}</span>
-        <div class="file-card-info" onclick="window.openFile('${id}')">
-          <div class="file-card-name">${name}</div>
-          <div class="file-card-path">${folderPath ? folderPath + ' /' : 'Racine'}</div>
+        <span class="ext-badge ${window.getExtClass(f.ext)}">${f.ext}</span>
+        <div class="file-card-info" onclick="window.openFile('${f.id}')">
+          <div class="file-card-name">${f.name}</div>
+          <div class="file-card-path">${f.path}</div>
         </div>
-        <button class="file-card-delete" onclick="window.deleteRecentFile('${id}', event)" title="Supprimer de la liste">
+        <button class="file-card-delete" onclick="window.deleteRecentFile('${f.id}', event)" title="Supprimer">
           <svg class="icon" style="width: 17px; height: 17px;" viewBox="0 0 24 24">
             <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
           </svg>
         </button>
       `;
-      fileListEl.appendChild(card);
+      return card;
+    }
+
+    // GESTIONNAIRE D'ARBORESCENCE PAR DOSSIERS ACCORDÉONS DÉPLIABLES
+    window.renderAllFiles = function() {
+      const fileListEl = document.getElementById('fileList');
+      const emptyMsg = document.getElementById('empty-state-msg');
+      fileListEl.innerHTML = '';
+
+      if (fileStore.size === 0) {
+        if (emptyMsg) {
+          emptyMsg.style.display = 'block';
+          fileListEl.appendChild(emptyMsg);
+        }
+        return;
+      }
+      if (emptyMsg) emptyMsg.style.display = 'none';
+
+      // 1. Grouper par sous-dossier
+      const groups = new Map();
+      fileStore.forEach((file, id) => {
+        const segments = (file.path || file.name).split('/');
+        const folder = segments.length > 1 ? segments.slice(0, -1).join(' / ') : '__root__';
+
+        if (!groups.has(folder)) groups.set(folder, []);
+        groups.get(folder).push({ id, ...file });
+      });
+
+      // 2. Afficher chaque groupe
+      groups.forEach((filesInFolder, folderName) => {
+        if (folderName === '__root__') {
+          filesInFolder.forEach(f => fileListEl.appendChild(createFileItem(f)));
+        } else {
+          const groupEl = document.createElement('div');
+          groupEl.className = 'folder-group open';
+
+          groupEl.innerHTML = `
+            <div class="folder-header">
+              <span class="folder-chevron">
+                <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+              </span>
+              <span class="folder-icon">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+              </span>
+              <span class="folder-name">${folderName}</span>
+              <span class="folder-count">${filesInFolder.length}</span>
+            </div>
+            <div class="folder-body"></div>
+          `;
+
+          const header = groupEl.querySelector('.folder-header');
+          header.onclick = () => groupEl.classList.toggle('open');
+
+          const body = groupEl.querySelector('.folder-body');
+          filesInFolder.forEach(f => body.appendChild(createFileItem(f)));
+
+          fileListEl.appendChild(groupEl);
+        }
+      });
     };
 
     async function processFile(file, path, autoOpen = true, handle = null) {
@@ -858,7 +939,7 @@
       const fileObj = { name, ext, path, content, handle, storageKey };
       fileStore.set(id, fileObj);
 
-      window.renderFileCard(id, name, ext, path);
+      window.renderAllFiles();
 
       if (window.saveToCloud) {
         window.saveToCloud(id, fileObj);
