@@ -187,17 +187,17 @@
   </style>
 </head>
 
-<body class="h-full flex flex-col antialiased overflow-hidden pt-[max(48px,env(safe-area-inset-top,48px))]">
+<body class="h-full flex flex-col antialiased overflow-hidden pt-[max(14px,env(safe-area-inset-top,14px))]">
 
   <header class="bg-[var(--md-sys-color-surface-container)] px-3 py-2 sm:px-5 flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0 z-20 gap-2">
     <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-[14px] bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center flex-shrink-0 shadow-sm">
-        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
-          <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
-        </svg>
-      </div>
+      <button id="btnToggleExplorer" class="m3-btn px-2.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] text-xs font-bold shadow-xs flex items-center gap-1.5" title="Ouvrir l'explorateur de fichiers & historique">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+        <span id="headerCurrentFileName" class="max-w-[90px] sm:max-w-[130px] truncate">index.html</span>
+      </button>
+
       <div>
-        <h1 class="font-extrabold text-sm sm:text-base tracking-tight leading-none text-[var(--md-sys-color-on-surface)]">
+        <h1 class="font-extrabold text-sm sm:text-base tracking-tight leading-none text-[var(--md-sys-color-on-surface)] hidden sm:block">
           HTML Editor
         </h1>
       </div>
@@ -363,6 +363,78 @@
 
   <!-- Toast Notification Box -->
   <div id="toastBox" class="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
+
+  <!-- File Explorer & History Fullscreen Overlay -->
+  <div id="explorerModal" class="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs flex flex-col items-center justify-end sm:justify-center p-0 sm:p-4 hidden">
+    <div class="m3-card w-full sm:max-w-2xl bg-[var(--md-sys-color-surface)] border border-[var(--md-sys-color-outline-variant)]/30 rounded-t-[32px] sm:rounded-[32px] flex flex-col max-h-[90vh] h-auto overflow-hidden shadow-2xl">
+      <!-- Header -->
+      <div class="p-4 sm:p-5 bg-[var(--md-sys-color-surface-container)] border-b border-[var(--md-sys-color-outline-variant)]/20 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-sm sm:text-base font-extrabold text-[var(--md-sys-color-on-surface)]">Fichiers &amp; Projets</h2>
+            <p class="text-[11px] text-[var(--md-sys-color-secondary)]">Importez vos fichiers ou reprenez un projet récent</p>
+          </div>
+        </div>
+        <button id="btnCloseExplorer" class="m3-btn w-8 h-8 rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-on-surface)] text-sm font-bold">
+          ✕
+        </button>
+      </div>
+
+      <!-- Main Body -->
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 hide-scrollbar flex-1">
+        <!-- Import Action Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+          <!-- Import File -->
+          <button id="btnTriggerImportFile" class="m3-btn p-3 rounded-2xl bg-[var(--md-sys-color-surface-container-lowest)] hover:bg-[var(--md-sys-color-primary-container)] border border-[var(--md-sys-color-outline-variant)]/30 flex flex-col items-center justify-center gap-1.5 text-center group">
+            <svg class="w-6 h-6 text-[var(--md-sys-color-primary)] fill-current" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            <span class="text-xs font-bold text-[var(--md-sys-color-on-surface)] group-hover:text-[var(--md-sys-color-on-primary-container)]">Fichier</span>
+            <span class="text-[10px] text-[var(--md-sys-color-secondary)]">.html, .js, .css</span>
+          </button>
+
+          <!-- Import Folder -->
+          <button id="btnTriggerImportFolder" class="m3-btn p-3 rounded-2xl bg-[var(--md-sys-color-surface-container-lowest)] hover:bg-[var(--md-sys-color-secondary-container)] border border-[var(--md-sys-color-outline-variant)]/30 flex flex-col items-center justify-center gap-1.5 text-center group">
+            <svg class="w-6 h-6 text-[var(--md-sys-color-secondary)] fill-current" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2zM20 18H4V8h16v10z"/></svg>
+            <span class="text-xs font-bold text-[var(--md-sys-color-on-surface)]">Dossier</span>
+            <span class="text-[10px] text-[var(--md-sys-color-secondary)]">Projet entier</span>
+          </button>
+
+          <!-- New Blank Document -->
+          <button id="btnNewBlankFile" class="m3-btn p-3 rounded-2xl bg-[var(--md-sys-color-surface-container-lowest)] hover:bg-[var(--md-sys-color-tertiary-container)] border border-[var(--md-sys-color-outline-variant)]/30 col-span-2 sm:col-span-1 flex flex-col items-center justify-center gap-1.5 text-center group">
+            <svg class="w-6 h-6 text-[var(--md-sys-color-tertiary)] fill-current" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span class="text-xs font-bold text-[var(--md-sys-color-on-surface)]">Nouveau</span>
+            <span class="text-[10px] text-[var(--md-sys-color-secondary)]">Page vierge</span>
+          </button>
+        </div>
+
+        <!-- Current Folder / Files Tree Section (if folder loaded) -->
+        <div id="projectFolderSection" class="hidden space-y-2">
+          <div class="flex items-center justify-between px-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-secondary)]">Fichiers du dossier</span>
+            <span id="folderFilesCount" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-secondary)]">0 fichiers</span>
+          </div>
+          <div id="projectFilesList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- History Section -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between px-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-[var(--md-sys-color-secondary)]">Historique récent</span>
+            <button id="btnClearHistory" class="text-[11px] font-bold text-[var(--md-sys-color-tertiary)] hover:underline">Vider</button>
+          </div>
+          <div id="historyListContent" class="space-y-1.5">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden Real File Inputs -->
+      <input type="file" id="inputRealFile" accept=".html,.htm,.txt,.js,.css,.json" class="hidden">
+      <input type="file" id="inputRealFolder" webkitdirectory directory multiple class="hidden">
+    </div>
+  </div>
 
   <div id="functionsModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div class="m3-card max-w-md w-full p-5 bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30 flex flex-col max-h-[80vh]">
@@ -629,6 +701,212 @@
     const STORAGE_KEY = 'pixel_vibecode_content';
     let isKeyboardEnabled = false;
     const lineHeight = 13.5 * 1.6; // ~21.6px
+
+    /* File & Folder System State */
+    const HISTORY_KEY = 'pixel_vibecode_history';
+    let currentFileName = 'index.html';
+    let projectFilesMap = new Map(); // Store files from folder imports
+
+    const btnToggleExplorer = document.getElementById('btnToggleExplorer');
+    const headerCurrentFileName = document.getElementById('headerCurrentFileName');
+    const explorerModal = document.getElementById('explorerModal');
+    const btnCloseExplorer = document.getElementById('btnCloseExplorer');
+    const btnTriggerImportFile = document.getElementById('btnTriggerImportFile');
+    const btnTriggerImportFolder = document.getElementById('btnTriggerImportFolder');
+    const btnNewBlankFile = document.getElementById('btnNewBlankFile');
+    const inputRealFile = document.getElementById('inputRealFile');
+    const inputRealFolder = document.getElementById('inputRealFolder');
+    const projectFolderSection = document.getElementById('projectFolderSection');
+    const projectFilesList = document.getElementById('projectFilesList');
+    const folderFilesCount = document.getElementById('folderFilesCount');
+    const historyListContent = document.getElementById('historyListContent');
+    const btnClearHistory = document.getElementById('btnClearHistory');
+
+    function openExplorer() {
+      renderHistoryList();
+      explorerModal.classList.remove('hidden');
+    }
+
+    function closeExplorer() {
+      explorerModal.classList.add('hidden');
+    }
+
+    btnToggleExplorer.addEventListener('click', openExplorer);
+    btnCloseExplorer.addEventListener('click', closeExplorer);
+
+    function setCurrentFile(name, content, addToHist = true) {
+      currentFileName = name;
+      headerCurrentFileName.textContent = name;
+      codeEditor.value = content;
+      refreshEditor();
+      triggerAutoRefresh();
+      closeExplorer();
+      if (addToHist) {
+        saveToHistory(name, content);
+      }
+      notify(`Fichier ouvert : ${name}`);
+    }
+
+    /* Import File */
+    btnTriggerImportFile.addEventListener('click', () => {
+      inputRealFile.value = '';
+      inputRealFile.click();
+    });
+
+    inputRealFile.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCurrentFile(file.name, event.target.result);
+      };
+      reader.readAsText(file);
+    });
+
+    /* Import Folder */
+    btnTriggerImportFolder.addEventListener('click', () => {
+      inputRealFolder.value = '';
+      inputRealFolder.click();
+    });
+
+    inputRealFolder.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+
+      projectFilesMap.clear();
+      projectFilesList.innerHTML = '';
+      
+      const readableFiles = files.filter(f => !f.name.startsWith('.') && /\.(html|htm|js|css|json|txt|svg)$/i.test(f.name));
+      
+      if (readableFiles.length === 0) {
+        notify('Aucun fichier HTML/JS/CSS trouvé');
+        return;
+      }
+
+      for (let f of readableFiles) {
+        const path = f.webkitRelativePath || f.name;
+        const text = await f.text();
+        projectFilesMap.set(path, { name: f.name, path: path, content: text });
+      }
+
+      renderProjectFolderView();
+      
+      // Auto-open index.html or the first HTML file
+      let entryFile = Array.from(projectFilesMap.values()).find(f => f.name.toLowerCase() === 'index.html');
+      if (!entryFile) entryFile = Array.from(projectFilesMap.values())[0];
+
+      if (entryFile) {
+        setCurrentFile(entryFile.name, entryFile.content);
+      }
+      notify(`${readableFiles.length} fichiers chargés depuis le dossier`);
+    });
+
+    function renderProjectFolderView() {
+      if (projectFilesMap.size === 0) {
+        projectFolderSection.classList.add('hidden');
+        return;
+      }
+
+      projectFolderSection.classList.remove('hidden');
+      folderFilesCount.textContent = `${projectFilesMap.size} fichier(s)`;
+      projectFilesList.innerHTML = '';
+
+      projectFilesMap.forEach((item, path) => {
+        const row = document.createElement('button');
+        row.className = 'w-full text-left p-2.5 rounded-xl bg-[var(--md-sys-color-surface-container-lowest)] hover:bg-[var(--md-sys-color-primary-container)] transition-colors flex items-center justify-between border border-[var(--md-sys-color-outline-variant)]/20';
+        row.innerHTML = `
+          <div class="flex items-center gap-2 overflow-hidden pr-2">
+            <span class="text-xs font-bold text-[var(--md-sys-color-primary)] font-mono">📄</span>
+            <span class="text-xs font-semibold text-[var(--md-sys-color-on-surface)] truncate">${path}</span>
+          </div>
+          <span class="text-[10px] text-[var(--md-sys-color-secondary)] font-mono">${(item.content.length / 1024).toFixed(1)}k</span>
+        `;
+        row.onclick = () => {
+          setCurrentFile(item.name, item.content);
+        };
+        projectFilesList.appendChild(row);
+      });
+    }
+
+    /* New Blank File */
+    btnNewBlankFile.addEventListener('click', () => {
+      const blankHtml = '<!DOCTYPE html>\n<html lang="fr">\n<head>\n  <meta charset="UTF-8">\n  <title>Nouveau Document</title>\n</head>\n<body style="font-family:sans-serif; padding:20px;">\n  <h1>Nouveau Projet</h1>\n</body>\n</html>';
+      setCurrentFile('sans-titre.html', blankHtml);
+    });
+
+    function getHistory() {
+      try {
+        return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveToHistory(fileName, content) {
+      let hist = getHistory().filter(item => item.name !== fileName);
+      hist.unshift({
+        name: fileName,
+        content: content,
+        date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+        size: content.length
+      });
+      if (hist.length > 8) hist = hist.slice(0, 8); // Keep top 8
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+      renderHistoryList();
+    }
+
+    function renderHistoryList() {
+      const hist = getHistory();
+      historyListContent.innerHTML = '';
+
+      if (hist.length === 0) {
+        historyListContent.innerHTML = `
+          <div class="py-4 text-center text-xs text-[var(--md-sys-color-secondary)]">
+            Aucun historique pour le moment
+          </div>
+        `;
+        return;
+      }
+
+      hist.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-2.5 rounded-2xl bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/20 hover:border-[var(--md-sys-color-primary)] transition-all';
+        row.innerHTML = `
+          <button class="flex-1 text-left flex items-center gap-2 overflow-hidden mr-2">
+            <span class="text-xs">🕒</span>
+            <div class="truncate">
+              <div class="text-xs font-bold text-[var(--md-sys-color-on-surface)] truncate">${item.name}</div>
+              <div class="text-[10px] text-[var(--md-sys-color-secondary)]">${item.date} • ${item.size} car.</div>
+            </div>
+          </button>
+          <button class="btn-del-hist text-xs text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-tertiary)] p-1.5" title="Retirer">✕</button>
+        `;
+
+        row.querySelector('button').onclick = () => {
+          setCurrentFile(item.name, item.content, false);
+        };
+
+        row.querySelector('.btn-del-hist').onclick = (ev) => {
+          ev.stopPropagation();
+          deleteFromHistory(index);
+        };
+
+        historyListContent.appendChild(row);
+      });
+    }
+
+    function deleteFromHistory(index) {
+      let hist = getHistory();
+      hist.splice(index, 1);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+      renderHistoryList();
+    }
+
+    btnClearHistory.addEventListener('click', () => {
+      localStorage.removeItem(HISTORY_KEY);
+      renderHistoryList();
+      notify('Historique effacé');
+    });
 
     /* Global File Store for Real-Time synchronization */
     window.fileStore = new Map();
