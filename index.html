@@ -415,7 +415,7 @@
 
   <div id="toast-msg">Action effectuée</div>
 
-  <!-- MODULE FIREBASE AUTH + FIRESTORE -->
+  <!-- MODULE FIREBASE AUTH + FIRESTORE TEMPS RÉEL (onSnapshot) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
     import { 
@@ -430,7 +430,7 @@
       collection, 
       doc, 
       setDoc, 
-      getDocs, 
+      onSnapshot,
       query, 
       orderBy, 
       serverTimestamp 
@@ -452,6 +452,7 @@
     const provider = new GoogleAuthProvider();
 
     let currentUser = null;
+    let unsubscribeSnapshot = null;
 
     const btnAuth = document.getElementById('btn-auth');
     const authIcon = document.getElementById('auth-icon');
@@ -467,6 +468,7 @@
         }
       } else {
         if (confirm(`Connecté en tant que ${currentUser.displayName || currentUser.email}. Te déconnecter ?`)) {
+          if (unsubscribeSnapshot) unsubscribeSnapshot();
           await signOut(auth);
         }
       }
@@ -480,8 +482,12 @@
         authAvatar.src = user.photoURL || '';
         btnAuth.title = `Connecté : ${user.displayName || user.email}`;
         window.showToast("Connecté au Cloud");
-        await syncFromCloud();
+        listenToUserCloud(user.uid);
       } else {
+        if (unsubscribeSnapshot) {
+          unsubscribeSnapshot();
+          unsubscribeSnapshot = null;
+        }
         authIcon.style.display = 'block';
         authAvatar.style.display = 'none';
         btnAuth.title = "Se connecter avec Google";
@@ -489,50 +495,64 @@
       }
     });
 
-    async function syncFromCloud() {
-      if (!currentUser) return;
-      try {
-        const q = query(collection(db, "users", currentUser.uid, "files"), orderBy("updatedAt", "desc"));
-        const snap = await getDocs(q);
+    // ÉCOUTEUR TEMPS RÉEL MULTI-APPAREILS
+    function listenToUserCloud(uid) {
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
 
-        if (!snap.empty) {
-          const fileListEl = document.getElementById('fileList');
-          const emptyMsg = document.getElementById('empty-state-msg');
-          if (emptyMsg) emptyMsg.style.display = 'none';
-          
-          fileListEl.innerHTML = '';
-          window.fileStore.clear();
+      const q = query(collection(db, "users", uid, "files"), orderBy("updatedAt", "desc"));
+      unsubscribeSnapshot = onSnapshot(q, (snap) => {
+        if (snap.empty) return;
 
-          snap.forEach(docSnap => {
-            const data = docSnap.data();
-            const id = docSnap.id;
-            
-            window.fileStore.set(id, {
-              name: data.name,
-              ext: data.ext,
-              path: data.path || data.name,
-              content: data.content,
-              storageKey: 'cache_' + data.name
-            });
+        const fileListEl = document.getElementById('fileList');
+        const emptyMsg = document.getElementById('empty-state-msg');
+        if (emptyMsg) emptyMsg.style.display = 'none';
 
-            const card = document.createElement('div');
-            card.className = 'file-card';
-            card.innerHTML = `
-              <span class="ext-badge ${window.getExtClass(data.ext)}">${data.ext}</span>
-              <div class="file-card-info">
-                <div class="file-card-name">${data.name}</div>
-                <div class="file-card-path">${data.path || data.name}</div>
-              </div>
-            `;
-            card.onclick = () => window.openFile(id);
-            fileListEl.appendChild(card);
+        fileListEl.innerHTML = '';
+        window.fileStore.clear();
+
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          const id = docSnap.id;
+
+          window.fileStore.set(id, {
+            name: data.name,
+            ext: data.ext,
+            path: data.path || data.name,
+            content: data.content,
+            storageKey: 'cache_' + data.name
           });
-        }
-      } catch (e) {
-        console.error("Erreur chargement cloud :", e);
-      }
+
+          // Si le fichier actuellement ouvert a été modifié sur un autre appareil
+          if (window.curFileId === id && document.activeElement !== document.getElementById('code-area')) {
+            if (window.rawCode !== data.content) {
+              window.rawCode = data.content;
+              document.getElementById('code-area').innerText = data.content;
+              if (window.applySyntaxHighlighting) window.applySyntaxHighlighting();
+              if (window.renderGutter) window.renderGutter();
+              if (window.updateTelemetry) window.updateTelemetry();
+              if (window.renderPreview) window.renderPreview(data.content, data.ext, data.name);
+              window.showToast("Synchronisé depuis un autre appareil");
+            }
+          }
+
+          const card = document.createElement('div');
+          card.className = 'file-card';
+          card.innerHTML = `
+            <span class="ext-badge ${window.getExtClass(data.ext)}">${data.ext}</span>
+            <div class="file-card-info">
+              <div class="file-card-name">${data.name}</div>
+              <div class="file-card-path">${data.path || data.name}</div>
+            </div>
+          `;
+          card.onclick = () => window.openFile(id);
+          fileListEl.appendChild(card);
+        });
+      }, (error) => {
+        console.error("Erreur d'écoute temps réel :", error);
+      });
     }
 
+    // Sauvegarde Cloud
     window.saveToCloud = async (fileId, fileObj) => {
       if (!currentUser || !fileObj) return;
       try {
@@ -556,7 +576,10 @@
     window.fileStore = new Map();
     const fileStore = window.fileStore;
 
-    let curFileId = null, rawCode = "", isKeyboard = false;
+    window.curFileId = null;
+    let rawCode = "";
+    window.rawCode = rawCode;
+    let isKeyboard = false;
     let autoSaveTimer = null, isAllSelected = false, selRange = null;
     const undoHist = [];
 
@@ -589,7 +612,7 @@
 
     function updateTelemetry() {
       if (!telTotal || !telSelection) return;
-      const totalChars = (rawCode || '').length;
+      const totalChars = (window.rawCode || '').length;
       telTotal.textContent = totalChars.toLocaleString('fr-FR') + ' car.';
 
       let selChars = 0;
@@ -597,9 +620,9 @@
 
       if (isAllSelected) {
         selChars = totalChars;
-        selLines = rawCode ? rawCode.split('\n').length : 0;
+        selLines = window.rawCode ? window.rawCode.split('\n').length : 0;
       } else if (selRange) {
-        const lines = rawCode.split('\n');
+        const lines = window.rawCode.split('\n');
         const slice = lines.slice(selRange.from - 1, selRange.to);
         selLines = slice.length;
         selChars = slice.join('\n').length;
@@ -614,6 +637,7 @@
 
       telSelection.textContent = selChars.toLocaleString('fr-FR') + ' car. (' + selLines + ' l.)';
     }
+    window.updateTelemetry = updateTelemetry;
 
     document.addEventListener('selectionchange', () => {
       if (editorPane && editorPane.classList.contains('active')) {
@@ -718,10 +742,10 @@
     window.openFile = function(id) {
       const f = fileStore.get(id);
       if (!f) return;
-      curFileId = id;
-      rawCode = f.content || '';
+      window.curFileId = id;
+      window.rawCode = f.content || '';
       undoHist.length = 0;
-      pushUndo(rawCode);
+      pushUndo(window.rawCode);
 
       disableKb();
       resetSel();
@@ -731,7 +755,7 @@
       updateTelemetry();
 
       showPreview();
-      renderPreview(rawCode, f.ext, f.name);
+      renderPreview(window.rawCode, f.ext, f.name);
       viewRunner.classList.add('open');
     };
 
@@ -739,8 +763,8 @@
     tabPreview.onclick = () => {
       disableKb();
       syncDOM();
-      const f = curFileId ? fileStore.get(curFileId) : null;
-      renderPreview(rawCode, f?.ext || 'html', f?.name || '');
+      const f = window.curFileId ? fileStore.get(window.curFileId) : null;
+      renderPreview(window.rawCode, f?.ext || 'html', f?.name || '');
       showPreview();
     };
 
@@ -770,7 +794,7 @@
       isKeyboard = true;
       btnKb.classList.add('active-state');
       btnKb.querySelector('span').textContent = 'Fermer';
-      codeArea.textContent = rawCode;
+      codeArea.textContent = window.rawCode;
       codeArea.setAttribute('contenteditable', 'true');
       codeArea.removeAttribute('inputmode');
       codeArea.focus();
@@ -803,19 +827,21 @@
     }
 
     function renderGutter() {
-      const lines = rawCode.split('\n');
+      const lines = (window.rawCode || '').split('\n');
       let html = '';
       for (let i = 1; i <= Math.max(1, lines.length); i++) html += `<div class="gutter-num" data-line="${i}">${i}</div>`;
       gutterBar.innerHTML = html;
       gutterBar.scrollTop = scrollBox.scrollTop;
     }
+    window.renderGutter = renderGutter;
 
     function applySyntaxHighlighting() {
       if (isKeyboard) return;
-      const f = curFileId ? fileStore.get(curFileId) : null;
+      const f = window.curFileId ? fileStore.get(window.curFileId) : null;
       const ext = f?.ext || 'html';
-      codeArea.innerHTML = highlightCode(rawCode, ext);
+      codeArea.innerHTML = highlightCode(window.rawCode, ext);
     }
+    window.applySyntaxHighlighting = applySyntaxHighlighting;
 
     function escapeHtml(s) {
       return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -931,6 +957,7 @@
         </body></html>
       `;
     }
+    window.renderPreview = renderPreview;
 
     let isDragging = false, dragStart = null, scrollRaf = null, touchY = 0;
 
@@ -963,7 +990,7 @@
     function getLineFromY(y) {
       const r = gutterBar.getBoundingClientRect();
       const line = Math.floor(((y - r.top) + scrollBox.scrollTop - 16) / 22) + 1;
-      return Math.max(1, Math.min(line, rawCode.split('\n').length));
+      return Math.max(1, Math.min(line, (window.rawCode || '').split('\n').length));
     }
 
     function selectLines(from, to) {
@@ -976,7 +1003,7 @@
         el.classList.toggle('selected', l >= min && l <= max);
       });
 
-      const lines = rawCode.split('\n');
+      const lines = window.rawCode.split('\n');
       let startChar = 0, endChar = 0;
       for (let i = 0; i < min - 1; i++) startChar += lines[i].length + 1;
       for (let i = 0; i < max; i++) endChar += lines[i].length + (i < lines.length - 1 ? 1 : 0);
@@ -1040,7 +1067,7 @@
       syncDOM();
       const s = window.getSelection().toString();
       try {
-        await navigator.clipboard.writeText(s || rawCode);
+        await navigator.clipboard.writeText(s || window.rawCode);
         showToast(s ? "Lignes copiées" : "Tout copié");
       } catch { showToast("Erreur de copie"); }
     };
@@ -1051,20 +1078,20 @@
       catch { t = prompt("Collez le code :") || ""; }
       if (!t) return;
 
-      pushUndo(rawCode);
+      pushUndo(window.rawCode);
       if (isAllSelected) {
-        rawCode = t;
+        window.rawCode = t;
       } else if (selRange) {
-        const l = rawCode.split('\n');
-        rawCode = [...l.slice(0, selRange.from - 1), t, ...l.slice(selRange.to)].join('\n');
+        const l = window.rawCode.split('\n');
+        window.rawCode = [...l.slice(0, selRange.from - 1), t, ...l.slice(selRange.to)].join('\n');
       } else {
         const s = window.getSelection();
         if (s.rangeCount > 0 && !s.isCollapsed) {
           s.getRangeAt(0).deleteContents();
           s.getRangeAt(0).insertNode(document.createTextNode(t));
-          rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
+          window.rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
         } else {
-          rawCode = t;
+          window.rawCode = t;
         }
       }
       applySyntaxHighlighting();
@@ -1084,9 +1111,9 @@
     $('btn-undo').onclick = () => {
       if (undoHist.length > 1) {
         undoHist.pop();
-        rawCode = undoHist[undoHist.length - 1];
+        window.rawCode = undoHist[undoHist.length - 1];
       } else if (undoHist.length === 1) {
-        rawCode = undoHist[0];
+        window.rawCode = undoHist[0];
       } else {
         showToast("Rien à annuler");
         return;
@@ -1106,24 +1133,24 @@
     };
 
     function triggerAutoSave() {
-      if (!curFileId) return;
+      if (!window.curFileId) return;
       clearTimeout(autoSaveTimer);
       window.setSaveStatus("Sauvegarde…", true);
 
       autoSaveTimer = setTimeout(async () => {
-        const f = fileStore.get(curFileId);
+        const f = fileStore.get(window.curFileId);
         if (!f) return;
-        f.content = rawCode;
-        try { localStorage.setItem(f.storageKey, rawCode); } catch {}
+        f.content = window.rawCode;
+        try { localStorage.setItem(f.storageKey, window.rawCode); } catch {}
 
         if (window.saveToCloud) {
-          window.saveToCloud(curFileId, f);
+          window.saveToCloud(window.curFileId, f);
         }
 
         if (f.handle?.createWritable) {
           try {
             const w = await f.handle.createWritable();
-            await w.write(rawCode);
+            await w.write(window.rawCode);
             await w.close();
             window.setSaveStatus("iCloud à jour");
             return;
@@ -1135,13 +1162,13 @@
 
     $('btn-save').onclick = async () => {
       syncDOM();
-      const f = curFileId ? fileStore.get(curFileId) : null;
+      const f = window.curFileId ? fileStore.get(window.curFileId) : null;
       const filename = f?.name || 'document.html';
 
       if (f?.handle?.createWritable) {
         try {
           const w = await f.handle.createWritable();
-          await w.write(rawCode);
+          await w.write(window.rawCode);
           await w.close();
           window.setSaveStatus("iCloud à jour");
           showToast("Fichier iCloud enregistré");
@@ -1150,7 +1177,7 @@
       }
 
       const mimeType = f?.ext === 'json' ? 'application/json' : 'text/html;charset=utf-8';
-      const fileObj = new File([rawCode], filename, { type: mimeType });
+      const fileObj = new File([window.rawCode], filename, { type: mimeType });
       if (navigator.canShare?.({ files: [fileObj] })) {
         try {
           await navigator.share({ files: [fileObj], title: filename });
@@ -1159,7 +1186,7 @@
         } catch (e) { if (e.name === 'AbortError') return; }
       }
 
-      const blob = new Blob([rawCode], { type: mimeType });
+      const blob = new Blob([window.rawCode], { type: mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -1173,8 +1200,8 @@
     codeArea.oninput = () => {
       clearTimeout(syncT);
       syncT = setTimeout(() => {
-        rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
-        pushUndo(rawCode);
+        window.rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
+        pushUndo(window.rawCode);
         syncDOM();
         renderGutter();
         triggerAutoSave();
@@ -1183,12 +1210,12 @@
     };
 
     function syncDOM() {
-      if (!curFileId) return;
-      rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
-      const f = fileStore.get(curFileId);
+      if (!window.curFileId) return;
+      window.rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
+      const f = fileStore.get(window.curFileId);
       if (f) {
-        f.content = rawCode;
-        renderPreview(rawCode, f.ext, f.name);
+        f.content = window.rawCode;
+        renderPreview(window.rawCode, f.ext, f.name);
       }
       updateTelemetry();
     }
@@ -1223,7 +1250,7 @@
       if (!q) { applySyntaxHighlighting(); sCount.textContent = '0/0'; totalMatches = 0; renderGutter(); return; }
 
       const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-      const matches = [...rawCode.matchAll(regex)];
+      const matches = [...window.rawCode.matchAll(regex)];
       totalMatches = matches.length;
       if (!totalMatches) { applySyntaxHighlighting(); sCount.textContent = '0/0'; renderGutter(); return; }
 
@@ -1234,12 +1261,12 @@
       const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
       matches.forEach((m, i) => {
-        html += esc(rawCode.slice(last, m.index));
-        const matched = esc(rawCode.slice(m.index, m.index + m[0].length));
+        html += esc(window.rawCode.slice(last, m.index));
+        const matched = esc(window.rawCode.slice(m.index, m.index + m[0].length));
         html += `<mark class="code-match ${i === matchIdx ? 'code-match-active' : ''}" ${i === matchIdx ? 'id="cur-match"' : ''}>${matched}</mark>`;
         last = m.index + m[0].length;
       });
-      html += esc(rawCode.slice(last));
+      html += esc(window.rawCode.slice(last));
       codeArea.innerHTML = html;
       renderGutter();
 
