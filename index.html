@@ -1,527 +1,768 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="auto">
+<html lang="fr" class="h-full">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>HTML Editor</title>
+
+  <!-- Google Sans, Roboto & JetBrains Mono typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
+    /* Material 3 Expressive Dynamic Lilac Palette */
     :root {
-      --bg: #fdf8fd;
-      --surface: #f7f2fa;
-      --surface-c: #ede7f6;
-      --surface-h: #e6e0ee;
-      --primary: #6750a4;
-      --on-primary: #ffffff;
-      --primary-c: #eaddff;
-      --on-primary-c: #21005d;
-      --sec-c: #e8def8;
-      --on-sec-c: #1d192b;
-      --text: #1d1b20;
-      --text-sub: #49454f;
-      --outline: #cac4d0;
-      --shade: rgba(247, 242, 250, 0.94);
-      --editor-bg: #1e1e24;
-      --editor-fg: #f5f2f8;
-      --gutter-bg: #16161b;
-      --gutter-fg: #757182;
-      --gutter-act-bg: rgba(103, 80, 164, 0.35);
-      --gutter-act-fg: #eaddff;
-      --hl-match: rgba(33, 150, 243, 0.2);
-      --hl-act: #2196f3;
-      --radius-card: 24px;
-      --radius-pill: 9999px;
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005D;
+      --md-sys-color-secondary: #625B71;
+      --md-sys-color-secondary-container: #E8DEF8;
+      --md-sys-color-tertiary: #7D5260;
+      --md-sys-color-tertiary-container: #FFD8E4;
+      --md-sys-color-surface: #FEF7FF;
+      --md-sys-color-surface-container-lowest: #FFFFFF;
+      --md-sys-color-surface-container: #F3EDF7;
+      --md-sys-color-surface-container-high: #ECE6F0;
+      --md-sys-color-surface-container-highest: #E6E0E9;
+      --md-sys-color-on-surface: #1D1B20;
+      --md-sys-color-outline-variant: #CAC4D0;
 
-      --syn-keyword: #ff7b72;
-      --syn-tag: #7ee787;
-      --syn-attr: #79c0ff;
-      --syn-string: #a5d6ff;
-      --syn-comment: #8b949e;
-      --syn-number: #ffa657;
-      --syn-prop: #d2a8ff;
-      --syn-bool: #ff7b72;
+      /* Material 3 Spring Physics */
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-m3: cubic-bezier(0.2, 0, 0, 1);
     }
-    [data-theme="dark"], @media (prefers-color-scheme: dark) {
-      [data-theme="auto"] {
-        --bg: #141218;
-        --surface: #1d1b20;
-        --surface-c: #2b2930;
-        --surface-h: #36343b;
-        --primary: #d0bcff;
-        --on-primary: #381e72;
-        --primary-c: #4f378b;
-        --on-primary-c: #eaddff;
-        --sec-c: #4a4458;
-        --on-sec-c: #e8def8;
-        --text: #e6e1e5;
-        --text-sub: #cac4d0;
-        --outline: #49454f;
-        --shade: rgba(29, 27, 32, 0.94);
-        --editor-bg: #0f0e13;
-        --editor-fg: #ece6f0;
-        --gutter-bg: #09080c;
-        --gutter-fg: #605d68;
-        --gutter-act-bg: rgba(208, 188, 255, 0.25);
-        --gutter-act-fg: #d0bcff;
-        --hl-match: rgba(255, 235, 59, 0.25);
-        --hl-act: #ffeb3b;
-      }
-    }
-    [data-theme="dark"] {
-      --bg: #141218;
-      --surface: #1d1b20;
-      --surface-c: #2b2930;
-      --surface-h: #36343b;
-      --primary: #d0bcff;
-      --on-primary: #381e72;
-      --primary-c: #4f378b;
-      --on-primary-c: #eaddff;
-      --sec-c: #4a4458;
-      --on-sec-c: #e8def8;
-      --text: #e6e1e5;
-      --text-sub: #cac4d0;
-      --outline: #49454f;
-      --shade: rgba(29, 27, 32, 0.94);
-      --editor-bg: #0f0e13;
-      --editor-fg: #ece6f0;
-      --gutter-bg: #09080c;
-      --gutter-fg: #605d68;
-      --gutter-act-bg: rgba(208, 188, 255, 0.25);
-      --gutter-act-fg: #d0bcff;
-      --hl-match: rgba(255, 235, 59, 0.25);
-      --hl-act: #ffeb3b;
-    }
-    [data-theme="light"] {
-      --bg: #fdf8fd;
-      --surface: #f7f2fa;
-      --surface-c: #ede7f6;
-      --surface-h: #e6e0ee;
-      --primary: #6750a4;
-      --on-primary: #ffffff;
-      --primary-c: #eaddff;
-      --on-primary-c: #21005d;
-      --sec-c: #e8def8;
-      --on-sec-c: #1d192b;
-      --text: #1d1b20;
-      --text-sub: #49454f;
-      --outline: #cac4d0;
-      --shade: rgba(247, 242, 250, 0.94);
-      --editor-bg: #1e1e24;
-      --editor-fg: #f5f2f8;
-      --gutter-bg: #16161b;
-      --gutter-fg: #757182;
-      --gutter-act-bg: rgba(103, 80, 164, 0.35);
-      --gutter-act-fg: #eaddff;
-      --hl-match: rgba(33, 150, 243, 0.2);
-      --hl-act: #2196f3;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
     body {
-      font-family: 'Google Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      height: 100dvh;
-      width: 100vw;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-    svg.icon { width: 20px; height: 20px; fill: currentColor; display: block; flex-shrink: 0; }
-    #view-home { flex: 1; display: flex; flex-direction: column; padding: 20px 20px 16px; overflow-y: auto; gap: 20px; }
-    .top-bar { display: flex; align-items: center; justify-content: flex-end; }
-    .top-actions { display: flex; align-items: center; gap: 8px; }
-    .version-badge { font-size: 0.72rem; font-weight: 700; padding: 6px 10px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text-sub); }
-    .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text); display: grid; place-items: center; border: none; cursor: pointer; position: relative; overflow: hidden; }
-    .icon-btn:active { transform: scale(0.92); }
-    .header-text h1 { font-size: 1.85rem; font-weight: 700; letter-spacing: -0.5px; }
-    .header-text p { color: var(--text-sub); font-size: 0.92rem; margin-top: 4px; }
-    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .action-card {
-      background: var(--surface-c);
-      border-radius: var(--radius-card);
-      padding: 18px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-    .action-card:active { transform: scale(0.97); }
-    .action-icon {
-      background: var(--bg);
-      color: var(--primary);
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      display: grid;
-      place-items: center;
-    }
-    .action-card h3 { font-size: 0.95rem; font-weight: 600; }
-    .action-card span { font-size: 0.76rem; color: var(--text-sub); line-height: 1.2; }
-    .section-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-sub); font-weight: 700; margin-bottom: -8px; }
-    .file-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
-    .empty-state { padding: 28px 16px; text-align: center; background: var(--surface-c); border-radius: var(--radius-card); color: var(--text-sub); font-size: 0.85rem; }
-
-    /* Cartes Dossiers Dépliables (Accordéon) */
-    .folder-group {
-      background: var(--surface-c);
-      border-radius: 18px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .folder-header {
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
+      font-family: 'Google Sans', 'Roboto', sans-serif;
+      background-color: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
-    .folder-header:active { background: var(--surface-h); }
-    .folder-chevron {
-      transition: transform 0.2s ease;
-      display: grid;
-      place-items: center;
-      color: var(--text-sub);
+
+    .font-code {
+      font-family: 'JetBrains Mono', monospace;
     }
-    .folder-group.open .folder-chevron {
-      transform: rotate(90deg);
-    }
-    .folder-icon {
-      color: var(--primary);
-      display: grid;
-      place-items: center;
-    }
-    .folder-name {
-      font-weight: 600;
-      font-size: 0.88rem;
-      flex: 1;
-      white-space: nowrap;
+
+    /* M3 Expressive Spring Interactive Items */
+    .m3-btn {
+      position: relative;
       overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .folder-count {
-      font-size: 0.72rem;
-      color: var(--text-sub);
-      background: var(--bg);
-      padding: 2px 8px;
-      border-radius: var(--radius-pill);
-      font-weight: 700;
-    }
-    .folder-body {
-      display: none;
-      flex-direction: column;
-      gap: 6px;
-      padding: 4px 10px 10px 18px;
-      border-top: 1px solid rgba(0, 0, 0, 0.05);
-      background: rgba(0, 0, 0, 0.03);
-    }
-    .folder-group.open .folder-body {
-      display: flex;
-    }
-    
-    .file-card { 
-      background: var(--surface-c); 
-      border-radius: 16px; 
-      padding: 10px 12px; 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-      cursor: pointer;
-    }
-    .file-card:active { background: var(--surface-h); }
-    .file-card-info { flex: 1; overflow: hidden; }
-    .file-card-name { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
-    .file-card-path { font-size: 0.7rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-
-    .file-card-delete {
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-pill);
-      border: none;
-      background: transparent;
-      color: var(--text-sub);
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .file-card-delete:hover { background: rgba(255, 0, 0, 0.1); color: #d32f2f; }
-    .file-card-delete:active { transform: scale(0.9); }
-
-    .ext-badge { font-size: 0.68rem; font-weight: 700; padding: 3px 7px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .ext-html { background: rgba(255, 87, 34, 0.16); color: #ff5722; }
-    .ext-json { background: rgba(255, 179, 0, 0.2); color: #ff8f00; }
-    .ext-css  { background: rgba(33, 150, 243, 0.16); color: #2196f3; }
-    .ext-js   { background: rgba(255, 235, 59, 0.2); color: #fbc02d; }
-    .ext-py   { background: rgba(76, 175, 80, 0.16); color: #4caf50; }
-    .ext-cpp  { background: rgba(156, 39, 176, 0.16); color: #ab47bc; }
-    .ext-txt  { background: rgba(158, 158, 158, 0.16); color: #9e9e9e; }
-
-    #view-runner { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: none; flex-direction: column; }
-    #view-runner.open { display: flex; }
-    .runner-shade {
-      background: var(--shade);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--outline);
-      padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px;
-      display: grid;
-      grid-template-columns: 40px 1fr 40px;
-      align-items: center;
-      z-index: 1100;
-    }
-    .shade-btn { width: 38px; height: 38px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text); display: grid; place-items: center; border: none; cursor: pointer; }
-    .shade-btn:active { transform: scale(0.9); }
-    #shade-search-btn { justify-self: end; visibility: hidden; pointer-events: none; }
-    #shade-search-btn.visible { visibility: visible; pointer-events: auto; }
-    .shade-center { display: flex; justify-content: center; align-items: center; }
-    .shade-segmented { display: inline-flex; background: var(--surface-h); border-radius: var(--radius-pill); padding: 3px; }
-    .shade-tab { border: none; background: transparent; padding: 6px 14px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 600; color: var(--text-sub); cursor: pointer; }
-    .shade-tab.active { background: var(--primary); color: var(--on-primary); }
-
-    #search-bar { display: none; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface-c); border-bottom: 1px solid var(--outline); }
-    #search-bar.active { display: flex; }
-    .search-input-box { flex: 1; display: flex; align-items: center; background: var(--bg); border-radius: var(--radius-pill); padding: 0 12px; border: 1px solid var(--outline); }
-    #search-input { flex: 1; border: none; background: transparent; padding: 7px 0; outline: none; font-size: 0.82rem; color: var(--text); user-select: text; -webkit-user-select: text; }
-    #search-count { font-size: 0.72rem; color: var(--text-sub); font-weight: 600; padding-left: 6px; }
-    .search-nav-btn { width: 32px; height: 32px; border-radius: var(--radius-pill); border: none; background: var(--surface-h); color: var(--text); display: grid; place-items: center; cursor: pointer; }
-
-    .runner-body { flex: 1; position: relative; overflow: hidden; }
-    iframe#app-frame { width: 100%; height: 100%; border: none; background: #ffffff; display: block; }
-    #editor-pane { position: absolute; inset: 0; background: var(--editor-bg); display: none; flex-direction: column; }
-    #editor-pane.active { display: flex; }
-    .editor-toolbar { display: flex; flex-direction: column; gap: 5px; padding: 6px 8px; background: rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.08); width: 100%; }
-    .toolbar-row { display: flex; width: 100%; gap: 5px; align-items: center; }
-    .tool-btn {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-      border: none;
-      padding: 7px 0;
-      border-radius: var(--radius-pill);
-      font-size: 0.72rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      white-space: nowrap;
+      gap: 6px;
+      transition: transform 0.3s var(--ease-spring), box-shadow 0.2s ease, background-color 0.2s ease;
+      cursor: pointer;
     }
-    .tool-btn:active { background: rgba(255, 255, 255, 0.25); }
-    .tool-btn.active-state { background: var(--primary) !important; color: var(--on-primary) !important; }
-    .tool-btn-primary { background: var(--primary); color: var(--on-primary); flex: 1.1; }
-    .tool-btn-sub { background: rgba(255, 255, 255, 0.08); color: #e0dced; }
-    .save-indicator { font-size: 0.68rem; color: #a49fc0; font-weight: 500; padding-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
-    .save-indicator-dot { width: 6px; height: 6px; border-radius: 50%; background: #4caf50; display: inline-block; flex-shrink: 0; }
-    .save-indicator-dot.syncing { background: #ff9800; animation: pulse 1s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-
-    .editor-workspace { flex: 1; display: flex; position: relative; overflow: hidden; background: var(--editor-bg); }
-    #gutter-bar { width: 44px; background: var(--gutter-bg); border-right: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-direction: column; padding: 16px 0; touch-action: none; overflow: hidden; flex-shrink: 0; }
-    .gutter-num { height: 22px; line-height: 22px; text-align: right; padding-right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--gutter-fg); cursor: pointer; }
-    .gutter-num.selected { background-color: var(--gutter-act-bg); color: var(--gutter-act-fg); font-weight: 700; }
-    .editor-container { flex: 1; position: relative; overflow: auto; background: transparent; padding: 16px 16px 16px 12px; -webkit-overflow-scrolling: touch; }
-    
-    #code-area { min-height: 100%; outline: none; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 22px; color: var(--editor-fg); white-space: pre; user-select: text; -webkit-user-select: text; display: inline-block; min-width: 100%; cursor: text; }
-    #code-area[contenteditable="false"] { cursor: default; }
-
-    .editor-telemetry {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 14px calc(env(safe-area-inset-bottom, 0px) + 6px);
-      background: var(--gutter-bg);
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
-      color: #9e9ba8;
-      z-index: 10;
+    .m3-btn:hover {
+      transform: translateY(-1.5px) scale(1.02);
     }
-    .telemetry-item { display: flex; align-items: center; gap: 6px; }
-    .telemetry-val { color: var(--on-primary-c); background: var(--primary-c); padding: 1px 6px; border-radius: 6px; font-weight: 700; }
-    [data-theme="dark"] .telemetry-val, @media (prefers-color-scheme: dark) {
-      .telemetry-val { background: rgba(208, 188, 255, 0.2); color: #d0bcff; }
+    .m3-btn:active {
+      transform: scale(0.96);
     }
-    
-    .syn-k { color: var(--syn-keyword); font-weight: 600; }
-    .syn-t { color: var(--syn-tag); }
-    .syn-a { color: var(--syn-attr); }
-    .syn-s { color: var(--syn-string); }
-    .syn-c { color: var(--syn-comment); font-style: italic; }
-    .syn-n { color: var(--syn-number); }
-    .syn-p { color: var(--syn-prop); }
-    .syn-b { color: var(--syn-bool); font-weight: 600; }
 
-    mark.code-match { background-color: var(--hl-match); color: inherit; border-radius: 3px; }
-    mark.code-match-active { background-color: var(--hl-act); color: #000; font-weight: 700; border-radius: 3px; }
-
-    #toast-msg {
-      position: fixed;
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--text);
-      color: var(--bg);
-      padding: 10px 18px;
-      border-radius: var(--radius-pill);
-      font-size: 0.8rem;
-      font-weight: 500;
-      z-index: 3000;
-      opacity: 0;
-      transition: all 0.25s ease;
+    /* Ripple wave effect */
+    .ripple-wave {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(103, 80, 164, 0.28) 0%, rgba(103, 80, 164, 0) 75%);
+      transform: scale(0);
+      animation: ripple 0.5s ease-out forwards;
       pointer-events: none;
     }
-    #toast-msg.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    @keyframes ripple {
+      to {
+        transform: scale(3.5);
+        opacity: 0;
+      }
+    }
+
+    /* M3 Surface Card Hierarchy (No harsh 3D shadows, smooth tonal superposition) */
+    .m3-card {
+      border-radius: 32px;
+      background-color: var(--md-sys-color-surface-container-lowest);
+      box-shadow: 0 12px 32px -12px rgba(103, 80, 164, 0.12), 0 2px 6px rgba(103, 80, 164, 0.05);
+    }
+
+    .code-editor-container {
+      position: relative;
+      display: flex;
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--md-sys-color-surface-container-lowest);
+    }
+
+    .gutter {
+      font-family: 'JetBrains Mono', monospace;
+      color: #9D96A8;
+      background-color: var(--md-sys-color-surface-container-high);
+      user-select: none;
+      text-align: right;
+      padding: 16px 10px;
+      line-height: 1.6;
+      font-size: 13.5px;
+      white-space: pre-line;
+      box-sizing: border-box;
+      border-right: 1px solid var(--md-sys-color-surface-container-highest);
+      min-width: 44px;
+    }
+
+    .code-area {
+      width: 100%;
+      height: 100%;
+      padding: 16px;
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.6;
+      background: transparent;
+      color: var(--md-sys-color-on-surface);
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: auto;
+      tab-size: 2;
+      -webkit-overflow-scrolling: touch;
+      user-select: text;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
-<body>
+<body class="h-full flex flex-col antialiased overflow-hidden">
 
-  <input type="file" id="filePicker" style="display: none;" accept="*/*">
-  <input type="file" id="folderPicker" webkitdirectory directory multiple style="display: none;">
+  <header class="bg-[var(--md-sys-color-surface-container)] px-3 py-2.5 sm:px-6 flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0 z-20">
+    <div class="flex items-center gap-3">
+      <!-- Clean 2D Material 3 Vector Badge (No 3D) -->
+      <div class="w-10 h-10 rounded-[16px] bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center flex-shrink-0 m3-btn">
+        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+          <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="font-extrabold text-base sm:text-lg tracking-tight leading-tight text-[var(--md-sys-color-on-surface)]">
+          HTML Editor
+        </h1>
+      </div>
+    </div>
 
-  <main id="view-home">
-    <div class="top-bar">
-      <div class="top-actions">
-        <span class="version-badge">v1.9.1</span>
+    <!-- Actions & view mode switches -->
+    <div class="flex items-center gap-2">
+      <!-- Google Auth Button (M3 Pill) -->
+      <button id="btn-auth" class="m3-btn px-3 py-1.5 text-xs font-semibold rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-container-highest)]" title="Se connecter avec Google">
+        <svg id="auth-icon" class="w-4 h-4 fill-current text-[var(--md-sys-color-primary)]" viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+        </svg>
+        <img id="auth-avatar" class="w-5 h-5 rounded-full object-cover hidden" alt="Avatar" />
+        <span id="auth-label" class="hidden sm:inline">Connexion</span>
+      </button>
 
-        <!-- Bouton Connexion / Profil Google -->
-        <button class="icon-btn" id="btn-auth" aria-label="Connexion Google" title="Se connecter avec Google">
-          <svg class="icon" id="auth-icon" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/>
-          </svg>
-          <img id="auth-avatar" style="display:none; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profil">
+      <!-- Tutorial code reset -->
+      <button id="btnReloadDemo" class="m3-btn px-3 py-1.5 text-xs font-semibold rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)]" title="Recharger l'exemple guidé">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        <span class="hidden md:inline">Tuto</span>
+      </button>
+
+      <!-- View Selector Pill Switch -->
+      <div class="flex bg-[var(--md-sys-color-surface-container-highest)] p-1 rounded-full text-xs font-semibold">
+        <button id="tabCode" class="m3-btn px-3.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]">
+          Code
         </button>
-
-        <!-- Bouton Thème Tri-State (Auto / Sombre / Clair) -->
-        <button class="icon-btn" id="btn-theme-toggle" aria-label="Changer de thème">
-          <svg class="icon" id="theme-icon" viewBox="0 0 24 24">
-            <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/>
-          </svg>
+        <button id="tabSplit" class="m3-btn px-3.5 py-1.5 rounded-full text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-on-surface)]">
+          Split
+        </button>
+        <button id="tabPreview" class="m3-btn px-3.5 py-1.5 rounded-full text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-on-surface)] flex items-center gap-1.5">
+          <span>Aperçu</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
         </button>
       </div>
     </div>
+  </header>
 
-    <div class="header-text">
-      <h1>HTML Editor</h1>
-      <p>Éditeur & Viewer Universel avec Cloud & Télémétrie</p>
-    </div>
+  <nav class="bg-[var(--md-sys-color-surface-container-high)] px-3 py-2 flex items-center gap-2 overflow-x-auto hide-scrollbar border-b border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0 z-10">
+    <!-- Select All -->
+    <button id="btnSelectAll" class="m3-btn whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)]" title="Tout sélectionner (Ctrl+A)">
+      <svg class="w-4 h-4 fill-current text-[var(--md-sys-color-primary)]" viewBox="0 0 24 24">
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM17.6 7.4l-7.2 7.2-3.8-3.8L5.2 12.2l5.2 5.2 8.6-8.6z"/>
+      </svg>
+      <span>Tout Choisir</span>
+    </button>
 
-    <div class="action-grid">
-      <div class="action-card" id="btn-import-file">
-        <div class="action-icon">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-        </div>
-        <h3>Fichier</h3>
-        <span>HTML, JSON, Scripts…</span>
+    <!-- Copy All -->
+    <button id="btnCopyAll" class="m3-btn whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]" title="Copier tout le code (Ctrl+C)">
+      <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>Copier Tout</span>
+    </button>
+
+    <!-- Paste -->
+    <button id="btnPaste" class="m3-btn whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)]" title="Coller depuis le presse-papier">
+      <svg class="w-4 h-4 fill-current text-[var(--md-sys-color-primary)]" viewBox="0 0 24 24"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/></svg>
+      <span>Coller</span>
+    </button>
+
+    <div class="h-4 w-[1px] bg-[var(--md-sys-color-outline-variant)] mx-1 flex-shrink-0"></div>
+
+    <!-- Search & Replace Drawer toggle -->
+    <button id="btnOpenSearch" class="m3-btn whitespace-nowrap px-3.5 py-1.5 text-xs font-bold rounded-full bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-secondary)]" title="Recherche globale (Ctrl+F)">
+      <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <span>Chercher &amp; Remplacer</span>
+    </button>
+
+    <!-- Beautify / Indent -->
+    <button id="btnFormat" class="m3-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)]" title="Réindenter automatiquement le code">
+      <svg class="w-4 h-4 fill-current text-[var(--md-sys-color-primary)]" viewBox="0 0 24 24"><path d="M3 17h18v2H3zm0-5h18v2H3zm0-5h18v2H3z"/></svg>
+      <span>Indenter</span>
+    </button>
+
+    <!-- Chromebook / PC File Download -->
+    <button id="btnDownload" class="m3-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)]" title="Télécharger index.html sur votre PC ou Chromebook">
+      <svg class="w-4 h-4 fill-current text-[var(--md-sys-color-primary)]" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+      <span>Exporter .html</span>
+    </button>
+
+    <!-- Clear Editor -->
+    <button id="btnClearCode" class="m3-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-full bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-tertiary)]" title="Effacer tout">
+      <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      <span>Effacer</span>
+    </button>
+  </nav>
+
+  <div id="searchBar" class="hidden bg-[var(--md-sys-color-surface-container-highest)] px-4 py-3 border-b border-[var(--md-sys-color-outline-variant)]/30 z-10 transition-all">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-2.5">
+      <div class="relative w-full md:w-1/3">
+        <input id="findInput" type="text" placeholder="Terme à rechercher (ex: Vibe)..." class="w-full pl-3 pr-10 py-2 text-xs rounded-full bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30 outline-none text-[var(--md-sys-color-on-surface)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]">
+        <span id="matchCount" class="absolute right-3 top-2.5 text-[11px] font-bold text-[var(--md-sys-color-secondary)]">0</span>
       </div>
 
-      <div class="action-card" id="btn-import-folder">
-        <div class="action-icon">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
-        </div>
-        <h3>Dossier</h3>
-        <span>Arborescence</span>
+      <div class="w-full md:w-1/3">
+        <input id="replaceInput" type="text" placeholder="Remplacer par (ex: Pixel)..." class="w-full px-3 py-2 text-xs rounded-full bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30 outline-none text-[var(--md-sys-color-on-surface)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]">
+      </div>
+
+      <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+        <button id="btnExecuteReplaceAll" class="m3-btn flex-1 md:flex-none px-4 py-2 text-xs font-bold rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] whitespace-nowrap">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+          <span>Remplacer</span>
+        </button>
+        <button id="btnCloseSearchBar" class="m3-btn w-8 h-8 rounded-full bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-on-surface)] text-sm font-bold">
+          ✕
+        </button>
       </div>
     </div>
+  </div>
 
-    <div class="section-title">Fichiers récents</div>
+  <main class="flex-1 flex flex-col md:flex-row relative overflow-hidden bg-[var(--md-sys-color-surface-container)]">
+    
+    <!-- Code Editor Section -->
+    <section id="editorSection" class="flex-1 flex flex-col h-full relative transition-all duration-200">
+      <div class="code-editor-container">
+        <div id="gutter" class="gutter">1</div>
+        <textarea id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off" class="code-area" placeholder="Écris ton code HTML/CSS/JS ici..."></textarea>
+      </div>
 
-    <div class="file-list" id="fileList">
-      <div class="empty-state" id="empty-state-msg">Importez un fichier ou connectez-vous avec Google pour charger vos documents.</div>
-    </div>
+      <!-- Quick symbol bar -->
+      <div class="bg-[var(--md-sys-color-surface-container-high)] px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto hide-scrollbar border-t border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0">
+        <span class="text-[10px] font-bold text-[var(--md-sys-color-secondary)] uppercase tracking-wider pr-1">Symboles :</span>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">&lt;</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">&gt;</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">/</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">=</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">"</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">{</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">}</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">(</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">)</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">;</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">`</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">$</button>
+        <button class="key-symbol m3-btn px-2.5 py-1 bg-[var(--md-sys-color-surface-container-lowest)] rounded-[10px] text-xs font-code font-bold text-[var(--md-sys-color-on-surface)]">#</button>
+      </div>
+    </section>
+
+    <!-- Live Preview Sandbox Section -->
+    <section id="previewSection" class="hidden flex-1 flex-col h-full bg-[var(--md-sys-color-surface-container-lowest)] border-l border-[var(--md-sys-color-outline-variant)]/20 transition-all duration-200">
+      <div class="bg-[var(--md-sys-color-surface-container-high)] px-4 py-2 flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/20">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <span class="text-xs font-bold text-[var(--md-sys-color-on-surface)]">Rendu Web Interactif</span>
+        </div>
+        <button id="btnForceReloadPreview" class="m3-btn text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-secondary)]">
+          Actualiser ↺
+        </button>
+      </div>
+      <div class="flex-1 w-full h-full relative">
+        <iframe id="previewFrame" class="w-full h-full border-none" sandbox="allow-scripts allow-modals"></iframe>
+      </div>
+    </section>
   </main>
 
-  <section id="view-runner">
-    <header class="runner-shade">
-      <button class="shade-btn" id="shade-back-btn" aria-label="Retour">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-      </button>
-
-      <div class="shade-center">
-        <div class="shade-segmented">
-          <button class="shade-tab" id="tab-code">Coder</button>
-          <button class="shade-tab active" id="tab-preview">Aperçu</button>
-        </div>
-      </div>
-
-      <button class="shade-btn" id="shade-search-btn" aria-label="Rechercher">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      </button>
-    </header>
-
-    <div id="search-bar">
-      <div class="search-input-box">
-        <input type="text" id="search-input" placeholder="Rechercher…" autocomplete="off" autocapitalize="off">
-        <span id="search-count">0/0</span>
-      </div>
-      <button class="search-nav-btn" id="search-prev" aria-label="Précédent">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
-      </button>
-      <button class="search-nav-btn" id="search-next" aria-label="Suivant">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
-      </button>
-      <button class="search-nav-btn" id="search-close" aria-label="Fermer">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-      </button>
+  <footer class="bg-[var(--md-sys-color-surface-container)] px-4 py-2 border-t border-[var(--md-sys-color-outline-variant)]/20 flex items-center justify-between text-xs text-[var(--md-sys-color-secondary)] flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <span id="posIndicator">Ligne 1, Colonne 1</span>
+      <span class="hidden sm:inline">•</span>
+      <span id="metricsIndicator" class="hidden sm:inline">0 caractères</span>
     </div>
 
-    <div class="runner-body">
-      <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+    <!-- Quick shortcuts indicator for PC / Chromebook -->
+    <div class="flex items-center gap-2">
+      <span class="hidden lg:inline text-[11px] bg-[var(--md-sys-color-surface-container-high)] px-2 py-0.5 rounded-md font-mono">Ctrl+S Sauvegarder</span>
+      <span class="hidden lg:inline text-[11px] bg-[var(--md-sys-color-surface-container-high)] px-2 py-0.5 rounded-md font-mono">Ctrl+F Chercher</span>
+      <span class="text-[11px] font-bold text-[var(--md-sys-color-primary)]">Material 3 Expressive</span>
+    </div>
+  </footer>
 
-      <div id="editor-pane">
-        <div class="editor-toolbar">
-          <div class="toolbar-row">
-            <button class="tool-btn" id="btn-toggle-keyboard">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
-              <span>Clavier</span>
-            </button>
-            <button class="tool-btn" id="btn-select-all">Tout</button>
-            <button class="tool-btn" id="btn-copy">Copier</button>
-            <button class="tool-btn" id="btn-paste">Coller</button>
-            <button class="tool-btn tool-btn-primary" id="btn-save">Sauveg.</button>
-          </div>
-          <div class="toolbar-row">
-            <button class="tool-btn tool-btn-sub" id="btn-undo">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
-              <span>Annuler</span>
-            </button>
-            <div class="save-indicator">
-              <span class="save-indicator-dot" id="save-status-dot"></span>
-              <span id="save-status-text">Prêt</span>
-            </div>
-          </div>
-        </div>
+  <!-- Toast Notification System -->
+  <div id="toastBox" class="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
 
-        <div class="editor-workspace">
-          <div id="gutter-bar"></div>
-          <div class="editor-container" id="editor-scroll-box">
-            <pre id="code-area" contenteditable="false" spellcheck="false" inputmode="none"></pre>
-          </div>
-        </div>
-
-        <footer class="editor-telemetry">
-          <div class="telemetry-item">
-            <span>Total :</span>
-            <span class="telemetry-val" id="telemetry-total">0 car.</span>
-          </div>
-          <div class="telemetry-item">
-            <span>Sélect. :</span>
-            <span class="telemetry-val" id="telemetry-selection">0 car. (0 l.)</span>
-          </div>
-        </footer>
+  <!-- Material 3 Expressive Confirmation Modal (No native confirm/alert) -->
+  <div id="confirmModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="m3-card max-w-sm w-full p-6 bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30">
+      <h3 class="text-base font-bold text-[var(--md-sys-color-on-surface)] mb-2">Déconnexion</h3>
+      <p id="confirmModalText" class="text-xs text-[var(--md-sys-color-secondary)] mb-5">Voulez-vous vraiment vous déconnecter ?</p>
+      <div class="flex items-center justify-end gap-2">
+        <button id="btnModalCancel" class="m3-btn px-4 py-2 text-xs font-bold rounded-full text-[var(--md-sys-color-secondary)] hover:bg-[var(--md-sys-color-surface-container)]">
+          Annuler
+        </button>
+        <button id="btnModalConfirm" class="m3-btn px-4 py-2 text-xs font-bold rounded-full bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-tertiary)]">
+          Se déconnecter
+        </button>
       </div>
     </div>
-  </section>
+  </div>
 
-  <div id="toast-msg">Action effectuée</div>
+  <script>
+    /* Safe embedded HTML demo without premature inline script tag termination */
+    const DEMO_HTML = '<!DOCTYPE html>\n' +
+'<html lang="fr" class="h-full">\n' +
+'<head>\n' +
+'  <meta charset="UTF-8">\n' +
+'  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+'  <title>HTML Editor Preview</title>\n' +
+'  <' + 'script src="https://cdn.tailwindcss.com"><' + '/script>\n' +
+'  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">\n' +
+'  <style>\n' +
+'    body {\n' +
+'      font-family: "Google Sans", sans-serif;\n' +
+'      background: radial-gradient(circle at 50% 0%, #F3EDF7 0%, #FEF7FF 100%);\n' +
+'      color: #1D1B20;\n' +
+'    }\n' +
+'    .preview-card {\n' +
+'      border-radius: 28px;\n' +
+'      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);\n' +
+'    }\n' +
+'    .preview-card:hover {\n' +
+'      transform: translateY(-2px) scale(1.01);\n' +
+'    }\n' +
+'  </style>\n' +
+'</head>\n' +
+'<body class="h-full flex items-center justify-center p-4">\n' +
+'  <div class="preview-card bg-white p-6 max-w-sm w-full text-center shadow-lg border border-[#E6E0E9]">\n' +
+'    <div class="w-12 h-12 mx-auto rounded-2xl bg-[#EADDFF] text-[#21005D] flex items-center justify-center mb-3">\n' +
+'      <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>\n' +
+'    </div>\n' +
+'    <h2 class="text-xl font-extrabold text-[#1D1B20] mb-1">HTML Editor</h2>\n' +
+'    <p class="text-xs text-[#625B71] mb-4">Aperçu interactif et réactif en temps réel</p>\n' +
+'    <div class="bg-[#F3EDF7] rounded-2xl p-4 mb-4 flex items-center justify-around">\n' +
+'      <div>\n' +
+'        <div id="counter" class="text-2xl font-black text-[#6750A4]">0</div>\n' +
+'        <div class="text-[11px] text-[#625B71] font-semibold">Clics</div>\n' +
+'      </div>\n' +
+'      <button onclick="addClick()" class="px-4 py-2 rounded-full bg-[#6750A4] text-white text-xs font-bold shadow hover:bg-[#523e85] active:scale-95 transition-all">Tester +1</button>\n' +
+'    </div>\n' +
+'    <div class="text-[11px] text-[#7D5260] bg-[#FFD8E4] py-1 px-3 rounded-full font-semibold">✨ Prêt pour le vibecoding</div>\n' +
+'  </div>\n' +
+'  <' + 'script>\n' +
+'    let count = 0;\n' +
+'    function addClick() {\n' +
+'      count++;\n' +
+'      document.getElementById("counter").innerText = count;\n' +
+'    }\n' +
+'  <' + '/script>\n' +
+'</body>\n' +
+'</html>';
+
+    const codeEditor = document.getElementById('codeEditor');
+    const gutter = document.getElementById('gutter');
+    const previewFrame = document.getElementById('previewFrame');
+    const editorSection = document.getElementById('editorSection');
+    const previewSection = document.getElementById('previewSection');
+
+    const tabCode = document.getElementById('tabCode');
+    const tabSplit = document.getElementById('tabSplit');
+    const tabPreview = document.getElementById('tabPreview');
+
+    const btnSelectAll = document.getElementById('btnSelectAll');
+    const btnCopyAll = document.getElementById('btnCopyAll');
+    const btnPaste = document.getElementById('btnPaste');
+    const btnFormat = document.getElementById('btnFormat');
+    const btnDownload = document.getElementById('btnDownload');
+    const btnClearCode = document.getElementById('btnClearCode');
+    const btnReloadDemo = document.getElementById('btnReloadDemo');
+
+    const searchBar = document.getElementById('searchBar');
+    const btnOpenSearch = document.getElementById('btnOpenSearch');
+    const btnCloseSearchBar = document.getElementById('btnCloseSearchBar');
+    const findInput = document.getElementById('findInput');
+    const replaceInput = document.getElementById('replaceInput');
+    const btnExecuteReplaceAll = document.getElementById('btnExecuteReplaceAll');
+    const matchCount = document.getElementById('matchCount');
+
+    const posIndicator = document.getElementById('posIndicator');
+    const metricsIndicator = document.getElementById('metricsIndicator');
+    const toastBox = document.getElementById('toastBox');
+
+    let previewTimer = null;
+    const STORAGE_KEY = 'pixel_vibecode_content';
+
+    function notify(message, symbol = '✓') {
+      const toast = document.createElement('div');
+      toast.className = 'px-4 py-2 rounded-full bg-[var(--md-sys-color-on-surface)] text-[var(--md-sys-color-surface)] text-xs font-bold shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-y-3 opacity-0';
+      toast.innerHTML = `<span class="text-[var(--md-sys-color-primary-container)]">${symbol}</span><span>${message}</span>`;
+      toastBox.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-3', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 250);
+      }, 2000);
+    }
+
+    function spawnRipple(e) {
+      const btn = e.currentTarget;
+      const wave = document.createElement('span');
+      const size = Math.max(btn.clientWidth, btn.clientHeight);
+      const bounds = btn.getBoundingClientRect();
+
+      wave.style.width = wave.style.height = `${size}px`;
+      wave.style.left = `${(e.clientX || (e.touches ? e.touches[0].clientX : bounds.left + size / 2)) - bounds.left - size / 2}px`;
+      wave.style.top = `${(e.clientY || (e.touches ? e.touches[0].clientY : bounds.top + size / 2)) - bounds.top - size / 2}px`;
+      wave.classList.add('ripple-wave');
+
+      const oldWave = btn.querySelector('.ripple-wave');
+      if (oldWave) oldWave.remove();
+
+      btn.appendChild(wave);
+    }
+
+    document.querySelectorAll('.m3-btn').forEach(b => {
+      b.addEventListener('pointerdown', spawnRipple);
+    });
+
+    function refreshEditor() {
+      const content = codeEditor.value;
+      const lines = content.split('\n');
+      const lineCount = lines.length;
+
+      // Update gutter numbers
+      let gutterHTML = '';
+      for (let i = 1; i <= lineCount; i++) {
+        gutterHTML += i + '<br>';
+      }
+      gutter.innerHTML = gutterHTML || '1';
+
+      // Update metrics
+      metricsIndicator.innerText = `${content.length} caractères • ${lineCount} lignes`;
+
+      // Update line & column
+      const cursorIndex = codeEditor.selectionStart;
+      const textToCursor = content.substring(0, cursorIndex).split('\n');
+      const currentLine = textToCursor.length;
+      const currentCol = textToCursor[textToCursor.length - 1].length + 1;
+      posIndicator.innerText = `Ligne ${currentLine}, Col ${currentCol}`;
+
+      // Save to localStorage
+      try {
+        localStorage.setItem(STORAGE_KEY, content);
+      } catch (e) {}
+
+      // Auto-refresh preview instantaneously on any edit
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(() => {
+        previewFrame.srcdoc = codeEditor.value;
+      }, 100);
+    }
+
+    codeEditor.addEventListener('scroll', () => {
+      gutter.scrollTop = codeEditor.scrollTop;
+    });
+
+    codeEditor.addEventListener('input', refreshEditor);
+    codeEditor.addEventListener('keyup', refreshEditor);
+    codeEditor.addEventListener('click', refreshEditor);
+
+    document.getElementById('btnForceReloadPreview').addEventListener('click', () => {
+      previewFrame.srcdoc = codeEditor.value;
+      notify('Aperçu mis à jour');
+    });
+
+    function switchLayout(mode) {
+      [tabCode, tabSplit, tabPreview].forEach(tab => {
+        tab.className = 'm3-btn px-3.5 py-1.5 rounded-full text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-on-surface)]';
+      });
+
+      if (mode === 'code') {
+        tabCode.className = 'm3-btn px-3.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]';
+        editorSection.classList.remove('hidden');
+        previewSection.classList.add('hidden');
+      } else if (mode === 'split') {
+        tabSplit.className = 'm3-btn px-3.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]';
+        editorSection.classList.remove('hidden');
+        previewSection.classList.remove('hidden');
+        previewFrame.srcdoc = codeEditor.value;
+      } else if (mode === 'preview') {
+        tabPreview.className = 'm3-btn px-3.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center gap-1.5';
+        editorSection.classList.add('hidden');
+        previewSection.classList.remove('hidden');
+        previewFrame.srcdoc = codeEditor.value;
+      }
+    }
+
+    tabCode.addEventListener('click', () => switchLayout('code'));
+    tabSplit.addEventListener('click', () => switchLayout('split'));
+    tabPreview.addEventListener('click', () => switchLayout('preview'));
+
+    function insertSnippet(text) {
+      const start = codeEditor.selectionStart;
+      const end = codeEditor.selectionEnd;
+      const val = codeEditor.value;
+      codeEditor.value = val.substring(0, start) + text + val.substring(end);
+      codeEditor.selectionStart = codeEditor.selectionEnd = start + text.length;
+      refreshEditor();
+    }
+
+    btnSelectAll.addEventListener('click', () => {
+      codeEditor.focus();
+      codeEditor.setSelectionRange(0, codeEditor.value.length);
+      notify('Code sélectionné en totalité');
+    });
+
+    btnCopyAll.addEventListener('click', () => {
+      try {
+        codeEditor.select();
+        document.execCommand('copy');
+        notify('Copié dans le presse-papier');
+      } catch (e) {
+        navigator.clipboard.writeText(codeEditor.value)
+          .then(() => notify('Copié dans le presse-papier'))
+          .catch(() => notify('Erreur lors de la copie', '✕'));
+      }
+    });
+
+    btnPaste.addEventListener('click', async () => {
+      codeEditor.focus();
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        try {
+          const clip = await navigator.clipboard.readText();
+          if (clip) {
+            insertSnippet(clip);
+            notify('Contenu collé');
+            return;
+          }
+        } catch (err) {}
+      }
+      notify('Utilisez Ctrl+V ou appui long pour coller', 'ℹ');
+    });
+
+    // Touch symbols bar for Pixel & quick keys
+    document.querySelectorAll('.key-symbol').forEach(btn => {
+      btn.addEventListener('click', () => {
+        insertSnippet(btn.innerText);
+        codeEditor.focus();
+      });
+    });
+
+    // Auto-indentation formatter
+    btnFormat.addEventListener('click', () => {
+      try {
+        const lines = codeEditor.value.split('\n');
+        let level = 0;
+        const formatted = lines.map(line => {
+          let trimmed = line.trim();
+          if (trimmed.startsWith('</') || trimmed.startsWith('}')) {
+            level = Math.max(0, level - 1);
+          }
+          const res = '  '.repeat(level) + trimmed;
+          if ((trimmed.startsWith('<') && !trimmed.startsWith('</') && !trimmed.endsWith('/>') && !trimmed.includes('</')) || trimmed.endsWith('{')) {
+            level++;
+          }
+          return res;
+        }).join('\n');
+
+        codeEditor.value = formatted;
+        refreshEditor();
+        notify('Code indenté');
+      } catch (err) {
+        notify('Erreur de formatage', '✕');
+      }
+    });
+
+    // Chromebook & PC file export (.html)
+    btnDownload.addEventListener('click', () => {
+      const blob = new Blob([codeEditor.value], { type: 'text/html;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'index.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      notify('Fichier index.html exporté');
+    });
+
+    btnClearCode.addEventListener('click', () => {
+      codeEditor.value = '';
+      refreshEditor();
+      notify('Éditeur vidé');
+    });
+
+    btnReloadDemo.addEventListener('click', () => {
+      codeEditor.value = DEMO_HTML;
+      refreshEditor();
+      notify('Tutoriel réinitialisé');
+    });
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function checkMatches() {
+      const query = findInput.value;
+      if (!query) {
+        matchCount.innerText = '0';
+        return;
+      }
+      try {
+        const rx = new RegExp(escapeRegExp(query), 'g');
+        const matches = (codeEditor.value.match(rx) || []).length;
+        matchCount.innerText = `${matches} trouvé${matches > 1 ? 's' : ''}`;
+      } catch (e) {
+        matchCount.innerText = '0';
+      }
+    }
+
+    btnOpenSearch.addEventListener('click', () => {
+      const isHidden = searchBar.classList.contains('hidden');
+      if (isHidden) {
+        searchBar.classList.remove('hidden');
+        findInput.focus();
+        checkMatches();
+      } else {
+        searchBar.classList.add('hidden');
+      }
+    });
+
+    btnCloseSearchBar.addEventListener('click', () => {
+      searchBar.classList.add('hidden');
+    });
+
+    findInput.addEventListener('input', checkMatches);
+
+    btnExecuteReplaceAll.addEventListener('click', () => {
+      const searchVal = findInput.value;
+      const replaceVal = replaceInput.value;
+      if (!searchVal) {
+        notify('Entrez un mot à chercher', 'ℹ');
+        return;
+      }
+
+      const rx = new RegExp(escapeRegExp(searchVal), 'g');
+      const count = (codeEditor.value.match(rx) || []).length;
+
+      if (count === 0) {
+        notify('Aucune occurrence trouvée', '✕');
+        return;
+      }
+
+      codeEditor.value = codeEditor.value.replace(rx, replaceVal);
+      refreshEditor();
+      checkMatches();
+      notify(`${count} occurrence(s) remplacée(s) !`);
+    });
+
+    codeEditor.addEventListener('keydown', (e) => {
+      // Ctrl+S or Cmd+S : Quick save notification
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        try {
+          localStorage.setItem(STORAGE_KEY, codeEditor.value);
+        } catch (err) {}
+        notify('Sauvegardé en local');
+        return;
+      }
+
+      // Ctrl+F or Cmd+F : Toggle search
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        searchBar.classList.remove('hidden');
+        findInput.focus();
+        checkMatches();
+        return;
+      }
+
+      // Tab indentation
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        insertSnippet('  ');
+      }
+    });
+
+    // Expose helpers and stores globally for Firebase module integration
+    window.fileStore = new Map();
+    window.curFileId = 'index_html';
+    window.showToast = notify;
+    window.setSaveStatus = (msg) => notify(msg, '☁');
+
+    window.promptConfirm = function(message) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        const modalText = document.getElementById('confirmModalText');
+        const btnCancel = document.getElementById('btnModalCancel');
+        const btnConfirm = document.getElementById('btnModalConfirm');
+
+        modalText.textContent = message;
+        modal.classList.remove('hidden');
+
+        const cleanup = (val) => {
+          modal.classList.add('hidden');
+          btnCancel.onclick = null;
+          btnConfirm.onclick = null;
+          resolve(val);
+        };
+
+        btnCancel.onclick = () => cleanup(false);
+        btnConfirm.onclick = () => cleanup(true);
+      });
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const cached = localStorage.getItem(STORAGE_KEY);
+      codeEditor.value = cached && cached.trim().length > 0 ? cached : DEMO_HTML;
+      refreshEditor();
+      
+      // Force initial preview render
+      previewFrame.srcdoc = codeEditor.value;
+
+      // Automatically choose Split on desktop screen sizes
+      if (window.innerWidth >= 820) {
+        switchLayout('split');
+      } else {
+        switchLayout('code');
+      }
+    });
+  </script>
 
   <!-- MODULE FIREBASE AUTH + FIRESTORE TEMPS RÉEL -->
   <script type="module">
@@ -538,8 +779,8 @@
       collection, 
       doc, 
       setDoc, 
-      deleteDoc,
-      onSnapshot,
+      deleteDoc, 
+      onSnapshot, 
       query, 
       orderBy, 
       serverTimestamp 
@@ -566,6 +807,7 @@
     const btnAuth = document.getElementById('btn-auth');
     const authIcon = document.getElementById('auth-icon');
     const authAvatar = document.getElementById('auth-avatar');
+    const authLabel = document.getElementById('auth-label');
 
     btnAuth.onclick = async () => {
       if (!currentUser) {
@@ -573,12 +815,14 @@
           await signInWithPopup(auth, provider);
         } catch (err) {
           console.error("Erreur de connexion :", err);
-          window.showToast("Erreur de connexion");
+          window.showToast("Erreur de connexion", "✕");
         }
       } else {
-        if (confirm(`Connecté en tant que ${currentUser.displayName || currentUser.email}. Te déconnecter ?`)) {
+        const confirmed = await window.promptConfirm(`Connecté en tant que ${currentUser.displayName || currentUser.email}. Te déconnecter ?`);
+        if (confirmed) {
           if (unsubscribeSnapshot) unsubscribeSnapshot();
           await signOut(auth);
+          window.showToast("Déconnecté", "ℹ");
         }
       }
     };
@@ -589,8 +833,10 @@
         authIcon.style.display = 'none';
         authAvatar.style.display = 'block';
         authAvatar.src = user.photoURL || '';
+        if (authLabel) authLabel.textContent = (user.displayName || 'Compte').split(' ')[0];
         btnAuth.title = `Connecté : ${user.displayName || user.email}`;
         listenToUserCloud(user.uid);
+        window.showToast(`Bienvenue ${user.displayName || ''}`);
       } else {
         if (unsubscribeSnapshot) {
           unsubscribeSnapshot();
@@ -598,6 +844,7 @@
         }
         authIcon.style.display = 'block';
         authAvatar.style.display = 'none';
+        if (authLabel) authLabel.textContent = 'Connexion';
         btnAuth.title = "Se connecter avec Google";
       }
     });
@@ -607,11 +854,15 @@
 
       const q = query(collection(db, "users", uid, "files"), orderBy("path", "asc"));
       unsubscribeSnapshot = onSnapshot(q, (snap) => {
-        const emptyMsg = document.getElementById('empty-state-msg');
-
         if (snap.empty) {
           window.fileStore.clear();
-          if (window.renderAllFiles) window.renderAllFiles();
+          // Initialize default cloud document if none exists
+          window.saveToCloud(window.curFileId, {
+            name: "index.html",
+            ext: "html",
+            path: "index.html",
+            content: document.getElementById('codeEditor').value
+          });
           return;
         }
 
@@ -629,26 +880,21 @@
             storageKey: 'cache_' + data.name
           });
 
-          if (window.curFileId === id && document.activeElement !== document.getElementById('code-area')) {
-            if (window.rawCode !== data.content) {
-              window.rawCode = data.content;
-              document.getElementById('code-area').innerText = data.content;
-              if (window.applySyntaxHighlighting) window.applySyntaxHighlighting();
-              if (window.renderGutter) window.renderGutter();
-              if (window.updateTelemetry) window.updateTelemetry();
-              if (window.renderPreview) window.renderPreview(data.content, data.ext, data.name);
+          // Sync into the active editor if modified externally
+          if (window.curFileId === id && document.activeElement !== document.getElementById('codeEditor')) {
+            const editor = document.getElementById('codeEditor');
+            if (editor.value !== data.content) {
+              editor.value = data.content;
+              editor.dispatchEvent(new Event('input'));
             }
           }
         });
-
-        if (window.renderAllFiles) {
-          window.renderAllFiles();
-        }
       }, (error) => {
         console.error("Erreur d'écoute temps réel :", error);
       });
     }
 
+    let cloudSyncTimeout = null;
     window.saveToCloud = async (fileId, fileObj) => {
       if (!currentUser || !fileObj) return;
       try {
@@ -669,866 +915,25 @@
       if (!currentUser) return;
       try {
         await deleteDoc(doc(db, "users", currentUser.uid, "files", fileId));
+        window.setSaveStatus("Supprimé du cloud");
       } catch (e) {
         console.error("Erreur suppression cloud :", e);
       }
     };
-  </script>
 
-  <!-- LOGIQUE PRINCIPALE HTML EDITOR -->
-  <script>
-    const $ = id => document.getElementById(id);
-    window.fileStore = new Map();
-    const fileStore = window.fileStore;
-
-    window.curFileId = null;
-    let rawCode = "";
-    window.rawCode = rawCode;
-    let isKeyboard = false;
-    let autoSaveTimer = null, isAllSelected = false, selRange = null;
-    const undoHist = [];
-
-    const viewRunner = $('view-runner'), appFrame = $('app-frame'), editorPane = $('editor-pane');
-    const codeArea = $('code-area'), gutterBar = $('gutter-bar'), scrollBox = $('editor-scroll-box');
-    const fileList = $('fileList'), emptyMsg = $('empty-state-msg');
-    const tabCode = $('tab-code'), tabPreview = $('tab-preview'), searchBtn = $('shade-search-btn');
-    const btnKb = $('btn-toggle-keyboard'), saveDot = $('save-status-dot'), saveTxt = $('save-status-text');
-    const toast = $('toast-msg');
-
-    const telTotal = $('telemetry-total');
-    const telSelection = $('telemetry-selection');
-
-    let curTheme = localStorage.getItem('app_theme') || 'auto';
-    applyTheme(curTheme);
-
-    function applyTheme(t) {
-      document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('app_theme', t);
-      curTheme = t;
-
-      const themeIcon = $('theme-icon');
-      if (!themeIcon) return;
-      if (t === 'auto') {
-        themeIcon.innerHTML = '<path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/>';
-      } else if (t === 'dark') {
-        themeIcon.innerHTML = '<path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>';
-      } else {
-        themeIcon.innerHTML = '<path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z"/>';
-      }
-    }
-
-    $('btn-theme-toggle').onclick = () => {
-      const nextTheme = curTheme === 'auto' ? 'dark' : (curTheme === 'dark' ? 'light' : 'auto');
-      applyTheme(nextTheme);
-      showToast('Thème : ' + nextTheme.toUpperCase());
-    };
-
-    // SUPPRESSION DE FICHIER RÉCENT
-    window.deleteRecentFile = function(id, event) {
-      if (event) event.stopPropagation();
-
-      const f = fileStore.get(id);
-      const name = f?.name || "ce fichier";
-
-      if (!confirm(`Supprimer « ${name} » des fichiers récents ?`)) return;
-
-      if (f?.storageKey) localStorage.removeItem(f.storageKey);
-      fileStore.delete(id);
-
-      if (window.deleteFromCloud) {
-        window.deleteFromCloud(id);
-      }
-
-      window.renderAllFiles();
-      showToast("Fichier retiré");
-    };
-
-    scrollBox.onscroll = () => { gutterBar.scrollTop = scrollBox.scrollTop; };
-
-    function updateTelemetry() {
-      if (!telTotal || !telSelection) return;
-      const totalChars = (window.rawCode || '').length;
-      telTotal.textContent = totalChars.toLocaleString('fr-FR') + ' car.';
-
-      let selChars = 0;
-      let selLines = 0;
-
-      if (isAllSelected) {
-        selChars = totalChars;
-        selLines = window.rawCode ? window.rawCode.split('\n').length : 0;
-      } else if (selRange) {
-        const lines = window.rawCode.split('\n');
-        const slice = lines.slice(selRange.from - 1, selRange.to);
-        selLines = slice.length;
-        selChars = slice.join('\n').length;
-      } else {
-        const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
-          const str = sel.toString();
-          selChars = str.length;
-          selLines = str ? str.split('\n').length : 0;
-        }
-      }
-
-      telSelection.textContent = selChars.toLocaleString('fr-FR') + ' car. (' + selLines + ' l.)';
-    }
-    window.updateTelemetry = updateTelemetry;
-
-    document.addEventListener('selectionchange', () => {
-      if (editorPane && editorPane.classList.contains('active')) {
-        updateTelemetry();
-      }
+    // Auto-save debounced cloud trigger whenever typing occurs
+    document.getElementById('codeEditor').addEventListener('input', () => {
+      if (!currentUser) return;
+      clearTimeout(cloudSyncTimeout);
+      cloudSyncTimeout = setTimeout(() => {
+        window.saveToCloud(window.curFileId, {
+          name: "index.html",
+          ext: "html",
+          path: "index.html",
+          content: document.getElementById('codeEditor').value
+        });
+      }, 1500);
     });
-
-    $('btn-import-file').onclick = async () => {
-      if (window.showOpenFilePicker) {
-        try {
-          const [handle] = await window.showOpenFilePicker({ multiple: false });
-          if (handle) {
-            const f = await handle.getFile();
-            await processFile(f, f.name, true, handle);
-            return;
-          }
-        } catch (e) { if (e.name === 'AbortError') return; }
-      }
-      $('filePicker').click();
-    };
-
-    $('btn-import-folder').onclick = () => $('folderPicker').click();
-
-    $('filePicker').onchange = async e => {
-      const f = e.target.files[0];
-      if (f) await processFile(f, f.name, true);
-      e.target.value = '';
-    };
-
-    // IMPORT DOSSIER AVEC TRI A-Z
-    $('folderPicker').onchange = async e => {
-      const files = Array.from(e.target.files);
-      if (!files.length) return;
-      fileStore.clear();
-
-      files.sort((a, b) => {
-        const pathA = a.webkitRelativePath || a.name;
-        const pathB = b.webkitRelativePath || b.name;
-        return pathA.localeCompare(pathB, undefined, { numeric: true, sensitivity: 'base' });
-      });
-
-      let targetId = null;
-      for (const f of files) {
-        if (f.name.startsWith('.')) continue;
-        const id = await processFile(f, f.webkitRelativePath || f.name, false);
-        if (!targetId && (f.name.endsWith('.html') || f.name.endsWith('.json') || f.name.endsWith('.txt'))) targetId = id;
-      }
-      if (targetId) openFile(targetId);
-      e.target.value = '';
-    };
-
-    window.getExtClass = function(ext) {
-      switch (ext) {
-        case 'html': case 'htm': return 'ext-html';
-        case 'json': return 'ext-json';
-        case 'css': return 'ext-css';
-        case 'js': case 'jsx': case 'ts': return 'ext-js';
-        case 'py': return 'ext-py';
-        case 'cpp': case 'c': case 'h': case 'hpp': return 'ext-cpp';
-        case 'md': return 'ext-txt';
-        case 'yml': case 'yaml': return 'ext-json';
-        default: return 'ext-txt';
-      }
-    };
-
-    // CRÉATION D'UNE LIGNE FICHIER
-    function createFileItem(f) {
-      const card = document.createElement('div');
-      card.className = 'file-card';
-      card.innerHTML = `
-        <span class="ext-badge ${window.getExtClass(f.ext)}">${f.ext}</span>
-        <div class="file-card-info" onclick="window.openFile('${f.id}')">
-          <div class="file-card-name">${f.name}</div>
-          <div class="file-card-path">${f.path}</div>
-        </div>
-        <button class="file-card-delete" onclick="window.deleteRecentFile('${f.id}', event)" title="Supprimer">
-          <svg class="icon" style="width: 17px; height: 17px;" viewBox="0 0 24 24">
-            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-          </svg>
-        </button>
-      `;
-      return card;
-    }
-
-    // GESTIONNAIRE D'ARBORESCENCE PAR DOSSIERS ACCORDÉONS DÉPLIABLES
-    window.renderAllFiles = function() {
-      const fileListEl = document.getElementById('fileList');
-      const emptyMsg = document.getElementById('empty-state-msg');
-      fileListEl.innerHTML = '';
-
-      if (fileStore.size === 0) {
-        if (emptyMsg) {
-          emptyMsg.style.display = 'block';
-          fileListEl.appendChild(emptyMsg);
-        }
-        return;
-      }
-      if (emptyMsg) emptyMsg.style.display = 'none';
-
-      // 1. Grouper par sous-dossier
-      const groups = new Map();
-      fileStore.forEach((file, id) => {
-        const segments = (file.path || file.name).split('/');
-        const folder = segments.length > 1 ? segments.slice(0, -1).join(' / ') : '__root__';
-
-        if (!groups.has(folder)) groups.set(folder, []);
-        groups.get(folder).push({ id, ...file });
-      });
-
-      // 2. Afficher chaque groupe
-      groups.forEach((filesInFolder, folderName) => {
-        if (folderName === '__root__') {
-          filesInFolder.forEach(f => fileListEl.appendChild(createFileItem(f)));
-        } else {
-          const groupEl = document.createElement('div');
-          groupEl.className = 'folder-group open';
-
-          groupEl.innerHTML = `
-            <div class="folder-header">
-              <span class="folder-chevron">
-                <svg class="icon" style="width: 16px; height: 16px;" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-              </span>
-              <span class="folder-icon">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
-              </span>
-              <span class="folder-name">${folderName}</span>
-              <span class="folder-count">${filesInFolder.length}</span>
-            </div>
-            <div class="folder-body"></div>
-          `;
-
-          const header = groupEl.querySelector('.folder-header');
-          header.onclick = () => groupEl.classList.toggle('open');
-
-          const body = groupEl.querySelector('.folder-body');
-          filesInFolder.forEach(f => body.appendChild(createFileItem(f)));
-
-          fileListEl.appendChild(groupEl);
-        }
-      });
-    };
-
-    async function processFile(file, path, autoOpen = true, handle = null) {
-      if (emptyMsg) emptyMsg.style.display = 'none';
-      let name = file.name;
-      const isTxt = name.endsWith('.txt');
-      if (isTxt) name = name.replace(/\.txt$/i, '.html');
-
-      const ext = name.split('.').pop().toLowerCase();
-      const storageKey = 'cache_' + name;
-      const cached = localStorage.getItem(storageKey);
-      let rawText = await file.text();
-
-      if (ext === 'json') {
-        try {
-          const parsed = JSON.parse(cached !== null ? cached : rawText);
-          rawText = JSON.stringify(parsed, null, 2);
-        } catch {}
-      }
-
-      const content = cached !== null ? cached : rawText;
-      const id = 'f_' + Math.random().toString(36).slice(2, 9);
-
-      const fileObj = { name, ext, path, content, handle, storageKey };
-      fileStore.set(id, fileObj);
-
-      window.renderAllFiles();
-
-      if (window.saveToCloud) {
-        window.saveToCloud(id, fileObj);
-      }
-
-      if (autoOpen) openFile(id);
-      return id;
-    }
-
-    window.openFile = function(id) {
-      const f = fileStore.get(id);
-      if (!f) return;
-      window.curFileId = id;
-      window.rawCode = f.content || '';
-      undoHist.length = 0;
-      pushUndo(window.rawCode);
-
-      disableKb();
-      resetSel();
-      applySyntaxHighlighting();
-      renderGutter();
-      setSaveStatus("Prêt");
-      updateTelemetry();
-
-      showPreview();
-      renderPreview(window.rawCode, f.ext, f.name);
-      viewRunner.classList.add('open');
-    };
-
-    tabCode.onclick = showCode;
-    tabPreview.onclick = () => {
-      disableKb();
-      syncDOM();
-      const f = window.curFileId ? fileStore.get(window.curFileId) : null;
-      renderPreview(window.rawCode, f?.ext || 'html', f?.name || '');
-      showPreview();
-    };
-
-    function showCode() {
-      tabCode.classList.add('active');
-      tabPreview.classList.remove('active');
-      editorPane.classList.add('active');
-      appFrame.style.display = 'none';
-      searchBtn.classList.add('visible');
-      disableKb();
-      applySyntaxHighlighting();
-      renderGutter();
-      updateTelemetry();
-    }
-
-    function showPreview() {
-      tabPreview.classList.add('active');
-      tabCode.classList.remove('active');
-      editorPane.classList.remove('active');
-      appFrame.style.display = 'block';
-      searchBtn.classList.remove('visible');
-      disableKb();
-      closeSearch();
-    }
-
-    function enableKb() {
-      isKeyboard = true;
-      btnKb.classList.add('active-state');
-      btnKb.querySelector('span').textContent = 'Fermer';
-      codeArea.textContent = window.rawCode;
-      codeArea.setAttribute('contenteditable', 'true');
-      codeArea.removeAttribute('inputmode');
-      codeArea.focus();
-      updateTelemetry();
-    }
-
-    function disableKb() {
-      isKeyboard = false;
-      btnKb.classList.remove('active-state');
-      btnKb.querySelector('span').textContent = 'Clavier';
-      codeArea.setAttribute('contenteditable', 'false');
-      codeArea.setAttribute('inputmode', 'none');
-      if (document.activeElement) document.activeElement.blur();
-      applySyntaxHighlighting();
-      updateTelemetry();
-    }
-
-    btnKb.onclick = e => {
-      e.preventDefault();
-      isKeyboard ? disableKb() : enableKb();
-    };
-
-    codeArea.onfocus = e => { if (!isKeyboard) { e.preventDefault(); codeArea.blur(); } };
-
-    function resetSel() {
-      isAllSelected = false;
-      selRange = null;
-      document.querySelectorAll('.gutter-num').forEach(el => el.classList.remove('selected'));
-      updateTelemetry();
-    }
-
-    function renderGutter() {
-      const lines = (window.rawCode || '').split('\n');
-      let html = '';
-      for (let i = 1; i <= Math.max(1, lines.length); i++) html += `<div class="gutter-num" data-line="${i}">${i}</div>`;
-      gutterBar.innerHTML = html;
-      gutterBar.scrollTop = scrollBox.scrollTop;
-    }
-    window.renderGutter = renderGutter;
-
-    function applySyntaxHighlighting() {
-      if (isKeyboard) return;
-      const f = window.curFileId ? fileStore.get(window.curFileId) : null;
-      const ext = f?.ext || 'html';
-      codeArea.innerHTML = highlightCode(window.rawCode, ext);
-    }
-    window.applySyntaxHighlighting = applySyntaxHighlighting;
-
-    function escapeHtml(s) {
-      return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    function highlightCode(code, ext) {
-      if (!code) return '';
-
-      if (ext === 'json' || ext === 'yml' || ext === 'yaml') {
-        const safe = escapeHtml(code);
-        return safe.replace(/("(?:\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, match => {
-          let cls = 'syn-n';
-          if (/^"/.test(match)) {
-            cls = /:$/.test(match) ? 'syn-p' : 'syn-s';
-          } else if (/true|false/.test(match)) {
-            cls = 'syn-b';
-          } else if (/null/.test(match)) {
-            cls = 'syn-k';
-          }
-          return `<span class="${cls}">${match}</span>`;
-        });
-      }
-
-      if (ext === 'html' || ext === 'htm') {
-        return code.replace(/(<!--[\s\S]*?-->)|(<\/?[a-zA-Z0-9-]+)|(\s+[a-zA-Z-]+(?=\=))|("[^"]*"|'[^']*')|(&[a-zA-Z0-9#]+;)/g, (m, c, t, a, s, e) => {
-          if (c) return `<span class="syn-c">${escapeHtml(c)}</span>`;
-          if (t) return `<span class="syn-t">${escapeHtml(t)}</span>`;
-          if (a) return `<span class="syn-a">${escapeHtml(a)}</span>`;
-          if (s) return `<span class="syn-s">${escapeHtml(s)}</span>`;
-          if (e) return `<span class="syn-p">${escapeHtml(e)}</span>`;
-          return escapeHtml(m);
-        });
-      }
-
-      if (ext === 'css') {
-        return code.replace(/(\/\*[\s\S]*?\*\/)|([.#][\w-]+(?=[^{]*\{))|([\w-]+(?=\s*:))|("[^"]*"|'[^']*')|(#[\da-fA-F]{3,8}\b|\b\d+(?:px|rem|em|vh|vw|%)?)/g, (m, c, sel, prop, s, num) => {
-          if (c) return `<span class="syn-c">${escapeHtml(c)}</span>`;
-          if (sel) return `<span class="syn-k">${escapeHtml(sel)}</span>`;
-          if (prop) return `<span class="syn-p">${escapeHtml(prop)}</span>`;
-          if (s) return `<span class="syn-s">${escapeHtml(s)}</span>`;
-          if (num) return `<span class="syn-n">${escapeHtml(num)}</span>`;
-          return escapeHtml(m);
-        });
-      }
-
-      const jsKw = /\b(const|let|var|function|return|if|else|for|while|import|export|from|class|new|async|await|try|catch|typeof)\b/g;
-      const pyKw = /\b(def|return|if|elif|else|for|while|import|from|class|try|except|with|as|pass|in|is|not|and|or|lambda)\b/g;
-      const cppKw = /\b(int|float|double|char|bool|void|class|struct|public|private|protected|template|typename|return|if|else|for|while|include)\b/g;
-
-      let kw = jsKw;
-      if (ext === 'py') kw = pyKw;
-      if (ext === 'cpp' || ext === 'c' || ext === 'h' || ext === 'hpp') kw = cppKw;
-
-      let safe = escapeHtml(code);
-      safe = safe.replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/|#.*)/g, '<span class="syn-c">$1</span>');
-      safe = safe.replace(/("[^"]*"|'[^']*'|`[^`]*`)/g, '<span class="syn-s">$1</span>');
-      safe = safe.replace(kw, '<span class="syn-k">$1</span>');
-      safe = safe.replace(/\b(\d+)\b/g, '<span class="syn-n">$1</span>');
-      return safe;
-    }
-
-    function renderPreview(content, ext, filename) {
-      if (ext === 'html' || ext === 'htm') {
-        let h = content || '';
-        if (!h.includes('viewport')) {
-          h = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"></head><body>${h}</body></html>`;
-        }
-
-        appFrame.removeAttribute('srcdoc');
-
-        try {
-          const frameDoc = appFrame.contentDocument || appFrame.contentWindow.document;
-          frameDoc.open();
-          frameDoc.write(h);
-          frameDoc.close();
-        } catch (e) {
-          const blob = new Blob([h], { type: 'text/html;charset=utf-8' });
-          appFrame.src = URL.createObjectURL(blob);
-        }
-        return;
-      }
-
-      if (ext === 'json') {
-        let parsed = null, err = null;
-        try { parsed = JSON.parse(content); } catch (e) { err = e.message; }
-
-        const jsonViewerHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-            <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-            <style>
-              body { font-family: 'Google Sans', sans-serif; background: #fdf8fd; color: #1d1b20; margin: 0; padding: 20px; }
-              @media (prefers-color-scheme: dark) { body { background: #141218; color: #e6e1e5; } }
-              .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-              .badge { background: #eaddff; color: #21005d; padding: 6px 12px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; }
-              .card { background: #ede7f6; border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-              @media (prefers-color-scheme: dark) { .card { background: #2b2930; } }
-              pre { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; white-space: pre-wrap; line-height: 1.5; margin: 0; }
-              .err { background: #fce8e6; color: #c5221f; padding: 12px; border-radius: 14px; font-weight: 500; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h2>${filename}</h2>
-              <span class="badge">Visualiseur JSON</span>
-            </div>
-            ${err ? `<div class="err">JSON invalide : ${err}</div>` : ''}
-            <div class="card">
-              <pre>${escapeHtml(JSON.stringify(parsed, null, 2))}</pre>
-            </div>
-          </body>
-          </html>
-        `;
-        appFrame.removeAttribute('srcdoc');
-        const frameDoc = appFrame.contentDocument || appFrame.contentWindow.document;
-        frameDoc.open();
-        frameDoc.write(jsonViewerHtml);
-        frameDoc.close();
-        return;
-      }
-
-      const defaultHtml = `
-        <!DOCTYPE html><html><body style="font-family:sans-serif;padding:20px;background:#fdf8fd;color:#1d1b20;">
-          <h3>Fichier ${ext.toUpperCase()}</h3>
-          <p>Ce fichier est un script/donnée. Modifiez-le dans l'onglet <strong>Coder</strong>.</p>
-        </body></html>
-      `;
-      appFrame.removeAttribute('srcdoc');
-      const frameDoc = appFrame.contentDocument || appFrame.contentWindow.document;
-      frameDoc.open();
-      frameDoc.write(defaultHtml);
-      frameDoc.close();
-    }
-    window.renderPreview = renderPreview;
-
-    let isDragging = false, dragStart = null, scrollRaf = null, touchY = 0;
-
-    function startAutoScroll() {
-      if (scrollRaf) return;
-      const step = () => {
-        if (!isDragging) { scrollRaf = null; return; }
-        const r = scrollBox.getBoundingClientRect();
-        const topTh = r.top + 95, botTh = r.bottom - 95;
-        let speed = 0;
-
-        if (touchY < topTh) {
-          const ratio = Math.max(0, Math.min(1.4, (topTh - touchY) / 85));
-          speed = -(8 + Math.pow(ratio, 2.2) * 65);
-        } else if (touchY > botTh) {
-          const ratio = Math.max(0, Math.min(1.4, (touchY - botTh) / 85));
-          speed = (8 + Math.pow(ratio, 2.2) * 65);
-        }
-
-        if (speed !== 0) {
-          scrollBox.scrollTop += speed;
-          gutterBar.scrollTop = scrollBox.scrollTop;
-          selectLines(dragStart, getLineFromY(touchY));
-        }
-        scrollRaf = requestAnimationFrame(step);
-      };
-      scrollRaf = requestAnimationFrame(step);
-    }
-
-    function getLineFromY(y) {
-      const r = gutterBar.getBoundingClientRect();
-      const line = Math.floor(((y - r.top) + scrollBox.scrollTop - 16) / 22) + 1;
-      return Math.max(1, Math.min(line, (window.rawCode || '').split('\n').length));
-    }
-
-    function selectLines(from, to) {
-      const min = Math.min(from, to), max = Math.max(from, to);
-      isAllSelected = false;
-      selRange = { from: min, to: max };
-
-      document.querySelectorAll('.gutter-num').forEach(el => {
-        const l = +el.dataset.line;
-        el.classList.toggle('selected', l >= min && l <= max);
-      });
-
-      const lines = window.rawCode.split('\n');
-      let startChar = 0, endChar = 0;
-      for (let i = 0; i < min - 1; i++) startChar += lines[i].length + 1;
-      for (let i = 0; i < max; i++) endChar += lines[i].length + (i < lines.length - 1 ? 1 : 0);
-
-      const sel = window.getSelection(), range = document.createRange();
-      let curOffset = 0, sNode = null, sOff = 0, eNode = null, eOff = 0;
-      const walker = document.createTreeWalker(codeArea, NodeFilter.SHOW_TEXT);
-      let n;
-      while ((n = walker.nextNode())) {
-        const next = curOffset + n.nodeValue.length;
-        if (!sNode && startChar >= curOffset && startChar <= next) { sNode = n; sOff = startChar - curOffset; }
-        if (!eNode && endChar >= curOffset && endChar <= next) { eNode = n; eOff = endChar - curOffset; break; }
-        curOffset = next;
-      }
-      if (sNode && eNode) {
-        range.setStart(sNode, sOff);
-        range.setEnd(eNode, eOff);
-        sel.removeAllRanges();
-        sel.addRange(range);
-      }
-      updateTelemetry();
-    }
-
-    gutterBar.addEventListener('touchstart', e => {
-      isDragging = true;
-      disableKb();
-      touchY = e.touches[0].clientY;
-      dragStart = getLineFromY(touchY);
-      selectLines(dragStart, dragStart);
-      startAutoScroll();
-    }, { passive: false });
-
-    gutterBar.addEventListener('touchmove', e => {
-      if (!isDragging) return;
-      e.preventDefault();
-      touchY = e.touches[0].clientY;
-      selectLines(dragStart, getLineFromY(touchY));
-    }, { passive: false });
-
-    ['touchend', 'touchcancel'].forEach(ev => gutterBar.addEventListener(ev, () => {
-      isDragging = false;
-      if (scrollRaf) cancelAnimationFrame(scrollRaf);
-      scrollRaf = null;
-    }));
-
-    $('btn-select-all').onclick = () => {
-      disableKb();
-      const r = document.createRange();
-      r.selectNodeContents(codeArea);
-      const s = window.getSelection();
-      s.removeAllRanges();
-      s.addRange(r);
-      isAllSelected = true;
-      selRange = null;
-      document.querySelectorAll('.gutter-num').forEach(el => el.classList.add('selected'));
-      updateTelemetry();
-      showToast("Tout sélectionné");
-    };
-
-    $('btn-copy').onclick = async () => {
-      syncDOM();
-      const s = window.getSelection().toString();
-      try {
-        await navigator.clipboard.writeText(s || window.rawCode);
-        showToast(s ? "Lignes copiées" : "Tout copié");
-      } catch { showToast("Erreur de copie"); }
-    };
-
-    $('btn-paste').onclick = async () => {
-      let t = "";
-      try { t = await navigator.clipboard.readText(); }
-      catch { t = prompt("Collez le code :") || ""; }
-      if (!t) return;
-
-      pushUndo(window.rawCode);
-      if (isAllSelected) {
-        window.rawCode = t;
-      } else if (selRange) {
-        const l = window.rawCode.split('\n');
-        window.rawCode = [...l.slice(0, selRange.from - 1), t, ...l.slice(selRange.to)].join('\n');
-      } else {
-        const s = window.getSelection();
-        if (s.rangeCount > 0 && !s.isCollapsed) {
-          s.getRangeAt(0).deleteContents();
-          s.getRangeAt(0).insertNode(document.createTextNode(t));
-          window.rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
-        } else {
-          window.rawCode = t;
-        }
-      }
-      applySyntaxHighlighting();
-      resetSel();
-      renderGutter();
-      syncDOM();
-      triggerAutoSave();
-      updateTelemetry();
-      showToast("Code collé");
-    };
-
-    function pushUndo(txt) {
-      if (undoHist.length > 25) undoHist.shift();
-      undoHist.push(txt);
-    }
-
-    $('btn-undo').onclick = () => {
-      if (undoHist.length > 1) {
-        undoHist.pop();
-        window.rawCode = undoHist[undoHist.length - 1];
-      } else if (undoHist.length === 1) {
-        window.rawCode = undoHist[0];
-      } else {
-        showToast("Rien à annuler");
-        return;
-      }
-      applySyntaxHighlighting();
-      resetSel();
-      renderGutter();
-      syncDOM();
-      triggerAutoSave();
-      updateTelemetry();
-      showToast("Annulé");
-    };
-
-    window.setSaveStatus = function(txt, isSync = false) {
-      saveTxt.textContent = txt;
-      saveDot.classList.toggle('syncing', isSync);
-    };
-
-    function triggerAutoSave() {
-      if (!window.curFileId) return;
-      clearTimeout(autoSaveTimer);
-      window.setSaveStatus("Sauvegarde…", true);
-
-      autoSaveTimer = setTimeout(async () => {
-        const f = fileStore.get(window.curFileId);
-        if (!f) return;
-        f.content = window.rawCode;
-        try { localStorage.setItem(f.storageKey, window.rawCode); } catch {}
-
-        if (window.saveToCloud) {
-          window.saveToCloud(window.curFileId, f);
-        }
-
-        if (f.handle?.createWritable) {
-          try {
-            const w = await f.handle.createWritable();
-            await w.write(window.rawCode);
-            await w.close();
-            window.setSaveStatus("iCloud à jour");
-            return;
-          } catch {}
-        }
-        window.setSaveStatus("Cache local à jour");
-      }, 700);
-    }
-
-    $('btn-save').onclick = async () => {
-      syncDOM();
-      const f = window.curFileId ? fileStore.get(window.curFileId) : null;
-      const filename = f?.name || 'document.html';
-
-      if (f?.handle?.createWritable) {
-        try {
-          const w = await f.handle.createWritable();
-          await w.write(window.rawCode);
-          await w.close();
-          window.setSaveStatus("iCloud à jour");
-          showToast("Fichier iCloud enregistré");
-          return;
-        } catch {}
-      }
-
-      const mimeType = f?.ext === 'json' ? 'application/json' : 'text/html;charset=utf-8';
-      const fileObj = new File([window.rawCode], filename, { type: mimeType });
-      if (navigator.canShare?.({ files: [fileObj] })) {
-        try {
-          await navigator.share({ files: [fileObj], title: filename });
-          showToast("Fichier partagé");
-          return;
-        } catch (e) { if (e.name === 'AbortError') return; }
-      }
-
-      const blob = new Blob([window.rawCode], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast("Téléchargé");
-    };
-
-    let syncT = null;
-    codeArea.oninput = () => {
-      clearTimeout(syncT);
-      syncT = setTimeout(() => {
-        window.rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
-        pushUndo(window.rawCode);
-        syncDOM();
-        renderGutter();
-        triggerAutoSave();
-        updateTelemetry();
-      }, 350);
-    };
-
-    function syncDOM() {
-      if (!window.curFileId) return;
-      window.rawCode = codeArea.innerText.replace(/\r\n/g, '\n');
-      const f = fileStore.get(window.curFileId);
-      if (f) {
-        f.content = window.rawCode;
-        renderPreview(window.rawCode, f.ext, f.name);
-      }
-      updateTelemetry();
-    }
-
-    const sBar = $('search-bar'), sInput = $('search-input'), sCount =$('search-count');
-    let totalMatches = 0, matchIdx = 0;
-
-    searchBtn.onclick = () => {
-      sBar.classList.toggle('active');
-      if (sBar.classList.contains('active')) { sInput.focus(); if (sInput.value) searchCode(); }
-      else closeSearch();
-    };
-
-    $('search-close').onclick = closeSearch;
-
-    function closeSearch() {
-      sBar.classList.remove('active');
-      sInput.value = '';
-      sCount.textContent = '0/0';
-      totalMatches = 0;
-      applySyntaxHighlighting();
-      renderGutter();
-      sInput.blur();
-    }
-
-    sInput.oninput = () => { matchIdx = 0; searchCode(); };
-    sInput.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); navSearch(1); } };
-    $('search-next').onclick = () => navSearch(1);$('search-prev').onclick = () => navSearch(-1);
-
-    function searchCode() {
-      const q = sInput.value;
-      if (!q) { applySyntaxHighlighting(); sCount.textContent = '0/0'; totalMatches = 0; renderGutter(); return; }
-
-      const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-      const matches = [...window.rawCode.matchAll(regex)];
-      totalMatches = matches.length;
-      if (!totalMatches) { applySyntaxHighlighting(); sCount.textContent = '0/0'; renderGutter(); return; }
-
-      matchIdx = ((matchIdx % totalMatches) + totalMatches) % totalMatches;
-      sCount.textContent = `${matchIdx + 1}/${totalMatches}`;
-
-      let html = '', last = 0;
-      const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-      matches.forEach((m, i) => {
-        html += esc(window.rawCode.slice(last, m.index));
-        const matched = esc(window.rawCode.slice(m.index, m.index + m[0].length));
-        html += `<mark class="code-match ${i === matchIdx ? 'code-match-active' : ''}" ${i === matchIdx ? 'id="cur-match"' : ''}>${matched}</mark>`;
-        last = m.index + m[0].length;
-      });
-      html += esc(window.rawCode.slice(last));
-      codeArea.innerHTML = html;
-      renderGutter();
-
-      const activeEl = $('cur-match');
-      if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    function navSearch(d) {
-      if (!totalMatches) return;
-      matchIdx += d;
-      searchCode();
-    }
-
-    window.showToast = function(m) {
-      toast.textContent = m;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
-    };
-
-    $('shade-back-btn').onclick = () => {
-      disableKb();
-      viewRunner.classList.remove('open');
-      closeSearch();
-      setTimeout(() => {
-        try {
-          const frameDoc = appFrame.contentDocument || appFrame.contentWindow.document;
-          frameDoc.open();
-          frameDoc.write('');
-          frameDoc.close();
-        } catch {}
-      }, 150);
-    };
   </script>
 </body>
 </html>
