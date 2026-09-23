@@ -100,6 +100,13 @@
       overflow: hidden;
     }
 
+    /* Force le masquage absolu du mode Split sur mobile */
+    @media (max-width: 767px) {
+      #tabSplit {
+        display: none !important;
+      }
+    }
+
     .highlight-layer {
       position: absolute;
       top: 0;
@@ -137,26 +144,37 @@
       color: transparent;
     }
 
+    .gutter-wrapper {
+      position: relative;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--md-sys-color-surface-container-high);
+      border-right: 1px solid var(--md-sys-color-surface-container-highest);
+      min-width: 52px;
+      flex-shrink: 0;
+      touch-action: none;
+      cursor: ns-resize;
+      transition: background-color 0.2s ease;
+    }
+    .gutter-wrapper.is-scrolling {
+      background-color: var(--md-sys-color-primary-container);
+    }
+
     .gutter {
       font-family: 'JetBrains Mono', monospace;
       color: #9D96A8;
-      background-color: var(--md-sys-color-surface-container-high);
       user-select: none;
       -webkit-user-select: none;
       text-align: right;
-      padding: 16px 8px;
+      padding: 16px 8px 48px 8px;
       line-height: 1.6;
-      font-size: 13px;
-      white-space: pre-line;
+      font-size: 13.5px;
+      white-space: pre;
       box-sizing: border-box;
-      border-right: 1px solid var(--md-sys-color-surface-container-highest);
-      min-width: 54px;
-      touch-action: none;
-      cursor: ns-resize;
-      transition: background-color 0.2s ease, color 0.2s ease;
+      will-change: transform;
+      transition: color 0.2s ease;
     }
-    .gutter.is-scrolling {
-      background-color: var(--md-sys-color-primary-container);
+    .gutter-wrapper.is-scrolling .gutter {
       color: var(--md-sys-color-on-primary-container);
       font-weight: 700;
     }
@@ -380,7 +398,9 @@
     <!-- Code Editor Section -->
     <section id="editorSection" class="flex-1 flex flex-col h-full relative transition-all duration-200">
       <div class="code-editor-container">
-        <div id="gutter" class="gutter">1</div>
+        <div id="gutterWrapper" class="gutter-wrapper">
+          <div id="gutter" class="gutter">1</div>
+        </div>
         <div class="editor-wrapper">
           <pre id="highlightLayer" class="highlight-layer" aria-hidden="true"></pre>
           <div id="touchOriginMarker" class="touch-origin-marker hidden"></div>
@@ -396,9 +416,6 @@
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
           <span class="text-xs font-bold text-[var(--md-sys-color-on-surface)]">Rendu Web Interactif</span>
         </div>
-        <button id="btnForceReloadPreview" class="m3-btn text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-secondary)]">
-          Actualiser ↺
-        </button>
       </div>
       <div class="flex-1 w-full h-full relative overflow-hidden bg-white">
         <iframe id="previewFrame" class="w-full h-full border-0 block bg-white" sandbox="allow-scripts allow-same-origin allow-modals allow-forms"></iframe>
@@ -416,7 +433,6 @@
     <div class="flex items-center gap-2">
       <span class="hidden lg:inline text-[11px] bg-[var(--md-sys-color-surface-container-high)] px-2 py-0.5 rounded-md font-mono">Entrée / Maj+Entrée Suiv/Préc</span>
       <span class="hidden lg:inline text-[11px] bg-[var(--md-sys-color-surface-container-high)] px-2 py-0.5 rounded-md font-mono">Ctrl+F Chercher</span>
-      <span class="text-[11px] font-bold text-[var(--md-sys-color-primary)]">Material 3 Expressive</span>
     </div>
   </footer>
 
@@ -597,6 +613,7 @@
     const codeEditor = document.getElementById('codeEditor');
     const highlightLayer = document.getElementById('highlightLayer');
     const gutter = document.getElementById('gutter');
+    const gutterWrapper = document.getElementById('gutterWrapper');
     const previewFrame = document.getElementById('previewFrame');
     const editorSection = document.getElementById('editorSection');
     const previewSection = document.getElementById('previewSection');
@@ -701,9 +718,9 @@
 
       let gutterHTML = '';
       for (let i = 1; i <= lineCount; i++) {
-        gutterHTML += i + '<br>';
+        gutterHTML += i + '\n';
       }
-      gutter.innerHTML = gutterHTML || '1';
+      gutter.textContent = gutterHTML || '1';
 
       metricsIndicator.innerText = `${content.length} caractères • ${lineCount} lignes`;
 
@@ -725,41 +742,47 @@
       previewTimer = setTimeout(renderPreviewNow, 80);
     }
 
-    codeEditor.addEventListener('scroll', () => {
-      gutter.scrollTop = codeEditor.scrollTop;
-      highlightLayer.scrollTop = codeEditor.scrollTop;
+    function syncScroll() {
+      const top = codeEditor.scrollTop;
+      gutter.style.transform = `translateY(-${top}px)`;
+      highlightLayer.scrollTop = top;
       highlightLayer.scrollLeft = codeEditor.scrollLeft;
-    });
+    }
 
+    codeEditor.addEventListener('scroll', syncScroll, { passive: true });
     codeEditor.addEventListener('input', refreshEditor);
     codeEditor.addEventListener('keyup', refreshEditor);
     codeEditor.addEventListener('click', refreshEditor);
 
-    document.getElementById('btnForceReloadPreview').addEventListener('click', () => {
-      renderPreviewNow();
-      notify('Aperçu actualisé');
-    });
-
     function switchLayout(mode) {
-      [tabCode, tabSplit, tabPreview].forEach(tab => {
-        tab.className = 'm3-btn px-3.5 py-1.5 rounded-full text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-on-surface)]';
+      const tabs = [
+        { el: tabCode, id: 'code' },
+        { el: tabSplit, id: 'split' },
+        { el: tabPreview, id: 'preview' }
+      ];
+
+      tabs.forEach(t => {
+        if (t.id === mode) {
+          t.el.classList.add('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
+          t.el.classList.remove('text-[var(--md-sys-color-secondary)]');
+        } else {
+          t.el.classList.remove('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
+          t.el.classList.add('text-[var(--md-sys-color-secondary)]');
+        }
       });
 
       if (mode === 'code') {
-        tabCode.className = 'm3-btn px-3.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]';
         editorSection.classList.remove('hidden');
         editorSection.classList.add('flex');
         previewSection.classList.add('hidden');
         previewSection.classList.remove('flex');
       } else if (mode === 'split') {
-        tabSplit.className = 'm3-btn px-3.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]';
         editorSection.classList.remove('hidden');
         editorSection.classList.add('flex');
         previewSection.classList.remove('hidden');
         previewSection.classList.add('flex');
         renderPreviewNow();
       } else if (mode === 'preview') {
-        tabPreview.className = 'm3-btn px-3.5 py-1.5 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center gap-1.5';
         editorSection.classList.add('hidden');
         editorSection.classList.remove('flex');
         previewSection.classList.remove('hidden');
@@ -977,8 +1000,7 @@
 
       if (scrollDelta !== 0) {
         codeEditor.scrollTop += scrollDelta;
-        highlightLayer.scrollTop = codeEditor.scrollTop;
-        gutter.scrollTop = codeEditor.scrollTop;
+        syncScroll();
       }
 
       // Update selection range from origin index to current touched character index
@@ -1060,7 +1082,7 @@
       cancelAnimationFrame(gutterInertiaFrame);
 
       isGutterScrolling = true;
-      gutter.classList.add('is-scrolling');
+      gutterWrapper.classList.add('is-scrolling');
       gutterStartY = e.touches[0].clientY;
       gutterLastY = gutterStartY;
       gutterVelocity = 0;
@@ -1077,10 +1099,9 @@
       gutterVelocity = deltaY;
       gutterLastY = currentY;
 
-      // Défilement 1:1 sans sélection de texte
+      // Défilement 1:1 du code et synchronisation matérielle de la colonne
       codeEditor.scrollTop += deltaY * 1.5;
-      highlightLayer.scrollTop = codeEditor.scrollTop;
-      gutter.scrollTop = codeEditor.scrollTop;
+      syncScroll();
 
       // Mise à jour de l'indicateur de position
       const currentScrollLine = Math.floor(codeEditor.scrollTop / lineHeight) + 1;
@@ -1090,14 +1111,13 @@
     function handleGutterTouchEnd() {
       if (!isGutterScrolling) return;
       isGutterScrolling = false;
-      gutter.classList.remove('is-scrolling');
+      gutterWrapper.classList.remove('is-scrolling');
 
       // Effet d'inertie fluide
       function applyInertia() {
         if (Math.abs(gutterVelocity) > 0.5) {
           codeEditor.scrollTop += gutterVelocity;
-          highlightLayer.scrollTop = codeEditor.scrollTop;
-          gutter.scrollTop = codeEditor.scrollTop;
+          syncScroll();
           gutterVelocity *= 0.92;
           gutterInertiaFrame = requestAnimationFrame(applyInertia);
         } else {
@@ -1107,16 +1127,16 @@
       gutterInertiaFrame = requestAnimationFrame(applyInertia);
     }
 
-    gutter.addEventListener('touchstart', handleGutterTouchStart, { passive: false });
-    gutter.addEventListener('touchmove', handleGutterTouchMove, { passive: false });
-    gutter.addEventListener('touchend', handleGutterTouchEnd);
-    gutter.addEventListener('touchcancel', handleGutterTouchEnd);
+    gutterWrapper.addEventListener('touchstart', handleGutterTouchStart, { passive: false });
+    gutterWrapper.addEventListener('touchmove', handleGutterTouchMove, { passive: false });
+    gutterWrapper.addEventListener('touchend', handleGutterTouchEnd);
+    gutterWrapper.addEventListener('touchcancel', handleGutterTouchEnd);
 
     // Support du glisser à la souris sur Chromebook / PC
-    gutter.addEventListener('mousedown', (e) => {
+    gutterWrapper.addEventListener('mousedown', (e) => {
       e.preventDefault();
       isGutterScrolling = true;
-      gutter.classList.add('is-scrolling');
+      gutterWrapper.classList.add('is-scrolling');
       gutterLastY = e.clientY;
 
       const onMouseMove = (moveEvent) => {
@@ -1124,13 +1144,12 @@
         const delta = gutterLastY - moveEvent.clientY;
         gutterLastY = moveEvent.clientY;
         codeEditor.scrollTop += delta * 1.5;
-        highlightLayer.scrollTop = codeEditor.scrollTop;
-        gutter.scrollTop = codeEditor.scrollTop;
+        syncScroll();
       };
 
       const onMouseUp = () => {
         isGutterScrolling = false;
-        gutter.classList.remove('is-scrolling');
+        gutterWrapper.classList.remove('is-scrolling');
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
         refreshEditor();
@@ -1188,11 +1207,9 @@
         // Smooth scroll textarea to match line
         const textBefore = text.substring(0, cur.start);
         const lineIndex = textBefore.split('\n').length - 1;
-        const lineHeight = 13.5 * 1.6;
         const targetScroll = Math.max(0, (lineIndex * lineHeight) - 80);
         codeEditor.scrollTop = targetScroll;
-        highlightLayer.scrollTop = targetScroll;
-        gutter.scrollTop = targetScroll;
+        syncScroll();
       }
     }
 
