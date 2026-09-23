@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>HTML Editor</title>
 
-  <!-- Google Sans, Roboto & JetBrains Mono typography -->
+  <!-- Google Fonts: Google Sans, Roboto & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -29,9 +29,7 @@
       --md-sys-color-on-surface: #1D1B20;
       --md-sys-color-outline-variant: #CAC4D0;
 
-      /* Material 3 Spring Physics */
       --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-      --ease-m3: cubic-bezier(0.2, 0, 0, 1);
     }
 
     body {
@@ -42,10 +40,6 @@
       user-select: none;
     }
 
-    .font-code {
-      font-family: 'JetBrains Mono', monospace;
-    }
-
     .m3-btn {
       position: relative;
       overflow: hidden;
@@ -53,35 +47,26 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      transition: transform 0.3s var(--ease-spring), box-shadow 0.2s ease, background-color 0.2s ease;
+      transition: transform 0.25s var(--ease-spring), box-shadow 0.2s ease, background-color 0.2s ease;
       cursor: pointer;
     }
     .m3-btn:hover {
-      transform: translateY(-1.5px) scale(1.02);
+      transform: translateY(-1px) scale(1.01);
     }
     .m3-btn:active {
       transform: scale(0.96);
     }
 
-    .ripple-wave {
-      position: absolute;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(103, 80, 164, 0.28) 0%, rgba(103, 80, 164, 0) 75%);
-      transform: scale(0);
-      animation: ripple 0.5s ease-out forwards;
-      pointer-events: none;
-    }
-    @keyframes ripple {
-      to {
-        transform: scale(3.5);
-        opacity: 0;
-      }
-    }
-
     .m3-card {
-      border-radius: 32px;
+      border-radius: 28px;
       background-color: var(--md-sys-color-surface-container-lowest);
       box-shadow: 0 12px 32px -12px rgba(103, 80, 164, 0.12), 0 2px 6px rgba(103, 80, 164, 0.05);
+    }
+
+    @media (max-width: 767px) {
+      #tabSplit {
+        display: none !important;
+      }
     }
 
     .code-editor-container {
@@ -98,13 +83,6 @@
       flex: 1;
       height: 100%;
       overflow: hidden;
-    }
-
-    /* Force le masquage absolu du mode Split sur mobile */
-    @media (max-width: 767px) {
-      #tabSplit {
-        display: none !important;
-      }
     }
 
     .highlight-layer {
@@ -128,7 +106,6 @@
       z-index: 1;
     }
 
-    /* Standard blue highlight on all matches */
     .search-highlight {
       background-color: rgba(59, 130, 246, 0.35);
       border-bottom: 2px solid #2563eb;
@@ -136,7 +113,6 @@
       color: transparent;
     }
 
-    /* Active blue highlight on current focused match */
     .search-highlight.active-highlight {
       background-color: #2563eb;
       border-bottom: 2px solid #1d4ed8;
@@ -150,7 +126,7 @@
       overflow: hidden;
       background-color: var(--md-sys-color-surface-container-high);
       border-right: 1px solid var(--md-sys-color-surface-container-highest);
-      min-width: 52px;
+      min-width: 54px;
       flex-shrink: 0;
       touch-action: none;
       cursor: ns-resize;
@@ -208,53 +184,14 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-
-    /* Touch selection origin point and dynamic velocity HUD */
-    .touch-origin-marker {
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--md-sys-color-primary);
-      box-shadow: 0 0 0 4px var(--md-sys-color-primary-container);
-      pointer-events: none;
-      transform: translate(-50%, -50%);
-      z-index: 30;
-      transition: transform 0.15s ease-out;
-    }
-    .touch-origin-marker::after {
-      content: '';
-      position: absolute;
-      inset: -6px;
-      border-radius: 50%;
-      border: 1.5px dashed var(--md-sys-color-primary);
-      animation: spin 3s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .touch-hud {
-      position: fixed;
-      bottom: 68px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.25s var(--ease-spring);
-      z-index: 40;
-    }
-    .touch-hud.active {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
   </style>
 </head>
+
 <body class="h-full flex flex-col antialiased overflow-hidden pt-[env(safe-area-inset-top,0px)]">
 
   <header class="bg-[var(--md-sys-color-surface-container)] px-3 py-2 sm:px-5 flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0 z-20 gap-2">
     <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-[14px] bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center flex-shrink-0">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-[14px] bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center flex-shrink-0 shadow-sm">
         <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
           <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
         </svg>
@@ -277,13 +214,13 @@
         <span id="auth-label" class="hidden sm:inline">Connexion</span>
       </button>
 
-      <!-- Tutorial code reset -->
-      <button id="btnReloadDemo" class="m3-btn px-2.5 py-1.5 text-xs font-semibold rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)]" title="Recharger l'exemple guidé">
+      <!-- Bouton Exemple HTML Tuto -->
+      <button id="btnReloadDemo" class="m3-btn px-3 py-1.5 text-xs font-bold rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]" title="Charger le code HTML d'exemple (125+ lignes)">
         <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-        <span class="hidden md:inline">Tuto</span>
+        <span>Exemple</span>
       </button>
 
-      <!-- View Selector Pill Switch: Split button is hidden on mobile screens -->
+      <!-- View Selector Pill Switch -->
       <div class="flex bg-[var(--md-sys-color-surface-container-highest)] p-1 rounded-full text-xs font-semibold">
         <button id="tabCode" class="m3-btn px-3 py-1 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]">
           Code
@@ -309,7 +246,7 @@
     </button>
 
     <!-- Copy All -->
-    <button id="btnCopyAll" class="m3-btn flex-shrink-0 whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] shadow-xs" title="Copier tout le code (Ctrl+C)">
+    <button id="btnCopyAll" class="m3-btn flex-shrink-0 whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] shadow-xs" title="Copier tout le code">
       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
       <span>Copier Tout</span>
     </button>
@@ -322,12 +259,18 @@
 
     <div class="h-4 w-[1px] bg-[var(--md-sys-color-outline-variant)] mx-0.5 flex-shrink-0"></div>
 
-    <!-- Mobile Touch Selection Velocity Tool -->
-    <button id="btnTouchSelect" class="m3-btn flex-shrink-0 whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-primary)] border border-[var(--md-sys-color-primary)]/30 shadow-xs" title="Activer la sélection tactile au doigt">
-      <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-        <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74a4.5 4.5 0 0 0-9 0c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.44-.72c-.1-.02-.21-.03-.31-.03-.41 0-.79.17-1.06.44l-.7.71 5.02 5.03c.36.36.86.57 1.39.57h6.74c.95 0 1.76-.67 1.94-1.61l.83-4.39c.14-.73-.18-1.46-.73-1.87z"/>
+    <!-- Mobile Keyboard Lock / Toggle Button -->
+    <button id="btnToggleKeyboard" class="m3-btn flex-shrink-0 whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] shadow-xs" title="Activer / Désactiver le clavier sur mobile">
+      <svg class="w-3.5 h-3.5 fill-current text-[var(--md-sys-color-primary)]" viewBox="0 0 24 24">
+        <path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm8 7H9v-2h6v2zm1-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/>
       </svg>
-      <span id="touchSelectLabel">Sélection Doigt</span>
+      <span id="keyboardLabel">Clavier : Bloqué</span>
+    </button>
+
+    <!-- JS Functions Inspector Modal Toggle -->
+    <button id="btnFunctionsList" class="m3-btn flex-shrink-0 whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] shadow-xs" title="Voir la liste des fonctions JS du document">
+      <span class="font-mono text-xs font-bold">ƒ(x)</span>
+      <span>Fonctions JS</span>
     </button>
 
     <!-- Search & Replace Drawer toggle -->
@@ -342,13 +285,13 @@
       <span>Indenter</span>
     </button>
 
-    <!-- Chromebook / PC File Download -->
+    <!-- Download HTML File -->
     <button id="btnDownload" class="m3-btn flex-shrink-0 whitespace-nowrap px-3 py-1 text-xs font-semibold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] shadow-xs" title="Télécharger index.html">
       <svg class="w-3.5 h-3.5 fill-current text-[var(--md-sys-color-primary)]" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
       <span>Exporter .html</span>
     </button>
 
-    <!-- Clear Editor -->
+    <!-- Clear Code -->
     <button id="btnClearCode" class="m3-btn flex-shrink-0 whitespace-nowrap px-3 py-1 text-xs font-semibold rounded-full bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-tertiary)] shadow-xs" title="Effacer tout">
       <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
       <span>Effacer</span>
@@ -361,17 +304,14 @@
       <div class="relative w-full md:w-5/12 flex items-center">
         <input id="findInput" type="text" placeholder="Terme à rechercher..." class="w-full pl-3 pr-28 py-2 text-xs rounded-full bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30 outline-none text-[var(--md-sys-color-on-surface)] focus:ring-2 focus:ring-[var(--md-sys-color-primary)]">
         
-        <!-- Navigation Chevrons and Match Indicator -->
         <div class="absolute right-1.5 flex items-center gap-1">
           <span id="matchCount" class="text-[11px] font-bold text-[var(--md-sys-color-secondary)] px-1.5">0/0</span>
           
-          <!-- Previous Match Chevron (Up) -->
-          <button id="btnPrevMatch" class="m3-btn w-6 h-6 rounded-full bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-surface)]" title="Occurrence précédente (Maj+Entrée)">
+          <button id="btnPrevMatch" class="m3-btn w-6 h-6 rounded-full bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-surface)]" title="Précédent (Maj+Entrée)">
             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
           </button>
           
-          <!-- Next Match Chevron (Down) -->
-          <button id="btnNextMatch" class="m3-btn w-6 h-6 rounded-full bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-surface)]" title="Occurrence suivante (Entrée)">
+          <button id="btnNextMatch" class="m3-btn w-6 h-6 rounded-full bg-[var(--md-sys-color-surface-container-high)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-surface)]" title="Suivant (Entrée)">
             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
           </button>
         </div>
@@ -403,13 +343,12 @@
         </div>
         <div class="editor-wrapper">
           <pre id="highlightLayer" class="highlight-layer" aria-hidden="true"></pre>
-          <div id="touchOriginMarker" class="touch-origin-marker hidden"></div>
-          <textarea id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off" class="code-area" placeholder="Colle ton code HTML/CSS/JS généré par l'IA ici..."></textarea>
+          <textarea id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off" inputmode="none" class="code-area" placeholder="Colle ton code HTML/CSS/JS généré par l'IA ici..."></textarea>
         </div>
       </div>
     </section>
 
-    <!-- Live Preview Section (Ensuring flex display for zero height collapse) -->
+    <!-- Live Preview Section -->
     <section id="previewSection" class="flex-1 flex flex-col h-full bg-white border-t md:border-t-0 md:border-l border-[var(--md-sys-color-outline-variant)]/30 transition-all duration-200">
       <div class="bg-[var(--md-sys-color-surface-container-high)] px-4 py-2 flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0">
         <div class="flex items-center gap-2">
@@ -436,23 +375,29 @@
     </div>
   </footer>
 
-  <!-- Toast Notification System -->
+  <!-- Toast Notification Box -->
   <div id="toastBox" class="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
 
-  <!-- Mobile Touch Selection HUD Overlay -->
-  <div id="touchHud" class="touch-hud">
-    <div class="m3-card px-4 py-2 bg-[var(--md-sys-color-surface-container-highest)] border border-[var(--md-sys-color-primary)]/40 flex items-center gap-3 shadow-2xl">
-      <div id="touchHudIcon" class="w-7 h-7 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center justify-center font-bold text-xs">
-        ⚡
+  <div id="functionsModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="m3-card max-w-md w-full p-5 bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30 flex flex-col max-h-[80vh]">
+      <div class="flex items-center justify-between pb-3 border-b border-[var(--md-sys-color-outline-variant)]/20 mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] flex items-center justify-center font-bold font-mono text-xs">
+            ƒ(x)
+          </div>
+          <h3 class="text-sm font-extrabold text-[var(--md-sys-color-on-surface)]">Fonctions JavaScript</h3>
+        </div>
+        <button id="btnCloseFunctionsModal" class="m3-btn w-7 h-7 rounded-full bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-on-surface)] text-xs font-bold">
+          ✕
+        </button>
       </div>
-      <div>
-        <div id="touchHudSpeed" class="text-xs font-extrabold text-[var(--md-sys-color-on-surface)]">Vitesse 1x</div>
-        <div id="touchHudCount" class="text-[11px] text-[var(--md-sys-color-secondary)]">0 caractères sélectionnés</div>
+
+      <div id="functionsListContent" class="flex-1 overflow-y-auto space-y-2 pr-1 hide-scrollbar">
+        <!-- Rempli dynamiquement -->
       </div>
     </div>
   </div>
 
-  <!-- Material 3 Expressive Confirmation Modal -->
   <div id="confirmModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div class="m3-card max-w-sm w-full p-6 bg-[var(--md-sys-color-surface-container-lowest)] border border-[var(--md-sys-color-outline-variant)]/30">
       <h3 class="text-base font-bold text-[var(--md-sys-color-on-surface)] mb-2">Déconnexion</h3>
@@ -469,7 +414,7 @@
   </div>
 
   <script>
-    /* Robust tutorial code with 120+ lines to thoroughly test smooth scroll */
+    /* Robust tutorial code with 125+ lines and 5 complete JS functions */
     const DEMO_HTML = '<!DOCTYPE html>\n' +
 '<html lang="fr" style="height:100%;">\n' +
 '<head>\n' +
@@ -488,6 +433,11 @@
 '      align-items: center;\n' +
 '      padding: 24px 16px;\n' +
 '      gap: 20px;\n' +
+'      transition: background 0.3s ease, color 0.3s ease;\n' +
+'    }\n' +
+'    body.dark-mode {\n' +
+'      background: #1D1B20;\n' +
+'      color: #FEF7FF;\n' +
 '    }\n' +
 '    .card {\n' +
 '      background: #FFFFFF;\n' +
@@ -500,6 +450,10 @@
 '      border: 1px solid #E6E0E9;\n' +
 '      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);\n' +
 '    }\n' +
+'    body.dark-mode .card {\n' +
+'      background: #2B2930;\n' +
+'      border-color: #49454F;\n' +
+'    }\n' +
 '    .card:hover { transform: translateY(-2px); }\n' +
 '    .icon-badge {\n' +
 '      width: 52px; height: 52px; margin: 0 auto 12px;\n' +
@@ -509,17 +463,26 @@
 '    }\n' +
 '    h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }\n' +
 '    p { font-size: 13px; color: #625B71; margin-bottom: 16px; line-height: 1.5; }\n' +
+'    body.dark-mode p { color: #CAC4D0; }\n' +
 '    .counter-box {\n' +
 '      background: #F3EDF7; border-radius: 20px; padding: 16px;\n' +
 '      margin-bottom: 16px; display: flex; align-items: center; justify-content: space-around;\n' +
 '    }\n' +
-'    .count-num { font-size: 32px; font-weight: 900; color: #6750A4; }\n' +
+'    body.dark-mode .counter-box { background: #36343B; }\n' +
+'    .count-num { font-size: 32px; font-weight: 900; color: #6750A4;\n' +
+'      transition: transform 0.15s ease; }\n' +
+'    body.dark-mode .count-num { color: #D0BCFF; }\n' +
+'    .actions-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }\n' +
 '    .btn-action {\n' +
 '      background: #6750A4; color: #FFFFFF; border: none; outline: none;\n' +
-'      padding: 10px 20px; border-radius: 9999px; font-size: 13px;\n' +
+'      padding: 10px 18px; border-radius: 9999px; font-size: 12px;\n' +
 '      font-weight: 700; cursor: pointer; transition: transform 0.2s;\n' +
 '    }\n' +
 '    .btn-action:active { transform: scale(0.95); }\n' +
+'    .btn-outline {\n' +
+'      background: transparent; color: #6750A4; border: 1.5px solid #6750A4;\n' +
+'    }\n' +
+'    body.dark-mode .btn-outline { color: #D0BCFF; border-color: #D0BCFF; }\n' +
 '    .feature-list {\n' +
 '      width: 100%;\n' +
 '      max-width: 380px;\n' +
@@ -539,6 +502,7 @@
 '      font-weight: 600;\n' +
 '      box-shadow: 0 2px 6px rgba(0,0,0,0.03);\n' +
 '    }\n' +
+'    body.dark-mode .feature-item { background: #2B2930; border-color: #49454F; }\n' +
 '    .feature-item span.emoji {\n' +
 '      font-size: 20px;\n' +
 '      background: #F3EDF7;\n' +
@@ -546,6 +510,7 @@
 '      border-radius: 12px;\n' +
 '      display: flex; align-items: center; justify-content: center;\n' +
 '    }\n' +
+'    body.dark-mode .feature-item span.emoji { background: #36343B; }\n' +
 '    .tag {\n' +
 '      font-size: 11px; font-weight: 700;\n' +
 '      background: #FFD8E4; color: #7D5260;\n' +
@@ -567,7 +532,14 @@
 '        <div id="counter" class="count-num">0</div>\n' +
 '        <div style="font-size:11px; color:#625B71; font-weight:600;">Interactions</div>\n' +
 '      </div>\n' +
-'      <button class="btn-action" onclick="addClick()">Tester +1</button>\n' +
+'      <div class="actions-row">\n' +
+'        <button class="btn-action" onclick="addClick()">Tester +1</button>\n' +
+'        <button class="btn-action btn-outline" onclick="resetCounter()">Reset</button>\n' +
+'      </div>\n' +
+'    </div>\n' +
+'    <div class="actions-row">\n' +
+'      <button class="btn-action btn-outline" onclick="toggleTheme()">Basculer Thème</button>\n' +
+'      <button class="btn-action" onclick="logStats()">Statistiques</button>\n' +
 '    </div>\n' +
 '    <div class="tag">🚀 Prêt pour le vibecoding</div>\n' +
 '  </div>\n' +
@@ -575,28 +547,37 @@
 '  <div class="feature-list">\n' +
 '    <div class="feature-item">\n' +
 '      <span class="emoji">👆</span>\n' +
-'      <div>Scroll au doigt fluide via les numéros de ligne</div>\n' +
+'      <div>Scroll au doigt fluide via les numéros de ligne (jusqu\'à 300 lig/s)</div>\n' +
 '    </div>\n' +
 '    <div class="feature-item">\n' +
-'      <span class="emoji">⚡</span>\n' +
-'      <div>Sélection rapide par étirement tactile</div>\n' +
+'      <span class="emoji">⌨️</span>\n' +
+'      <div>Clavier mobile verrouillable pour naviguer sans gêne</div>\n' +
+'    </div>\n' +
+'    <div class="feature-item">\n' +
+'      <span class="emoji">ƒ(x)</span>\n' +
+'      <div>Inspecteur direct des fonctions JavaScript</div>\n' +
 '    </div>\n' +
 '    <div class="feature-item">\n' +
 '      <span class="emoji">🔍</span>\n' +
-'      <div>Recherche avec surbrillance bleue instantanée</div>\n' +
-'    </div>\n' +
-'    <div class="feature-item">\n' +
-'      <span class="emoji">☁️</span>\n' +
-'      <div>Sauvegarde Cloud automatique Firebase</div>\n' +
+'      <div>Recherche & Remplacement en temps réel avec chevrons</div>\n' +
 '    </div>\n' +
 '  </div>\n' +
 '\n' +
-'  <footer>HTML Editor • Démo 100+ lignes</footer>\n' +
+'  <footer>HTML Editor • Démo 125+ lignes</footer>\n' +
 '\n' +
 '  <' + 'script>\n' +
 '    let count = 0;\n' +
 '    function addClick() {\n' +
 '      count++;\n' +
+'      updateDisplay();\n' +
+'    }\n' +
+'\n' +
+'    function resetCounter() {\n' +
+'      count = 0;\n' +
+'      updateDisplay();\n' +
+'    }\n' +
+'\n' +
+'    function updateDisplay() {\n' +
 '      const counterEl = document.getElementById("counter");\n' +
 '      if (counterEl) {\n' +
 '        counterEl.innerText = count;\n' +
@@ -605,6 +586,14 @@
 '          counterEl.style.transform = "scale(1.0)";\n' +
 '        }, 150);\n' +
 '      }\n' +
+'    }\n' +
+'\n' +
+'    function toggleTheme() {\n' +
+'      document.body.classList.toggle("dark-mode");\n' +
+'    }\n' +
+'\n' +
+'    function logStats() {\n' +
+'      console.log("Interactions enregistrées : " + count);\n' +
 '    }\n' +
 '  <' + '/script>\n' +
 '</body>\n' +
@@ -629,6 +618,13 @@
     const btnDownload = document.getElementById('btnDownload');
     const btnClearCode = document.getElementById('btnClearCode');
     const btnReloadDemo = document.getElementById('btnReloadDemo');
+    const btnToggleKeyboard = document.getElementById('btnToggleKeyboard');
+    const keyboardLabel = document.getElementById('keyboardLabel');
+
+    const btnFunctionsList = document.getElementById('btnFunctionsList');
+    const functionsModal = document.getElementById('functionsModal');
+    const btnCloseFunctionsModal = document.getElementById('btnCloseFunctionsModal');
+    const functionsListContent = document.getElementById('functionsListContent');
 
     const searchBar = document.getElementById('searchBar');
     const btnOpenSearch = document.getElementById('btnOpenSearch');
@@ -640,13 +636,6 @@
     const btnPrevMatch = document.getElementById('btnPrevMatch');
     const btnNextMatch = document.getElementById('btnNextMatch');
 
-    const btnTouchSelect = document.getElementById('btnTouchSelect');
-    const touchSelectLabel = document.getElementById('touchSelectLabel');
-    const touchOriginMarker = document.getElementById('touchOriginMarker');
-    const touchHud = document.getElementById('touchHud');
-    const touchHudSpeed = document.getElementById('touchHudSpeed');
-    const touchHudCount = document.getElementById('touchHudCount');
-
     const posIndicator = document.getElementById('posIndicator');
     const metricsIndicator = document.getElementById('metricsIndicator');
     const toastBox = document.getElementById('toastBox');
@@ -655,138 +644,70 @@
     let matchPositions = [];
     let currentMatchIndex = -1;
     const STORAGE_KEY = 'pixel_vibecode_content';
+    let isKeyboardEnabled = false;
+    const lineHeight = 13.5 * 1.6; // ~21.6px
 
-    function notify(message, symbol = '✓') {
+    /* Global File Store for Real-Time synchronization */
+    window.fileStore = new Map();
+    window.curFileId = "main_index_html";
+
+    window.showToast = function(msg) {
       const toast = document.createElement('div');
-      toast.className = 'px-4 py-2 rounded-full bg-[var(--md-sys-color-on-surface)] text-[var(--md-sys-color-surface)] text-xs font-bold shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-y-3 opacity-0';
-      toast.innerHTML = `<span class="text-[var(--md-sys-color-primary-container)]">${symbol}</span><span>${message}</span>`;
+      toast.className = 'px-4 py-2 bg-[var(--md-sys-color-on-surface)] text-[var(--md-sys-color-surface)] text-xs font-semibold rounded-full shadow-lg transition-all duration-300 transform translate-y-2 opacity-0 flex items-center gap-2';
+      toast.textContent = msg;
       toastBox.appendChild(toast);
 
       requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-3', 'opacity-0');
+        toast.classList.remove('translate-y-2', 'opacity-0');
       });
 
       setTimeout(() => {
-        toast.classList.add('translate-y-2', 'opacity-0');
-        setTimeout(() => toast.remove(), 250);
-      }, 2000);
-    }
+        toast.classList.add('opacity-0', 'translate-y-1');
+        setTimeout(() => toast.remove(), 300);
+      }, 2200);
+    };
+    const notify = window.showToast;
 
-    function spawnRipple(e) {
-      const btn = e.currentTarget;
-      const wave = document.createElement('span');
-      const size = Math.max(btn.clientWidth, btn.clientHeight);
-      const bounds = btn.getBoundingClientRect();
+    window.promptConfirm = function(message) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        const modalText = document.getElementById('confirmModalText');
+        const btnConfirm = document.getElementById('btnModalConfirm');
+        const btnCancel = document.getElementById('btnModalCancel');
 
-      wave.style.width = wave.style.height = `${size}px`;
-      wave.style.left = `${(e.clientX || (e.touches ? e.touches[0].clientX : bounds.left + size / 2)) - bounds.left - size / 2}px`;
-      wave.style.top = `${(e.clientY || (e.touches ? e.touches[0].clientY : bounds.top + size / 2)) - bounds.top - size / 2}px`;
-      wave.classList.add('ripple-wave');
+        modalText.textContent = message;
+        modal.classList.remove('hidden');
 
-      const oldWave = btn.querySelector('.ripple-wave');
-      if (oldWave) oldWave.remove();
+        const cleanup = (val) => {
+          modal.classList.add('hidden');
+          btnConfirm.onclick = null;
+          btnCancel.onclick = null;
+          resolve(val);
+        };
 
-      btn.appendChild(wave);
-    }
-
-    document.querySelectorAll('.m3-btn').forEach(b => {
-      b.addEventListener('pointerdown', spawnRipple);
-    });
-
-    function renderPreviewNow() {
-      const content = codeEditor.value;
-      if (!previewFrame) return;
-
-      try {
-        const frameDoc = previewFrame.contentDocument || (previewFrame.contentWindow && previewFrame.contentWindow.document);
-        if (frameDoc) {
-          frameDoc.open();
-          frameDoc.write(content);
-          frameDoc.close();
-          return;
-        }
-      } catch (e) {
-        // Fallback to srcdoc if document writing is restricted
-      }
-      previewFrame.srcdoc = content;
-    }
-
-    function refreshEditor() {
-      const content = codeEditor.value;
-      const lines = content.split('\n');
-      const lineCount = lines.length;
-
-      let gutterHTML = '';
-      for (let i = 1; i <= lineCount; i++) {
-        gutterHTML += i + '\n';
-      }
-      gutter.textContent = gutterHTML || '1';
-
-      metricsIndicator.innerText = `${content.length} caractères • ${lineCount} lignes`;
-
-      const cursorIndex = codeEditor.selectionStart;
-      const textToCursor = content.substring(0, cursorIndex).split('\n');
-      const currentLine = textToCursor.length;
-      const currentCol = textToCursor[textToCursor.length - 1].length + 1;
-      posIndicator.innerText = `Ligne ${currentLine}, Col ${currentCol}`;
-
-      try {
-        localStorage.setItem(STORAGE_KEY, content);
-      } catch (e) {}
-
-      if (!searchBar.classList.contains('hidden')) {
-        updateSearchMatches(true);
-      }
-
-      clearTimeout(previewTimer);
-      previewTimer = setTimeout(renderPreviewNow, 80);
-    }
-
-    function syncScroll() {
-      const top = codeEditor.scrollTop;
-      gutter.style.transform = `translateY(-${top}px)`;
-      highlightLayer.scrollTop = top;
-      highlightLayer.scrollLeft = codeEditor.scrollLeft;
-    }
-
-    codeEditor.addEventListener('scroll', syncScroll, { passive: true });
-    codeEditor.addEventListener('input', refreshEditor);
-    codeEditor.addEventListener('keyup', refreshEditor);
-    codeEditor.addEventListener('click', refreshEditor);
+        btnConfirm.onclick = () => cleanup(true);
+        btnCancel.onclick = () => cleanup(false);
+      });
+    };
 
     function switchLayout(mode) {
-      const tabs = [
-        { el: tabCode, id: 'code' },
-        { el: tabSplit, id: 'split' },
-        { el: tabPreview, id: 'preview' }
-      ];
-
-      tabs.forEach(t => {
-        if (t.id === mode) {
-          t.el.classList.add('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
-          t.el.classList.remove('text-[var(--md-sys-color-secondary)]');
-        } else {
-          t.el.classList.remove('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
-          t.el.classList.add('text-[var(--md-sys-color-secondary)]');
-        }
-      });
+      tabCode.className = 'm3-btn px-3 py-1 rounded-full text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-on-surface)]';
+      tabSplit.className = 'm3-btn px-3 py-1 rounded-full text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-on-surface)] hidden md:inline-flex';
+      tabPreview.className = 'm3-btn px-3 py-1 rounded-full text-[var(--md-sys-color-secondary)] hover:text-[var(--md-sys-color-on-surface)] flex items-center gap-1.5';
 
       if (mode === 'code') {
-        editorSection.classList.remove('hidden');
-        editorSection.classList.add('flex');
-        previewSection.classList.add('hidden');
-        previewSection.classList.remove('flex');
-      } else if (mode === 'split') {
-        editorSection.classList.remove('hidden');
-        editorSection.classList.add('flex');
-        previewSection.classList.remove('hidden');
-        previewSection.classList.add('flex');
-        renderPreviewNow();
+        tabCode.className = 'm3-btn px-3 py-1 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]';
+        editorSection.style.display = 'flex';
+        previewSection.style.display = 'none';
       } else if (mode === 'preview') {
-        editorSection.classList.add('hidden');
-        editorSection.classList.remove('flex');
-        previewSection.classList.remove('hidden');
-        previewSection.classList.add('flex');
+        tabPreview.className = 'm3-btn px-3 py-1 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] flex items-center gap-1.5';
+        editorSection.style.display = 'none';
+        previewSection.style.display = 'flex';
+        renderPreviewNow();
+      } else if (mode === 'split') {
+        tabSplit.className = 'm3-btn px-3 py-1 rounded-full bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hidden md:inline-flex';
+        editorSection.style.display = 'flex';
+        previewSection.style.display = 'flex';
         renderPreviewNow();
       }
     }
@@ -795,336 +716,218 @@
     tabSplit.addEventListener('click', () => switchLayout('split'));
     tabPreview.addEventListener('click', () => switchLayout('preview'));
 
-    function insertSnippet(text) {
-      const start = codeEditor.selectionStart;
-      const end = codeEditor.selectionEnd;
-      const val = codeEditor.value;
-      codeEditor.value = val.substring(0, start) + text + val.substring(end);
-      codeEditor.selectionStart = codeEditor.selectionEnd = start + text.length;
-      refreshEditor();
+    function syncScroll() {
+      gutter.style.transform = `translateY(-${codeEditor.scrollTop}px)`;
+      highlightLayer.scrollTop = codeEditor.scrollTop;
+      highlightLayer.scrollLeft = codeEditor.scrollLeft;
     }
 
-    btnSelectAll.addEventListener('click', () => {
-      codeEditor.focus();
-      codeEditor.setSelectionRange(0, codeEditor.value.length);
-      notify('Code sélectionné en totalité');
-    });
+    function updateLineNumbers() {
+      const lineCount = codeEditor.value.split('\n').length;
+      let gutterText = '';
+      for (let i = 1; i <= lineCount; i++) {
+        gutterText += i + '\n';
+      }
+      gutter.textContent = gutterText;
+    }
 
-    btnCopyAll.addEventListener('click', () => {
+    function updateMetrics() {
+      const text = codeEditor.value;
+      const pos = codeEditor.selectionStart || 0;
+      const lines = text.substring(0, pos).split('\n');
+      const line = lines.length;
+      const col = lines[lines.length - 1].length + 1;
+      posIndicator.textContent = `Ligne ${line}, Colonne ${col}`;
+      metricsIndicator.textContent = `${text.length.toLocaleString('fr-FR')} caractères`;
+    }
+
+    function refreshEditor() {
+      updateLineNumbers();
+      updateMetrics();
+      syncScroll();
+      updateSearchHighlights();
+    }
+
+    function renderPreviewNow() {
+      const content = codeEditor.value;
       try {
-        codeEditor.select();
-        document.execCommand('copy');
-        notify('Copié dans le presse-papier');
+        const frameDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        frameDoc.open();
+        frameDoc.write(content);
+        frameDoc.close();
       } catch (e) {
-        navigator.clipboard.writeText(codeEditor.value)
-          .then(() => notify('Copié dans le presse-papier'))
-          .catch(() => notify('Erreur lors de la copie', '✕'));
+        previewFrame.srcdoc = content;
       }
-    });
+    }
 
-    btnPaste.addEventListener('click', async () => {
-      codeEditor.focus();
-      if (navigator.clipboard && navigator.clipboard.readText) {
+    function triggerAutoRefresh() {
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(() => {
+        renderPreviewNow();
         try {
-          const clip = await navigator.clipboard.readText();
-          if (clip) {
-            insertSnippet(clip);
-            notify('Contenu collé');
-            return;
-          }
-        } catch (err) {}
-      }
-      notify('Utilisez Ctrl+V pour coller', 'ℹ');
-    });
-
-    btnFormat.addEventListener('click', () => {
-      try {
-        const lines = codeEditor.value.split('\n');
-        let level = 0;
-        const formatted = lines.map(line => {
-          let trimmed = line.trim();
-          if (trimmed.startsWith('</') || trimmed.startsWith('}')) {
-            level = Math.max(0, level - 1);
-          }
-          const res = '  '.repeat(level) + trimmed;
-          if ((trimmed.startsWith('<') && !trimmed.startsWith('</') && !trimmed.endsWith('/>') && !trimmed.includes('</')) || trimmed.endsWith('{')) {
-            level++;
-          }
-          return res;
-        }).join('\n');
-
-        codeEditor.value = formatted;
-        refreshEditor();
-        notify('Code indenté');
-      } catch (err) {
-        notify('Erreur de formatage', '✕');
-      }
-    });
-
-    btnDownload.addEventListener('click', () => {
-      const blob = new Blob([codeEditor.value], { type: 'text/html;charset=utf-8' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'index.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      notify('Fichier index.html exporté');
-    });
-
-    btnClearCode.addEventListener('click', () => {
-      codeEditor.value = '';
-      refreshEditor();
-      notify('Éditeur vidé');
-    });
-
-    btnReloadDemo.addEventListener('click', () => {
-      codeEditor.value = DEMO_HTML;
-      refreshEditor();
-      renderPreviewNow();
-      notify('Tutoriel réinitialisé');
-    });
-
-    let isTouchSelectMode = false;
-    let isSelectingTouch = false;
-    let touchOrigin = { x: 0, y: 0, clientY: 0, index: 0 };
-    let currentTouchPos = { clientX: 0, clientY: 0 };
-    let velocityAnimId = null;
-    let charWidth = 8.1;
-    const lineHeight = 13.5 * 1.6; // ~21.6px
-    let longPressTimer = null;
-
-    // Measure exact monospace character width
-    function measureCharMetrics() {
-      const test = document.createElement('span');
-      test.style.fontFamily = "'JetBrains Mono', monospace";
-      test.style.fontSize = '13.5px';
-      test.style.lineHeight = '1.6';
-      test.style.visibility = 'hidden';
-      test.style.position = 'absolute';
-      test.textContent = 'WWWWWWWWWW';
-      document.body.appendChild(test);
-      charWidth = test.getBoundingClientRect().width / 10;
-      document.body.removeChild(test);
+          localStorage.setItem(STORAGE_KEY, codeEditor.value);
+        } catch (e) {}
+      }, 100);
     }
-    measureCharMetrics();
 
-    // Toggle button for explicit touch selection mode
-    btnTouchSelect.addEventListener('click', () => {
-      isTouchSelectMode = !isTouchSelectMode;
-      if (isTouchSelectMode) {
-        btnTouchSelect.classList.remove('bg-[var(--md-sys-color-surface-container-lowest)]', 'text-[var(--md-sys-color-primary)]');
-        btnTouchSelect.classList.add('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
-        touchSelectLabel.textContent = 'Sélection Active';
-        notify('Touchez et glissez votre doigt pour sélectionner', '👆');
+    codeEditor.addEventListener('input', () => {
+      refreshEditor();
+      triggerAutoRefresh();
+    });
+    codeEditor.addEventListener('scroll', syncScroll);
+    codeEditor.addEventListener('keyup', updateMetrics);
+    codeEditor.addEventListener('click', updateMetrics);
+
+    btnToggleKeyboard.addEventListener('click', () => {
+      isKeyboardEnabled = !isKeyboardEnabled;
+      if (isKeyboardEnabled) {
+        codeEditor.setAttribute('inputmode', 'text');
+        keyboardLabel.textContent = 'Clavier : Actif';
+        btnToggleKeyboard.classList.remove('bg-[var(--md-sys-color-surface-container-lowest)]');
+        btnToggleKeyboard.classList.add('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
+        notify('Clavier activé');
+        codeEditor.focus();
       } else {
-        btnTouchSelect.classList.add('bg-[var(--md-sys-color-surface-container-lowest)]', 'text-[var(--md-sys-color-primary)]');
-        btnTouchSelect.classList.remove('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
-        touchSelectLabel.textContent = 'Sélection Doigt';
-        stopTouchSelection();
+        codeEditor.setAttribute('inputmode', 'none');
+        keyboardLabel.textContent = 'Clavier : Bloqué';
+        btnToggleKeyboard.classList.add('bg-[var(--md-sys-color-surface-container-lowest)]');
+        btnToggleKeyboard.classList.remove('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
+        notify('Clavier bloqué (mode tactile)');
       }
     });
 
-    // Convert pixel coordinate inside textarea to exact character index
-    function getCharIndexFromCoords(clientX, clientY) {
-      const rect = codeEditor.getBoundingClientRect();
-      const paddingLeft = 16;
-      const paddingTop = 16;
+    function extractJSFunctions() {
+      const text = codeEditor.value;
+      const scriptRegex = /<script\b[^>]*>([\s\S]*?)<\/script>/gi;
+      let scriptMatch;
+      const functionsFound = [];
 
-      const relY = Math.max(0, clientY - rect.top + codeEditor.scrollTop - paddingTop);
-      const relX = Math.max(0, clientX - rect.left + codeEditor.scrollLeft - paddingLeft);
+      while ((scriptMatch = scriptRegex.exec(text)) !== null) {
+        const scriptCode = scriptMatch[1];
+        const scriptStartIndex = scriptMatch.index + scriptMatch[0].indexOf(scriptCode);
 
-      const targetLine = Math.floor(relY / lineHeight);
-      const targetCol = Math.max(0, Math.round(relX / charWidth));
+        const fnRegex = /(?:async\s+)?function\s*([a-zA-Z0-9_$]+)\s*\(([^)]*)\)|(?:const|let|var)\s+([a-zA-Z0-9_$]+)\s*=\s*(?:async\s*)?\(([^)]*)\)\s*=>|(?:const|let|var)\s+([a-zA-Z0-9_$]+)\s*=\s*function\s*\(([^)]*)\)/g;
+        let fnMatch;
 
-      const lines = codeEditor.value.split('\n');
-      let index = 0;
+        while ((fnMatch = fnRegex.exec(scriptCode)) !== null) {
+          const fnName = fnMatch[1] || fnMatch[3] || fnMatch[5] || 'anonyme';
+          const fnArgs = (fnMatch[2] || fnMatch[4] || fnMatch[6] || '').trim();
+          const matchAbsPos = scriptStartIndex + fnMatch.index;
+          const lineNumber = text.substring(0, matchAbsPos).split('\n').length;
 
-      for (let i = 0; i < lines.length; i++) {
-        if (i === targetLine) {
-          index += Math.min(targetCol, lines[i].length);
-          return Math.min(index, codeEditor.value.length);
+          functionsFound.push({
+            name: fnName,
+            args: fnArgs,
+            pos: matchAbsPos,
+            line: lineNumber
+          });
         }
-        index += lines[i].length + 1; // +1 for the newline
       }
-      return codeEditor.value.length;
+      return functionsFound;
     }
 
-    function startTouchSelection(clientX, clientY) {
-      isSelectingTouch = true;
-      const editorRect = codeEditor.getBoundingClientRect();
-      const originChar = getCharIndexFromCoords(clientX, clientY);
+    btnFunctionsList.addEventListener('click', () => {
+      const fns = extractJSFunctions();
+      functionsListContent.innerHTML = '';
 
-      touchOrigin = {
-        x: clientX - editorRect.left + codeEditor.scrollLeft,
-        y: clientY - editorRect.top + codeEditor.scrollTop,
-        clientY: clientY,
-        index: originChar
-      };
-      currentTouchPos = { clientX, clientY };
+      if (fns.length === 0) {
+        functionsListContent.innerHTML = `
+          <div class="py-8 text-center text-xs text-[var(--md-sys-color-secondary)]">
+            Aucune fonction JavaScript trouvée dans les balises &lt;script&gt;
+          </div>
+        `;
+      } else {
+        fns.forEach(fn => {
+          const item = document.createElement('button');
+          item.className = 'w-full text-left p-3 rounded-2xl bg-[var(--md-sys-color-surface-container)] hover:bg-[var(--md-sys-color-primary-container)] transition-colors flex items-center justify-between group';
+          item.innerHTML = `
+            <div class="flex items-center gap-2 overflow-hidden pr-2">
+              <span class="text-[var(--md-sys-color-primary)] font-mono font-bold text-xs">ƒ</span>
+              <span class="font-mono text-xs font-bold text-[var(--md-sys-color-on-surface)] truncate">${fn.name}(<span class="text-[var(--md-sys-color-secondary)] font-normal">${fn.args}</span>)</span>
+            </div>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-secondary)] group-hover:bg-[var(--md-sys-color-surface-container-lowest)] flex-shrink-0">
+              Lig ${fn.line}
+            </span>
+          `;
 
-      // Position origin point pin
-      touchOriginMarker.style.left = `${clientX - editorRect.left}px`;
-      touchOriginMarker.style.top = `${clientY - editorRect.top}px`;
-      touchOriginMarker.classList.remove('hidden');
+          item.onclick = () => {
+            functionsModal.classList.add('hidden');
+            codeEditor.focus();
+            codeEditor.setSelectionRange(fn.pos, fn.pos + fn.name.length);
+            const targetScroll = Math.max(0, ((fn.line - 1) * lineHeight) - 80);
+            codeEditor.scrollTop = targetScroll;
+            syncScroll();
+            notify(`Aller à ${fn.name}() (Ligne ${fn.line})`);
+          };
 
-      touchHud.classList.add('active');
-      touchHudSpeed.textContent = 'Défilement stationnaire';
-      touchHudCount.textContent = '0 caractère';
+          functionsListContent.appendChild(item);
+        });
+      }
 
-      if (navigator.vibrate) navigator.vibrate(15);
-      runVelocityScrollLoop();
-    }
+      functionsModal.classList.remove('hidden');
+    });
 
-    function runVelocityScrollLoop() {
-      if (!isSelectingTouch) return;
+    btnCloseFunctionsModal.addEventListener('click', () => {
+      functionsModal.classList.add('hidden');
+    });
 
-      const deltaY = currentTouchPos.clientY - touchOrigin.clientY;
+    let isGutterScrolling = false;
+    let gutterStartY = 0;
+    let gutterCurrentY = 0;
+    let gutterAnimLoopId = null;
+    const MAX_LINES_PER_SEC = 300;
+
+    function gutterScrollPhysicsLoop() {
+      if (!isGutterScrolling) return;
+
+      const deltaY = gutterCurrentY - gutterStartY;
       const distance = Math.abs(deltaY);
-      const deadzone = 25; // Deadzone where no auto-scroll occurs
-
-      let scrollDelta = 0;
-      let speedLabel = 'Précis (fixe)';
+      const deadzone = 8;
 
       if (distance > deadzone) {
         const excess = distance - deadzone;
-        // Non-linear acceleration: further finger moves away from origin, faster it scrolls
-        const normalizedPower = Math.pow(excess / 40, 1.7);
+        const ratio = Math.min(1, excess / 220);
         const direction = deltaY > 0 ? 1 : -1;
-        scrollDelta = direction * Math.min(55, Math.max(2, normalizedPower * 2.5));
+        const linesPerFrame = ratio * (MAX_LINES_PER_SEC / 60);
+        const pixelsToScroll = direction * (linesPerFrame * lineHeight);
 
-        const level = Math.min(10, Math.max(1, Math.round(Math.abs(scrollDelta) / 4)));
-        const arrows = direction > 0 ? '▼'.repeat(Math.min(4, level)) : '▲'.repeat(Math.min(4, level));
-        speedLabel = `${arrows} Vitesse x${level}`;
-      }
-
-      if (scrollDelta !== 0) {
-        codeEditor.scrollTop += scrollDelta;
+        codeEditor.scrollTop += pixelsToScroll;
         syncScroll();
+
+        const currentScrollLine = Math.floor(codeEditor.scrollTop / lineHeight) + 1;
+        const currentSpeed = Math.round(ratio * MAX_LINES_PER_SEC);
+        posIndicator.innerText = `Défilement : ~${currentScrollLine} (${currentSpeed} lig/s)`;
       }
 
-      // Update selection range from origin index to current touched character index
-      const currentChar = getCharIndexFromCoords(currentTouchPos.clientX, currentTouchPos.clientY);
-      const selStart = Math.min(touchOrigin.index, currentChar);
-      const selEnd = Math.max(touchOrigin.index, currentChar);
-
-      codeEditor.setSelectionRange(selStart, selEnd);
-      const count = selEnd - selStart;
-      touchHudSpeed.textContent = speedLabel;
-      touchHudCount.textContent = `${count} caractères sélectionnés`;
-
-      velocityAnimId = requestAnimationFrame(runVelocityScrollLoop);
+      gutterAnimLoopId = requestAnimationFrame(gutterScrollPhysicsLoop);
     }
-
-    function stopTouchSelection() {
-      isSelectingTouch = false;
-      if (velocityAnimId) cancelAnimationFrame(velocityAnimId);
-      touchOriginMarker.classList.add('hidden');
-      touchHud.classList.remove('active');
-      refreshEditor();
-    }
-
-    // Touch events on editor
-    codeEditor.addEventListener('touchstart', (e) => {
-      const touch = e.touches[0];
-      if (!touch) return;
-
-      // If explicit mode is toggled, start immediate selection
-      if (isTouchSelectMode) {
-        e.preventDefault();
-        startTouchSelection(touch.clientX, touch.clientY);
-        return;
-      }
-
-      // Long-press fallback (hold finger 350ms to start velocity selection)
-      longPressTimer = setTimeout(() => {
-        startTouchSelection(touch.clientX, touch.clientY);
-      }, 350);
-    }, { passive: false });
-
-    codeEditor.addEventListener('touchmove', (e) => {
-      const touch = e.touches[0];
-      if (!touch) return;
-
-      if (isSelectingTouch) {
-        e.preventDefault();
-        currentTouchPos = { clientX: touch.clientX, clientY: touch.clientY };
-      } else {
-        // If moving finger before long press completes, cancel long press
-        clearTimeout(longPressTimer);
-      }
-    }, { passive: false });
-
-    codeEditor.addEventListener('touchend', () => {
-      clearTimeout(longPressTimer);
-      if (isSelectingTouch) {
-        stopTouchSelection();
-      }
-    });
-
-    codeEditor.addEventListener('touchcancel', () => {
-      clearTimeout(longPressTimer);
-      if (isSelectingTouch) {
-        stopTouchSelection();
-      }
-    });
-
-    /* Défilement tactile direct via la colonne des numéros de ligne */
-    let isGutterScrolling = false;
-    let gutterStartY = 0;
-    let gutterLastY = 0;
-    let gutterVelocity = 0;
-    let gutterInertiaFrame = null;
 
     function handleGutterTouchStart(e) {
       if (e.touches.length !== 1) return;
       e.preventDefault();
-      cancelAnimationFrame(gutterInertiaFrame);
+      cancelAnimationFrame(gutterAnimLoopId);
 
       isGutterScrolling = true;
       gutterWrapper.classList.add('is-scrolling');
       gutterStartY = e.touches[0].clientY;
-      gutterLastY = gutterStartY;
-      gutterVelocity = 0;
+      gutterCurrentY = gutterStartY;
 
       if (navigator.vibrate) navigator.vibrate(10);
+      gutterAnimLoopId = requestAnimationFrame(gutterScrollPhysicsLoop);
     }
 
     function handleGutterTouchMove(e) {
       if (!isGutterScrolling || e.touches.length !== 1) return;
       e.preventDefault();
-
-      const currentY = e.touches[0].clientY;
-      const deltaY = gutterLastY - currentY;
-      gutterVelocity = deltaY;
-      gutterLastY = currentY;
-
-      // Défilement 1:1 du code et synchronisation matérielle de la colonne
-      codeEditor.scrollTop += deltaY * 1.5;
-      syncScroll();
-
-      // Mise à jour de l'indicateur de position
-      const currentScrollLine = Math.floor(codeEditor.scrollTop / lineHeight) + 1;
-      posIndicator.innerText = `Défilement ligne ~${currentScrollLine}`;
+      gutterCurrentY = e.touches[0].clientY;
     }
 
     function handleGutterTouchEnd() {
       if (!isGutterScrolling) return;
       isGutterScrolling = false;
+      cancelAnimationFrame(gutterAnimLoopId);
       gutterWrapper.classList.remove('is-scrolling');
-
-      // Effet d'inertie fluide
-      function applyInertia() {
-        if (Math.abs(gutterVelocity) > 0.5) {
-          codeEditor.scrollTop += gutterVelocity;
-          syncScroll();
-          gutterVelocity *= 0.92;
-          gutterInertiaFrame = requestAnimationFrame(applyInertia);
-        } else {
-          refreshEditor();
-        }
-      }
-      gutterInertiaFrame = requestAnimationFrame(applyInertia);
+      refreshEditor();
     }
 
     gutterWrapper.addEventListener('touchstart', handleGutterTouchStart, { passive: false });
@@ -1132,23 +935,25 @@
     gutterWrapper.addEventListener('touchend', handleGutterTouchEnd);
     gutterWrapper.addEventListener('touchcancel', handleGutterTouchEnd);
 
-    // Support du glisser à la souris sur Chromebook / PC
+    // Mouse support for desktop / PC
     gutterWrapper.addEventListener('mousedown', (e) => {
       e.preventDefault();
+      cancelAnimationFrame(gutterAnimLoopId);
       isGutterScrolling = true;
       gutterWrapper.classList.add('is-scrolling');
-      gutterLastY = e.clientY;
+      gutterStartY = e.clientY;
+      gutterCurrentY = gutterStartY;
+
+      gutterAnimLoopId = requestAnimationFrame(gutterScrollPhysicsLoop);
 
       const onMouseMove = (moveEvent) => {
         if (!isGutterScrolling) return;
-        const delta = gutterLastY - moveEvent.clientY;
-        gutterLastY = moveEvent.clientY;
-        codeEditor.scrollTop += delta * 1.5;
-        syncScroll();
+        gutterCurrentY = moveEvent.clientY;
       };
 
       const onMouseUp = () => {
         isGutterScrolling = false;
+        cancelAnimationFrame(gutterAnimLoopId);
         gutterWrapper.classList.remove('is-scrolling');
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
@@ -1163,138 +968,138 @@
       return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
-    function escapeHTML(str) {
-      return str.replace(/[&<>"']/g, m => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      }[m]));
-    }
-
-    function renderHighlightsAndNavigate(shouldScroll = false) {
+    function updateSearchHighlights() {
       const query = findInput.value;
       const text = codeEditor.value;
 
-      if (!query || matchPositions.length === 0) {
+      if (!query || searchBar.classList.contains('hidden')) {
         highlightLayer.innerHTML = '';
-        matchCount.innerText = '0/0';
+        matchCount.textContent = '0/0';
+        matchPositions = [];
+        currentMatchIndex = -1;
         return;
       }
 
-      let html = '';
-      let lastIndex = 0;
-
-      matchPositions.forEach((match, idx) => {
-        html += escapeHTML(text.substring(lastIndex, match.start));
-        const isActive = idx === currentMatchIndex;
-        html += `<mark class="search-highlight ${isActive ? 'active-highlight' : ''}">${escapeHTML(text.substring(match.start, match.end))}</mark>`;
-        lastIndex = match.end;
-      });
-
-      html += escapeHTML(text.substring(lastIndex));
-      if (text.endsWith('\n')) html += '\n';
-      highlightLayer.innerHTML = html;
-
-      matchCount.innerText = `${currentMatchIndex + 1}/${matchPositions.length}`;
-
-      if (shouldScroll && currentMatchIndex >= 0 && currentMatchIndex < matchPositions.length) {
-        const cur = matchPositions[currentMatchIndex];
-        codeEditor.focus();
-        codeEditor.setSelectionRange(cur.start, cur.end);
-
-        // Smooth scroll textarea to match line
-        const textBefore = text.substring(0, cur.start);
-        const lineIndex = textBefore.split('\n').length - 1;
-        const targetScroll = Math.max(0, (lineIndex * lineHeight) - 80);
-        codeEditor.scrollTop = targetScroll;
-        syncScroll();
-      }
-    }
-
-    function updateSearchMatches(keepIndex = false) {
-      const query = findInput.value;
       matchPositions = [];
+      const regex = new RegExp(escapeRegExp(query), 'gi');
+      let match;
+      let lastIdx = 0;
+      let html = '';
 
-      if (!query) {
-        matchCount.innerText = '0/0';
-        currentMatchIndex = -1;
-        highlightLayer.innerHTML = '';
-        return;
+      while ((match = regex.exec(text)) !== null) {
+        matchPositions.push({ start: match.index, end: match.index + match[0].length });
+        const nonMatchPart = text.substring(lastIdx, match.index);
+        html += escapeHtml(nonMatchPart);
+
+        const matchIdx = matchPositions.length - 1;
+        const isActive = matchIdx === currentMatchIndex;
+        const matchedText = text.substring(match.index, match.index + match[0].length);
+
+        html += `<span class="search-highlight ${isActive ? 'active-highlight' : ''}">${escapeHtml(matchedText)}</span>`;
+        lastIdx = match.index + match[0].length;
       }
 
-      const text = codeEditor.value;
-      try {
-        const rx = new RegExp(escapeRegExp(query), 'gi');
-        let m;
-        while ((m = rx.exec(text)) !== null) {
-          matchPositions.push({ start: m.index, end: m.index + m[0].length });
-          if (rx.lastIndex === m.index) rx.lastIndex++;
-        }
+      html += escapeHtml(text.substring(lastIdx));
+      highlightLayer.innerHTML = html + '\n';
 
-        const total = matchPositions.length;
-        if (total === 0) {
-          matchCount.innerText = '0/0';
-          currentMatchIndex = -1;
-          highlightLayer.innerHTML = '';
-          return;
+      const total = matchPositions.length;
+      if (total > 0) {
+        if (currentMatchIndex < 0 || currentMatchIndex >= total) {
+          currentMatchIndex = 0;
         }
-
-        if (!keepIndex || currentMatchIndex < 0 || currentMatchIndex >= total) {
-          const cursor = codeEditor.selectionStart || 0;
-          let nextIdx = matchPositions.findIndex(p => p.start >= cursor);
-          currentMatchIndex = nextIdx !== -1 ? nextIdx : 0;
-        }
-
-        renderHighlightsAndNavigate(false);
-      } catch (e) {
-        matchCount.innerText = '0/0';
+        matchCount.textContent = `${currentMatchIndex + 1}/${total}`;
+      } else {
         currentMatchIndex = -1;
-        highlightLayer.innerHTML = '';
+        matchCount.textContent = '0/0';
       }
     }
 
-    /* Chevron next match (Down) */
-    function nextMatch() {
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function scrollToMatch(index) {
+      if (index < 0 || index >= matchPositions.length) return;
+      currentMatchIndex = index;
+      const targetMatch = matchPositions[index];
+
+      codeEditor.focus();
+      codeEditor.setSelectionRange(targetMatch.start, targetMatch.end);
+
+      const beforeText = codeEditor.value.substring(0, targetMatch.start);
+      const lineNumber = beforeText.split('\n').length;
+      const targetScroll = Math.max(0, ((lineNumber - 1) * lineHeight) - 80);
+
+      codeEditor.scrollTop = targetScroll;
+      syncScroll();
+      updateSearchHighlights();
+    }
+
+    findInput.addEventListener('input', () => {
+      currentMatchIndex = 0;
+      updateSearchHighlights();
+      if (matchPositions.length > 0) {
+        scrollToMatch(0);
+      }
+    });
+
+    btnNextMatch.addEventListener('click', () => {
       if (matchPositions.length === 0) return;
       currentMatchIndex = (currentMatchIndex + 1) % matchPositions.length;
-      renderHighlightsAndNavigate(true);
-    }
+      scrollToMatch(currentMatchIndex);
+    });
 
-    /* Chevron previous match (Up) */
-    function prevMatch() {
+    btnPrevMatch.addEventListener('click', () => {
       if (matchPositions.length === 0) return;
       currentMatchIndex = (currentMatchIndex - 1 + matchPositions.length) % matchPositions.length;
-      renderHighlightsAndNavigate(true);
-    }
-
-    btnNextMatch.addEventListener('click', nextMatch);
-    btnPrevMatch.addEventListener('click', prevMatch);
+      scrollToMatch(currentMatchIndex);
+    });
 
     findInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         if (e.shiftKey) {
-          prevMatch();
+          btnPrevMatch.click();
         } else {
-          nextMatch();
+          btnNextMatch.click();
         }
       }
     });
 
-    findInput.addEventListener('input', () => updateSearchMatches(false));
+    btnExecuteReplaceAll.addEventListener('click', () => {
+      const searchVal = findInput.value;
+      const replaceVal = replaceInput.value;
+
+      if (!searchVal) {
+        notify('Veuillez entrer un terme');
+        return;
+      }
+
+      const regex = new RegExp(escapeRegExp(searchVal), 'gi');
+      const matches = codeEditor.value.match(regex);
+      const count = matches ? matches.length : 0;
+
+      if (count === 0) {
+        notify('Aucune occurrence trouvée');
+        return;
+      }
+
+      codeEditor.value = codeEditor.value.replace(regex, replaceVal);
+      refreshEditor();
+      triggerAutoRefresh();
+      updateSearchHighlights();
+      notify(`${count} remplacement(s) effectué(s)`);
+    });
 
     btnOpenSearch.addEventListener('click', () => {
-      const isHidden = searchBar.classList.contains('hidden');
-      if (isHidden) {
-        searchBar.classList.remove('hidden');
-        findInput.focus();
-        updateSearchMatches(false);
-      } else {
-        searchBar.classList.add('hidden');
-        highlightLayer.innerHTML = '';
-      }
+      searchBar.classList.remove('hidden');
+      findInput.focus();
+      updateSearchHighlights();
     });
 
     btnCloseSearchBar.addEventListener('click', () => {
@@ -1302,99 +1107,128 @@
       highlightLayer.innerHTML = '';
     });
 
-    /* Replace All logic with immediate refresh */
-    btnExecuteReplaceAll.addEventListener('click', () => {
-      const searchVal = findInput.value;
-      const replaceVal = replaceInput.value;
-      if (!searchVal) {
-        notify('Entrez un mot à chercher', 'ℹ');
-        return;
+    btnSelectAll.addEventListener('click', () => {
+      codeEditor.focus();
+      codeEditor.select();
+      updateMetrics();
+      notify('Tout sélectionné');
+    });
+
+    btnCopyAll.addEventListener('click', () => {
+      codeEditor.select();
+      document.execCommand('copy');
+      notify('Code copié');
+    });
+
+    btnPaste.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          const start = codeEditor.selectionStart;
+          const end = codeEditor.selectionEnd;
+          codeEditor.setRangeText(text, start, end, 'end');
+          refreshEditor();
+          triggerAutoRefresh();
+          notify('Contenu collé');
+        }
+      } catch (err) {
+        codeEditor.focus();
+        notify('Utilisez Ctrl+V');
+      }
+    });
+
+    btnFormat.addEventListener('click', () => {
+      let lines = codeEditor.value.split('\n');
+      let indentLevel = 0;
+      let formatted = [];
+
+      for (let rawLine of lines) {
+        let line = rawLine.trim();
+        if (!line) {
+          formatted.push('');
+          continue;
+        }
+
+        if (line.match(/^<\/(?!.*>)/) || line.startsWith('}') || line.startsWith('</')) {
+          indentLevel = Math.max(0, indentLevel - 1);
+        }
+
+        formatted.push('  '.repeat(indentLevel) + line);
+
+        const openTags = (line.match(/<[a-zA-Z0-9]+(?:\s+[^>]*?)?(?<!\/)>/g) || []).filter(t => !t.match(/<(img|br|hr|input|meta|link)\b/i)).length;
+        const closeTags = (line.match(/<\/[a-zA-Z0-9]+>/g) || []).length;
+        const openBraces = (line.match(/{/g) || []).length;
+        const closeBraces = (line.match(/}/g) || []).length;
+
+        indentLevel += (openTags - closeTags) + (openBraces - closeBraces);
+        if (indentLevel < 0) indentLevel = 0;
       }
 
-      const rx = new RegExp(escapeRegExp(searchVal), 'gi');
-      const count = (codeEditor.value.match(rx) || []).length;
-
-      if (count === 0) {
-        notify('Aucune occurrence trouvée', '✕');
-        return;
-      }
-
-      codeEditor.value = codeEditor.value.replace(rx, replaceVal);
+      codeEditor.value = formatted.join('\n');
       refreshEditor();
-      updateSearchMatches(false);
+      triggerAutoRefresh();
+      notify('Code indenté');
+    });
+
+    btnDownload.addEventListener('click', () => {
+      const blob = new Blob([codeEditor.value], { type: 'text/html;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'index.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      notify('index.html téléchargé');
+    });
+
+    btnClearCode.addEventListener('click', () => {
+      codeEditor.value = '';
+      refreshEditor();
+      triggerAutoRefresh();
+      notify('Éditeur vidé');
+    });
+
+    btnReloadDemo.addEventListener('click', () => {
+      codeEditor.value = DEMO_HTML;
+      try {
+        localStorage.setItem(STORAGE_KEY, DEMO_HTML);
+      } catch (e) {}
+      refreshEditor();
       renderPreviewNow();
-      notify(`${count} occurrence(s) remplacée(s) !`);
+      notify('Exemple HTML (125+ lignes) chargé !');
     });
 
     /* Keyboard shortcuts */
-    codeEditor.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        try {
-          localStorage.setItem(STORAGE_KEY, codeEditor.value);
-        } catch (err) {}
-        notify('Sauvegardé en local');
-        return;
-      }
-
+    window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
         e.preventDefault();
-        searchBar.classList.remove('hidden');
-        findInput.focus();
-        updateSearchMatches(false);
-        return;
-      }
-
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        insertSnippet('  ');
+        searchBar.classList.toggle('hidden');
+        if (!searchBar.classList.contains('hidden')) {
+          findInput.focus();
+          updateSearchHighlights();
+        }
       }
     });
 
-    window.fileStore = new Map();
-    window.curFileId = 'index_html';
-    window.showToast = notify;
-    window.setSaveStatus = (msg) => notify(msg, '☁');
-
-    window.promptConfirm = function(message) {
-      return new Promise((resolve) => {
-        const modal = document.getElementById('confirmModal');
-        const modalText = document.getElementById('confirmModalText');
-        const btnCancel = document.getElementById('btnModalCancel');
-        const btnConfirm = document.getElementById('btnModalConfirm');
-
-        modalText.textContent = message;
-        modal.classList.remove('hidden');
-
-        const cleanup = (val) => {
-          modal.classList.add('hidden');
-          btnCancel.onclick = null;
-          btnConfirm.onclick = null;
-          resolve(val);
-        };
-
-        btnCancel.onclick = () => cleanup(false);
-        btnConfirm.onclick = () => cleanup(true);
-      });
-    };
-
     window.addEventListener('DOMContentLoaded', () => {
       const cached = localStorage.getItem(STORAGE_KEY);
-      codeEditor.value = cached && cached.trim().length > 0 ? cached : DEMO_HTML;
+      if (!cached || cached.trim().length < 20) {
+        codeEditor.value = DEMO_HTML;
+      } else {
+        codeEditor.value = cached;
+      }
       
-      // On mobile screens (<768px), default to Code mode (Split view is hidden & disabled on phone)
       const isMobileDevice = window.innerWidth < 768;
       switchLayout(isMobileDevice ? 'code' : 'split');
       
       refreshEditor();
       renderPreviewNow();
-
-      // Ensure iframe is loaded after iframe finishes parsing
-      setTimeout(renderPreviewNow, 200);
+      setTimeout(renderPreviewNow, 150);
     });
   </script>
 
-  <!-- MODULE FIREBASE AUTH + FIRESTORE TEMPS RÉEL -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
     import { 
@@ -1445,14 +1279,14 @@
           await signInWithPopup(auth, provider);
         } catch (err) {
           console.error("Erreur de connexion :", err);
-          window.showToast("Erreur de connexion", "✕");
+          window.showToast("Erreur de connexion");
         }
       } else {
         const confirmed = await window.promptConfirm(`Connecté en tant que ${currentUser.displayName || currentUser.email}. Te déconnecter ?`);
         if (confirmed) {
           if (unsubscribeSnapshot) unsubscribeSnapshot();
           await signOut(auth);
-          window.showToast("Déconnecté", "ℹ");
+          window.showToast("Déconnecté");
         }
       }
     };
@@ -1533,7 +1367,6 @@
           content: fileObj.content,
           updatedAt: serverTimestamp()
         }, { merge: true });
-        window.setSaveStatus("Cloud synchronisé");
       } catch (e) {
         console.error("Erreur sauvegarde cloud :", e);
       }
@@ -1543,7 +1376,6 @@
       if (!currentUser) return;
       try {
         await deleteDoc(doc(db, "users", currentUser.uid, "files", fileId));
-        window.setSaveStatus("Supprimé du cloud");
       } catch (e) {
         console.error("Erreur suppression cloud :", e);
       }
