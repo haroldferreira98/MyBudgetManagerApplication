@@ -187,7 +187,7 @@
   </style>
 </head>
 
-<body class="h-full flex flex-col antialiased overflow-hidden pt-[env(safe-area-inset-top,0px)]">
+<body class="h-full flex flex-col antialiased overflow-hidden pt-[max(48px,env(safe-area-inset-top,48px))]">
 
   <header class="bg-[var(--md-sys-color-surface-container)] px-3 py-2 sm:px-5 flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0 z-20 gap-2">
     <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
@@ -212,12 +212,6 @@
         </svg>
         <img id="auth-avatar" class="w-4 h-4 rounded-full object-cover hidden" alt="Avatar" />
         <span id="auth-label" class="hidden sm:inline">Connexion</span>
-      </button>
-
-      <!-- Bouton Exemple HTML Tuto -->
-      <button id="btnReloadDemo" class="m3-btn px-3 py-1.5 text-xs font-bold rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)]" title="Charger le code HTML d'exemple (125+ lignes)">
-        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-        <span>Exemple</span>
       </button>
 
       <!-- View Selector Pill Switch -->
@@ -258,14 +252,6 @@
     </button>
 
     <div class="h-4 w-[1px] bg-[var(--md-sys-color-outline-variant)] mx-0.5 flex-shrink-0"></div>
-
-    <!-- Mobile Keyboard Lock / Toggle Button -->
-    <button id="btnToggleKeyboard" class="m3-btn flex-shrink-0 whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-[var(--md-sys-color-surface-container-lowest)] text-[var(--md-sys-color-on-surface)] shadow-xs" title="Activer / Désactiver le clavier sur mobile">
-      <svg class="w-3.5 h-3.5 fill-current text-[var(--md-sys-color-primary)]" viewBox="0 0 24 24">
-        <path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm8 7H9v-2h6v2zm1-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/>
-      </svg>
-      <span id="keyboardLabel">Clavier : Bloqué</span>
-    </button>
 
     <!-- JS Functions Inspector Modal Toggle -->
     <button id="btnFunctionsList" class="m3-btn flex-shrink-0 whitespace-nowrap px-3 py-1 text-xs font-bold rounded-full bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary-container)] shadow-xs" title="Voir la liste des fonctions JS du document">
@@ -333,7 +319,7 @@
     </div>
   </div>
 
-  <main class="flex-1 flex flex-col md:flex-row relative overflow-hidden bg-[var(--md-sys-color-surface-container)]">
+  <main class="flex-1 flex flex-col md:flex-row relative overflow-hidden bg-[var(--md-sys-color-surface-container-lowest)]">
     
     <!-- Code Editor Section -->
     <section id="editorSection" class="flex-1 flex flex-col h-full relative transition-all duration-200">
@@ -343,13 +329,13 @@
         </div>
         <div class="editor-wrapper">
           <pre id="highlightLayer" class="highlight-layer" aria-hidden="true"></pre>
-          <textarea id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off" inputmode="none" class="code-area" placeholder="Colle ton code HTML/CSS/JS généré par l'IA ici..."></textarea>
+          <textarea id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off" class="code-area" placeholder="Colle ton code HTML/CSS/JS généré par l'IA ici..."></textarea>
         </div>
       </div>
     </section>
 
     <!-- Live Preview Section -->
-    <section id="previewSection" class="flex-1 flex flex-col h-full bg-white border-t md:border-t-0 md:border-l border-[var(--md-sys-color-outline-variant)]/30 transition-all duration-200">
+    <section id="previewSection" class="flex-1 flex flex-col h-full bg-white transition-all duration-200 hidden">
       <div class="bg-[var(--md-sys-color-surface-container-high)] px-4 py-2 flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/20 flex-shrink-0">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
@@ -617,9 +603,6 @@
     const btnFormat = document.getElementById('btnFormat');
     const btnDownload = document.getElementById('btnDownload');
     const btnClearCode = document.getElementById('btnClearCode');
-    const btnReloadDemo = document.getElementById('btnReloadDemo');
-    const btnToggleKeyboard = document.getElementById('btnToggleKeyboard');
-    const keyboardLabel = document.getElementById('keyboardLabel');
 
     const btnFunctionsList = document.getElementById('btnFunctionsList');
     const functionsModal = document.getElementById('functionsModal');
@@ -777,24 +760,6 @@
     codeEditor.addEventListener('scroll', syncScroll);
     codeEditor.addEventListener('keyup', updateMetrics);
     codeEditor.addEventListener('click', updateMetrics);
-
-    btnToggleKeyboard.addEventListener('click', () => {
-      isKeyboardEnabled = !isKeyboardEnabled;
-      if (isKeyboardEnabled) {
-        codeEditor.setAttribute('inputmode', 'text');
-        keyboardLabel.textContent = 'Clavier : Actif';
-        btnToggleKeyboard.classList.remove('bg-[var(--md-sys-color-surface-container-lowest)]');
-        btnToggleKeyboard.classList.add('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
-        notify('Clavier activé');
-        codeEditor.focus();
-      } else {
-        codeEditor.setAttribute('inputmode', 'none');
-        keyboardLabel.textContent = 'Clavier : Bloqué';
-        btnToggleKeyboard.classList.add('bg-[var(--md-sys-color-surface-container-lowest)]');
-        btnToggleKeyboard.classList.remove('bg-[var(--md-sys-color-primary)]', 'text-[var(--md-sys-color-on-primary)]');
-        notify('Clavier bloqué (mode tactile)');
-      }
-    });
 
     function extractJSFunctions() {
       const text = codeEditor.value;
@@ -1188,16 +1153,6 @@
       refreshEditor();
       triggerAutoRefresh();
       notify('Éditeur vidé');
-    });
-
-    btnReloadDemo.addEventListener('click', () => {
-      codeEditor.value = DEMO_HTML;
-      try {
-        localStorage.setItem(STORAGE_KEY, DEMO_HTML);
-      } catch (e) {}
-      refreshEditor();
-      renderPreviewNow();
-      notify('Exemple HTML (125+ lignes) chargé !');
     });
 
     /* Keyboard shortcuts */
