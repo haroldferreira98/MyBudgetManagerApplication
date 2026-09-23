@@ -406,7 +406,8 @@
     </div>
 
     <div class="runner-body">
-      <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups"></iframe>
+      <!-- IFRAME AVEC POPUPS ESCAPING DU SANDBOX -->
+      <iframe id="app-frame" sandbox="allow-scripts allow-modals allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
 
       <div id="editor-pane">
         <div class="editor-toolbar">
@@ -655,7 +656,7 @@
     const telTotal = $('telemetry-total');
     const telSelection = $('telemetry-selection');
 
-    // GESTION DU THÈME : AUTO PAR DÉFAUT (Tri-State : auto -> dark -> light)
+    // Thème auto par défaut
     let curTheme = localStorage.getItem('app_theme') || 'auto';
     applyTheme(curTheme);
 
@@ -681,7 +682,6 @@
       showToast('Thème : ' + nextTheme.toUpperCase());
     };
 
-    // SUPPRESSION D'UN FICHIER RÉCENT
     window.deleteRecentFile = function(id, event) {
       if (event) event.stopPropagation();
 
@@ -997,13 +997,27 @@
       return safe;
     }
 
+    // RENDER PREVIEW MIS À JOUR POUR OAUTH & ORIGINE DOMAINE VALIDE
     function renderPreview(content, ext, filename) {
       if (ext === 'html' || ext === 'htm') {
         let h = content || '';
         if (!h.includes('viewport')) {
           h = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"></head><body>${h}</body></html>`;
         }
-        appFrame.srcdoc = h;
+
+        // Supprimer l'attribut srcdoc pour éviter l'origine opaque (null)
+        appFrame.removeAttribute('srcdoc');
+
+        try {
+          const frameDoc = appFrame.contentDocument || appFrame.contentWindow.document;
+          frameDoc.open();
+          frameDoc.write(h);
+          frameDoc.close();
+        } catch (e) {
+          // Fallback avec blob si blocage d'accès au document
+          const blob = new Blob([h], { type: 'text/html;charset=utf-8' });
+          appFrame.src = URL.createObjectURL(blob);
+        }
         return;
       }
 
@@ -1040,16 +1054,25 @@
           </body>
           </html>
         `;
-        appFrame.srcdoc = jsonViewerHtml;
+        appFrame.removeAttribute('srcdoc');
+        const frameDoc = appFrame.contentDocument || appFrame.contentWindow.document;
+        frameDoc.open();
+        frameDoc.write(jsonViewerHtml);
+        frameDoc.close();
         return;
       }
 
-      appFrame.srcdoc = `
+      const defaultHtml = `
         <!DOCTYPE html><html><body style="font-family:sans-serif;padding:20px;background:#fdf8fd;color:#1d1b20;">
           <h3>Fichier ${ext.toUpperCase()}</h3>
           <p>Ce fichier est un script/donnée. Modifiez-le dans l'onglet <strong>Coder</strong>.</p>
         </body></html>
       `;
+      appFrame.removeAttribute('srcdoc');
+      const frameDoc = appFrame.contentDocument || appFrame.contentWindow.document;
+      frameDoc.open();
+      frameDoc.write(defaultHtml);
+      frameDoc.close();
     }
     window.renderPreview = renderPreview;
 
@@ -1384,7 +1407,14 @@
       disableKb();
       viewRunner.classList.remove('open');
       closeSearch();
-      setTimeout(() => { appFrame.srcdoc = ''; }, 150);
+      setTimeout(() => {
+        try {
+          const frameDoc = appFrame.contentDocument || appFrame.contentWindow.document;
+          frameDoc.open();
+          frameDoc.write('');
+          frameDoc.close();
+        } catch {}
+      }, 150);
     };
   </script>
 </body>
