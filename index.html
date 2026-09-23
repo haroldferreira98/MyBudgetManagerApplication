@@ -112,7 +112,7 @@
     .badge-chip { background: var(--primary-c); color: var(--on-primary-c); padding: 6px 14px; border-radius: var(--radius-pill); font-size: 0.78rem; font-weight: 500; }
     .top-actions { display: flex; align-items: center; gap: 8px; }
     .version-badge { font-size: 0.72rem; font-weight: 700; padding: 6px 10px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text-sub); }
-    .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text); display: grid; place-items: center; border: none; cursor: pointer; }
+    .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-pill); background: var(--surface-c); color: var(--text); display: grid; place-items: center; border: none; cursor: pointer; position: relative; overflow: hidden; }
     .icon-btn:active { transform: scale(0.92); }
     .header-text h1 { font-size: 1.85rem; font-weight: 700; letter-spacing: -0.5px; }
     .header-text p { color: var(--text-sub); font-size: 0.92rem; margin-top: 4px; }
@@ -286,6 +286,15 @@
       <div class="badge-chip">Google Pixel • Material You</div>
       <div class="top-actions">
         <span class="version-badge">v1.9.1</span>
+
+        <!-- Bouton Connexion / Profil Google -->
+        <button class="icon-btn" id="btn-auth" aria-label="Connexion Google" title="Se connecter avec Google">
+          <svg class="icon" id="auth-icon" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/>
+          </svg>
+          <img id="auth-avatar" style="display:none; width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profil">
+        </button>
+
         <button class="icon-btn" id="btn-theme-toggle" aria-label="Changer de thème">
           <svg class="icon" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/></svg>
         </button>
@@ -294,7 +303,7 @@
 
     <div class="header-text">
       <h1>Web Studio</h1>
-      <p>Éditeur & Viewer Universel avec Télémétrie</p>
+      <p>Éditeur & Viewer Universel avec Cloud & Télémétrie</p>
     </div>
 
     <div class="action-grid">
@@ -318,7 +327,7 @@
     <div class="section-title">Fichiers récents</div>
 
     <div class="file-list" id="fileList">
-      <div class="empty-state" id="empty-state-msg">Importez un fichier ou un dossier pour commencer.</div>
+      <div class="empty-state" id="empty-state-msg">Importez un fichier ou connectez-vous avec Google pour charger vos documents.</div>
     </div>
   </main>
 
@@ -378,7 +387,7 @@
             </button>
             <div class="save-indicator">
               <span class="save-indicator-dot" id="save-status-dot"></span>
-              <span id="save-status-text">Synchronisé</span>
+              <span id="save-status-text">Prêt</span>
             </div>
           </div>
         </div>
@@ -406,9 +415,147 @@
 
   <div id="toast-msg">Action effectuée</div>
 
+  <!-- MODULE FIREBASE AUTH + FIRESTORE -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    import { 
+      getAuth, 
+      GoogleAuthProvider, 
+      signInWithPopup, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      setDoc, 
+      getDocs, 
+      query, 
+      orderBy, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCTYpB9_NTYNAphiNqSzH0Fd9itczJ75YU",
+      authDomain: "myhtmleditorapplication.firebaseapp.com",
+      projectId: "myhtmleditorapplication",
+      storageBucket: "myhtmleditorapplication.firebasestorage.app",
+      messagingSenderId: "882310056769",
+      appId: "1:882310056769:web:58905addb57e00cad4efc0",
+      measurementId: "G-F47LXNK65K"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    let currentUser = null;
+
+    const btnAuth = document.getElementById('btn-auth');
+    const authIcon = document.getElementById('auth-icon');
+    const authAvatar = document.getElementById('auth-avatar');
+
+    btnAuth.onclick = async () => {
+      if (!currentUser) {
+        try {
+          await signInWithPopup(auth, provider);
+        } catch (err) {
+          console.error("Erreur de connexion :", err);
+          window.showToast("Erreur de connexion");
+        }
+      } else {
+        if (confirm(`Connecté en tant que ${currentUser.displayName || currentUser.email}. Te déconnecter ?`)) {
+          await signOut(auth);
+        }
+      }
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      if (user) {
+        authIcon.style.display = 'none';
+        authAvatar.style.display = 'block';
+        authAvatar.src = user.photoURL || '';
+        btnAuth.title = `Connecté : ${user.displayName || user.email}`;
+        window.showToast("Connecté au Cloud");
+        await syncFromCloud();
+      } else {
+        authIcon.style.display = 'block';
+        authAvatar.style.display = 'none';
+        btnAuth.title = "Se connecter avec Google";
+        window.showToast("Mode local");
+      }
+    });
+
+    async function syncFromCloud() {
+      if (!currentUser) return;
+      try {
+        const q = query(collection(db, "users", currentUser.uid, "files"), orderBy("updatedAt", "desc"));
+        const snap = await getDocs(q);
+
+        if (!snap.empty) {
+          const fileListEl = document.getElementById('fileList');
+          const emptyMsg = document.getElementById('empty-state-msg');
+          if (emptyMsg) emptyMsg.style.display = 'none';
+          
+          fileListEl.innerHTML = '';
+          window.fileStore.clear();
+
+          snap.forEach(docSnap => {
+            const data = docSnap.data();
+            const id = docSnap.id;
+            
+            window.fileStore.set(id, {
+              name: data.name,
+              ext: data.ext,
+              path: data.path || data.name,
+              content: data.content,
+              storageKey: 'cache_' + data.name
+            });
+
+            const card = document.createElement('div');
+            card.className = 'file-card';
+            card.innerHTML = `
+              <span class="ext-badge ${window.getExtClass(data.ext)}">${data.ext}</span>
+              <div class="file-card-info">
+                <div class="file-card-name">${data.name}</div>
+                <div class="file-card-path">${data.path || data.name}</div>
+              </div>
+            `;
+            card.onclick = () => window.openFile(id);
+            fileListEl.appendChild(card);
+          });
+        }
+      } catch (e) {
+        console.error("Erreur chargement cloud :", e);
+      }
+    }
+
+    window.saveToCloud = async (fileId, fileObj) => {
+      if (!currentUser || !fileObj) return;
+      try {
+        await setDoc(doc(db, "users", currentUser.uid, "files", fileId), {
+          name: fileObj.name,
+          ext: fileObj.ext,
+          path: fileObj.path || fileObj.name,
+          content: fileObj.content,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        window.setSaveStatus("Cloud synchronisé");
+      } catch (e) {
+        console.error("Erreur sauvegarde cloud :", e);
+      }
+    };
+  </script>
+
+  <!-- LOGIQUE PRINCIPALE WEB STUDIO -->
   <script>
     const $ = id => document.getElementById(id);
-    const fileStore = new Map();
+    window.fileStore = new Map();
+    const fileStore = window.fileStore;
+
     let curFileId = null, rawCode = "", isKeyboard = false;
     let autoSaveTimer = null, isAllSelected = false, selRange = null;
     const undoHist = [];
@@ -512,7 +659,7 @@
       e.target.value = '';
     };
 
-    function getExtClass(ext) {
+    window.getExtClass = function(ext) {
       switch (ext) {
         case 'html': case 'htm': return 'ext-html';
         case 'json': return 'ext-json';
@@ -522,7 +669,7 @@
         case 'cpp': case 'c': case 'h': case 'hpp': return 'ext-cpp';
         default: return 'ext-txt';
       }
-    }
+    };
 
     async function processFile(file, path, autoOpen = true, handle = null) {
       if (emptyMsg) emptyMsg.style.display = 'none';
@@ -545,12 +692,13 @@
       const content = cached !== null ? cached : rawText;
       const id = 'f_' + Math.random().toString(36).slice(2, 9);
 
-      fileStore.set(id, { name, ext, path, content, handle, storageKey });
+      const fileObj = { name, ext, path, content, handle, storageKey };
+      fileStore.set(id, fileObj);
 
       const card = document.createElement('div');
       card.className = 'file-card';
       card.innerHTML = `
-        <span class="ext-badge ${getExtClass(ext)}">${ext}</span>
+        <span class="ext-badge ${window.getExtClass(ext)}">${ext}</span>
         <div class="file-card-info">
           <div class="file-card-name">${name}</div>
           <div class="file-card-path">${path}</div>
@@ -559,11 +707,15 @@
       card.onclick = () => openFile(id);
       fileList.prepend(card);
 
+      if (window.saveToCloud) {
+        window.saveToCloud(id, fileObj);
+      }
+
       if (autoOpen) openFile(id);
       return id;
     }
 
-    function openFile(id) {
+    window.openFile = function(id) {
       const f = fileStore.get(id);
       if (!f) return;
       curFileId = id;
@@ -581,7 +733,7 @@
       showPreview();
       renderPreview(rawCode, f.ext, f.name);
       viewRunner.classList.add('open');
-    }
+    };
 
     tabCode.onclick = showCode;
     tabPreview.onclick = () => {
@@ -948,31 +1100,36 @@
       showToast("Annulé");
     };
 
-    function setSaveStatus(txt, isSync = false) {
+    window.setSaveStatus = function(txt, isSync = false) {
       saveTxt.textContent = txt;
       saveDot.classList.toggle('syncing', isSync);
-    }
+    };
 
     function triggerAutoSave() {
       if (!curFileId) return;
       clearTimeout(autoSaveTimer);
-      setSaveStatus("Sauvegarde…", true);
+      window.setSaveStatus("Sauvegarde…", true);
 
       autoSaveTimer = setTimeout(async () => {
         const f = fileStore.get(curFileId);
         if (!f) return;
+        f.content = rawCode;
         try { localStorage.setItem(f.storageKey, rawCode); } catch {}
+
+        if (window.saveToCloud) {
+          window.saveToCloud(curFileId, f);
+        }
 
         if (f.handle?.createWritable) {
           try {
             const w = await f.handle.createWritable();
             await w.write(rawCode);
             await w.close();
-            setSaveStatus("iCloud à jour");
+            window.setSaveStatus("iCloud à jour");
             return;
           } catch {}
         }
-        setSaveStatus("Cache local à jour");
+        window.setSaveStatus("Cache local à jour");
       }, 700);
     }
 
@@ -986,7 +1143,7 @@
           const w = await f.handle.createWritable();
           await w.write(rawCode);
           await w.close();
-          setSaveStatus("iCloud à jour");
+          window.setSaveStatus("iCloud à jour");
           showToast("Fichier iCloud enregistré");
           return;
         } catch {}
@@ -1096,11 +1253,11 @@
       searchCode();
     }
 
-    function showToast(m) {
+    window.showToast = function(m) {
       toast.textContent = m;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 2000);
-    }
+    };
 
     $('shade-back-btn').onclick = () => {
       disableKb();
